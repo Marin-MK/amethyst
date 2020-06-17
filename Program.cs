@@ -11,7 +11,11 @@ namespace amethyst
         public static void Main(params string[] Args)
         {
             Graphics.Start();
-            UIWindow Window = new UIWindow();
+
+            BorderlessWindow Window = new BorderlessWindow();
+            Window.Show();
+
+            /*UIWindow Window = new UIWindow();
 
             Window.SetBackgroundColor(SystemColors.WindowBackground);
 
@@ -93,7 +97,8 @@ namespace amethyst
                 if (RadioBox2.Checked) System.Console.WriteLine("Checked RadioBox 2");
             };
 
-            Window.Show();
+            Window.Show();*/
+
             while (Graphics.CanUpdate())
             {
                 Graphics.Update();

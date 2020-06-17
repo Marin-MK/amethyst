@@ -9,6 +9,8 @@ namespace amethyst
     {
         /// <summary>
         /// The main UI manager object.
+        /// When used as widget parent, will force widget to be the size of the UI Manager.
+        /// Use UI.Container instead if not desired.
         /// </summary>
         public UIManager UI { get; protected set; }
         /// <summary>
@@ -20,9 +22,9 @@ namespace amethyst
         /// </summary>
         public List<IContainer> Widgets = new List<IContainer>();
 
-        public UIWindow() : base()
+        public UIWindow(bool Borderless = false) : base()
         {
-            Initialize();
+            Initialize(true, false, Borderless);
             InitializeUI();
         }
 
