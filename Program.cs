@@ -11,11 +11,12 @@ namespace amethyst
         public static void Main(params string[] Args)
         {
             Graphics.Start();
+            Audio.Start();
 
-            BorderlessWindow Window = new BorderlessWindow();
-            Window.Show();
+            //BorderlessWindow Window = new BorderlessWindow();
+            //Window.Show();
 
-            /*UIWindow Window = new UIWindow();
+            UIWindow Window = new UIWindow();
 
             Window.SetBackgroundColor(SystemColors.WindowBackground);
 
@@ -30,7 +31,11 @@ namespace amethyst
             Button Button1 = new Button(GroupBox1);
             Button1.SetPosition(16, 36);
             Button1.SetText("Start task");
-            Button1.OnPressed += delegate (BaseEventArgs e) { Console.WriteLine($"Clicked button 1!"); };
+            Button1.OnPressed += delegate (BaseEventArgs e)
+            {
+                Console.WriteLine($"Clicked button 1!");
+                Audio.BGMPlay("D:/Dropbox/Pokemon Jam/Audio/BGM/Battle trainer.ogg", 50, 4);
+            };
 
             Button Button2 = new Button(GroupBox1);
             Button2.SetPosition(16, Button1.Position.Y + Button1.Size.Height + 4);
@@ -97,7 +102,7 @@ namespace amethyst
                 if (RadioBox2.Checked) System.Console.WriteLine("Checked RadioBox 2");
             };
 
-            Window.Show();*/
+            Window.Show();
 
             while (Graphics.CanUpdate())
             {

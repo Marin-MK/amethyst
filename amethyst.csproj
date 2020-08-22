@@ -2,17 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>x64</Platforms>
     <ApplicationIcon />
     <OutputType>Exe</OutputType>
     <StartupObject />
+    <Configurations>Debug</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SharpZipLib" Version="1.2.0" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\Decodl\decodl.csproj" />
     <ProjectReference Include="..\odl\odl.csproj" />
   </ItemGroup>
 

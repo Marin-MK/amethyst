@@ -227,7 +227,7 @@ namespace amethyst
             if (!Widget.IsVisible()) return;
             if (!WidgetAccessible()) return;
 
-            if (e.WheelY != 0) MouseWheelEvent(e);
+            if (e.WheelX != 0 || e.WheelY != 0) MouseWheelEvent(e);
         }
 
         public void MouseMoving(MouseEventArgs e)

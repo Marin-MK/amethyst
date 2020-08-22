@@ -696,8 +696,12 @@ namespace amethyst
             this.Viewport.Height = this.Size.Height;
             int DiffX = 0;
             int DiffY = 0;
-            int DiffWidth = 0;
-            int DiffHeight = 0;
+            /* Handles width manipulation */
+            if (this.Viewport.X + this.Size.Width > Parent.Viewport.X + Parent.Viewport.Width)
+            {
+                int DiffWidth = this.Viewport.X + this.Size.Width - (Parent.Viewport.X + Parent.Viewport.Width);
+                this.Viewport.Width -= DiffWidth;
+            }
             /* Handles X positioning */
             if (this.Viewport.X < Parent.Viewport.X)
             {
@@ -708,12 +712,13 @@ namespace amethyst
                     else s.OX += DiffX;
                 }
                 this.Viewport.X = this.Position.X + Parent.Viewport.X + DiffX - ScrolledX - Parent.AdjustedPosition.X;
+                this.Viewport.Width -= DiffX;
             }
-            /* Handles width manipulation */
-            if (this.Viewport.X + this.Size.Width > Parent.Viewport.X + Parent.Viewport.Width)
+            /* Handles height manipulation */
+            if (this.Viewport.Y + this.Size.Height > Parent.Viewport.Y + Parent.Viewport.Height)
             {
-                DiffWidth = this.Viewport.X + this.Size.Width - (Parent.Viewport.X + Parent.Viewport.Width);
-                this.Viewport.Width -= DiffWidth;
+                int DiffHeight = this.Viewport.Y + this.Size.Height - (Parent.Viewport.Y + Parent.Viewport.Height);
+                this.Viewport.Height -= DiffHeight;
             }
             /* Handles Y positioning */
             if (this.Viewport.Y < Parent.Viewport.Y)
@@ -725,12 +730,7 @@ namespace amethyst
                     else s.OY += DiffY;
                 }
                 this.Viewport.Y = this.Position.Y + Parent.Viewport.Y + DiffY - ScrolledY - Parent.AdjustedPosition.Y;
-            }
-            /* Handles height manipulation */
-            if (this.Viewport.Y + this.Size.Height > Parent.Viewport.Y + Parent.Viewport.Height)
-            {
-                DiffHeight = this.Viewport.Y + this.Size.Height - (Parent.Viewport.Y + Parent.Viewport.Height);
-                this.Viewport.Height -= DiffHeight;
+                this.Viewport.Height -= DiffY;
             }
             this.AdjustedPosition = new Point(DiffX, DiffY);
             foreach (Widget w in this.Widgets)

@@ -61,6 +61,16 @@ namespace amethyst
             return this;
         }
 
+        public virtual void ScrollLeft(int Count = 1)
+        {
+
+        }
+
+        public virtual void ScrollRight(int Count = 1)
+        {
+
+        }
+
         public virtual void ScrollDown(int Count = 1)
         {
 
@@ -97,6 +107,12 @@ namespace amethyst
                 }
                 else
                 {
+                    int rightcount = 0;
+                    int leftcount = 0;
+                    if (e.WheelX < 0) rightcount = Math.Abs(e.WheelX);
+                    else leftcount = e.WheelX;
+                    if (rightcount != 0) this.ScrollRight(rightcount * 3);
+                    if (leftcount != 0) this.ScrollLeft(leftcount * 3);
                     int downcount = 0;
                     int upcount = 0;
                     if (e.WheelY < 0) downcount = Math.Abs(e.WheelY);

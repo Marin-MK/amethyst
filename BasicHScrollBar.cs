@@ -27,6 +27,16 @@ namespace amethyst
             this.SetHeight(SliderHeight);
         }
 
+        public override void ScrollLeft(int Count = 1)
+        {
+            ScrollDown(Count);
+        }
+
+        public override void ScrollRight(int Count = 1)
+        {
+            ScrollUp(Count);
+        }
+
         public override void MouseMoving(MouseEventArgs e)
         {
             base.MouseMoving(e);
@@ -214,7 +224,7 @@ namespace amethyst
         public override void MouseWheel(MouseEventArgs e)
         {
             // If a VScrollBar exists
-            if (LinkedWidget != null && LinkedWidget.VScrollBar != null)
+            if (LinkedWidget != null && LinkedWidget.VScrollBar != null && e.WheelX == 0)
             {
                 // Return if not pressing shift (i.e. VScrollBar will scroll instead)
                 if (!Input.Press(SDL2.SDL.SDL_Keycode.SDLK_LSHIFT) && !Input.Press(SDL2.SDL.SDL_Keycode.SDLK_RSHIFT)) return;

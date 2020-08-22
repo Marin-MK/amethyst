@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using odl;
 using static SDL2.SDL;
@@ -67,6 +69,32 @@ namespace amethyst
             this.NormalRect = new Rect(this.X, this.Y, this.Width, this.Height);
             SizeChanged(new BaseEventArgs());
             SDL_SetWindowResizable(this.SDL_Window, SDL_bool.SDL_FALSE);
+
+            Widget w = new Widget(UI.Container);
+            w.SetPosition(1, 33);
+            w.Sprites["sprite"] = s = new Sprite(w.Viewport);
+
+            DateTime t1 = DateTime.Now;
+            Bitmap bmp = new Bitmap("D:/Desktop/Main Essentials/Graphics/Tilesets/Outside.png");
+            DateTime t2 = DateTime.Now;
+            Console.WriteLine($"Time: {(t2 - t1).TotalMilliseconds}ms");
+            s.Bitmap = bmp;
+            w.SetSize(bmp.Width, bmp.Height);
+            OnTick += UpdateInput;
+        }
+
+        Sprite s;
+
+        public void UpdateInput(BaseEventArgs e)
+        {
+            if (Input.Press(SDL_Keycode.SDLK_DOWN))
+            {
+                s.Y -= 1;
+            }
+            else if (Input.Press(SDL_Keycode.SDLK_UP))
+            {
+                s.Y += 1;
+            }
         }
 
         public override void SetResizable(bool Resizable)
@@ -265,7 +293,7 @@ namespace amethyst
             base.FocusLost(e);
             // Out-of-reach mouse moving event to make sure the minimize button
             // doesn't stay in the hovered state.
-            OnMouseMoving?.Invoke(new MouseEventArgs(-1, -1, false, false, false, false, false, false));
+            OnMouseMoving?.Invoke(new MouseEventArgs(-1, -1, false, false, false, false, false, false, 0, 0));
             Graphics.UpdateGraphics(true);
         }
     }
