@@ -8,15 +8,10 @@ namespace amethyst
 {
     public class OpenFileDialog
     {
-        [DllImport("tinyfiledialogs64.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr tinyfd_openFileDialog(
-            string Title,
-            string DefaultPath,
-            int NumFilePatterns,
-            string[] FilterPatterns,
-            string SingleFilterDescription,
-            int AllowMultiple
-        );
+        odl.NativeLibrary tfd;
+
+        internal delegate IntPtr OFDDelegate(string Title, string DefaultPath, int NumFilePatterns, string[] FilterPatterns, string SingleFilterDescription, int AllowMultiple);
+        internal OFDDelegate FUNC_OpenFileDialog;
 
         public string Title;
         public string DefaultFolder;
@@ -25,6 +20,26 @@ namespace amethyst
 
         public OpenFileDialog()
         {
+            if (tfd == null)
+            {
+                if (odl.Graphics.Platform == odl.Platform.Windows)
+                {
+                    tfd = new odl.NativeLibrary("./lib/windows/tinyfiledialogs64.dll");
+                }
+                else if (odl.Graphics.Platform == odl.Platform.Linux)
+                {
+                    tfd = new odl.NativeLibrary("./lib/linux/tinyfiledialogs64.so");
+                }
+                else if (odl.Graphics.Platform == odl.Platform.MacOS)
+                {
+                    throw new Exception("MacOS support has not yet been implemented.");
+                }
+                else
+                {
+                    throw new Exception("Failed to detect platform.");
+                }
+                FUNC_OpenFileDialog = tfd.GetFunction<OFDDelegate>("tinyfd_openFileDialog");
+            }
             this.Title = "Open File";
             this.DefaultFolder = Directory.GetCurrentDirectory();
             this.AllowMultiple = false;
@@ -54,7 +69,7 @@ namespace amethyst
 
         public object Show()
         {
-            IntPtr ptr = tinyfd_openFileDialog(
+            IntPtr ptr = FUNC_OpenFileDialog(
                 this.Title,
                 this.DefaultFolder,
                 this.FileFilter == null ? 0 : this.FileFilter.Extensions.Count,
