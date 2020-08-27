@@ -14,6 +14,7 @@ namespace amethyst.Windows
 
         protected override void DrawText()
         {
+            Sprites["text"].Bitmap?.Dispose();
             if (!string.IsNullOrEmpty(this.Text))
             {
                 Size s = this.Font.TextSize(this.Text);
@@ -29,4 +30,38 @@ namespace amethyst.Windows
             base.DrawText();
         }
     }
+
+    public class MultilineLabel : TextWidget
+    {
+        public MultilineLabel(IContainer Parent) : base(Font.Get("Windows/segoeui", 12), Parent)
+        {
+            Sprites["text"] = new Sprite(this.Viewport);
+        }
+
+        public override void SizeChanged(BaseEventArgs e)
+        {
+            base.SizeChanged(e);
+            RedrawText();
+        }
+
+        protected override void DrawText()
+        {
+            Sprites["text"].Bitmap?.Dispose();
+            if (!string.IsNullOrEmpty(Text))
+            {
+                List<string> Lines = FormatString(this.Font, Text, Size.Width);
+                if (Sprites["text"].Bitmap != null) Sprites["text"].Bitmap.Dispose();
+                SetSize(Size.Width, (Font.Size + 4) * Lines.Count);
+                Sprites["text"].Bitmap = new Bitmap(Size);
+                Sprites["text"].Bitmap.Unlock();
+                Sprites["text"].Bitmap.Font = this.Font;
+                for (int i = 0; i < Lines.Count; i++)
+                {
+                    Sprites["text"].Bitmap.DrawText(Lines[i], 0, (Font.Size + 2) * i, this.TextColor);
+                }
+                Sprites["text"].Bitmap.Lock();
+            }
+        }
+    }
+
 }

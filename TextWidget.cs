@@ -62,5 +62,45 @@ namespace amethyst
             this.Redraw();
             this.DrawnText = false;
         }
+
+        protected List<string> FormatString(Font f, string Text, int Width)
+        {
+
+            List<string> Lines = new List<string>();
+            int startidx = 0;
+            int lastsplittableindex = -1;
+            for (int i = 0; i < Text.Length; i++)
+            {
+                char c = Text[i];
+                string txt = Text.Substring(startidx, i - startidx + 1);
+                Size s = f.TextSize(txt);
+                if (c == '\n')
+                {
+                    Lines.Add(Text.Substring(startidx, i - startidx));
+                    startidx = i + 1;
+                    if (i == Text.Length - 1) Lines.Add("");
+                }
+                else if (s.Width >= Width)
+                {
+                    int endidx = lastsplittableindex == -1 ? i : lastsplittableindex + 1;
+                    Lines.Add(Text.Substring(startidx, endidx - startidx - 1));
+                    startidx = endidx - 1;
+                    lastsplittableindex = -1;
+                }
+                else if (c == ' ' || c == '-')
+                {
+                    lastsplittableindex = i + 1;
+                }
+            }
+            if (startidx != Text.Length)
+            {
+                Lines.Add(Text.Substring(startidx));
+            }
+            else if (Lines.Count == 0)
+            {
+                Lines.Add("");
+            }
+            return Lines;
+        }
     }
 }

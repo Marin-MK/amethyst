@@ -1139,7 +1139,7 @@ namespace amethyst
 
                     Key k = s.Key;
                     bool Valid = false;
-                    if (Input.Press((SDL2.SDL.SDL_Keycode) k.MainKey))
+                    if (Input.Press((odl.SDL2.SDL.SDL_Keycode) k.MainKey))
                     {
                         if (TimerPassed($"key_{s.Key.ID}"))
                         {
@@ -1169,11 +1169,11 @@ namespace amethyst
                     foreach (Keycode mod in k.Modifiers)
                     {
                         bool onefound = false;
-                        List<SDL2.SDL.SDL_Keycode> codes = new List<SDL2.SDL.SDL_Keycode>();
-                        if (mod == Keycode.CTRL) { codes.Add(SDL2.SDL.SDL_Keycode.SDLK_LCTRL); codes.Add(SDL2.SDL.SDL_Keycode.SDLK_RCTRL); }
-                        else if (mod == Keycode.SHIFT) { codes.Add(SDL2.SDL.SDL_Keycode.SDLK_LSHIFT); codes.Add(SDL2.SDL.SDL_Keycode.SDLK_RSHIFT); }
-                        else if (mod == Keycode.ALT) { codes.Add(SDL2.SDL.SDL_Keycode.SDLK_LALT); codes.Add(SDL2.SDL.SDL_Keycode.SDLK_RALT); }
-                        else codes.Add((SDL2.SDL.SDL_Keycode)mod);
+                        List<odl.SDL2.SDL.SDL_Keycode> codes = new List<odl.SDL2.SDL.SDL_Keycode>();
+                        if (mod == Keycode.CTRL) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LCTRL); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RCTRL); }
+                        else if (mod == Keycode.SHIFT) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LSHIFT); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RSHIFT); }
+                        else if (mod == Keycode.ALT) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LALT); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RALT); }
+                        else codes.Add((odl.SDL2.SDL.SDL_Keycode)mod);
 
                         for (int i = 0; i < codes.Count; i++)
                         {

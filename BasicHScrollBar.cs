@@ -227,7 +227,7 @@ namespace amethyst
             if (LinkedWidget != null && LinkedWidget.VScrollBar != null && e.WheelX == 0)
             {
                 // Return if not pressing shift (i.e. VScrollBar will scroll instead)
-                if (!Input.Press(SDL2.SDL.SDL_Keycode.SDLK_LSHIFT) && !Input.Press(SDL2.SDL.SDL_Keycode.SDLK_RSHIFT)) return;
+                if (!Input.Press(odl.SDL2.SDL.SDL_Keycode.SDLK_LSHIFT) && !Input.Press(odl.SDL2.SDL.SDL_Keycode.SDLK_RSHIFT)) return;
             }
             base.MouseWheel(e);
         }

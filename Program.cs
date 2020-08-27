@@ -12,7 +12,6 @@ namespace amethyst
         {
             Graphics.Start();
             Audio.Start();
-
             //BorderlessWindow Window = new BorderlessWindow();
             //Window.Show();
 

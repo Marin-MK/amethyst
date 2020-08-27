@@ -101,7 +101,7 @@ namespace amethyst
             else inside = this.Viewport.Contains(e.X, e.Y);
             if (inside)
             {
-                if (Input.Press(SDL2.SDL.SDL_Keycode.SDLK_LCTRL) || Input.Press(SDL2.SDL.SDL_Keycode.SDLK_RCTRL))
+                if (Input.Press(odl.SDL2.SDL.SDL_Keycode.SDLK_LCTRL) || Input.Press(odl.SDL2.SDL.SDL_Keycode.SDLK_RCTRL))
                 {
                     this.OnControlScrolling?.Invoke(new DirectionEventArgs(e.WheelY > 0, e.WheelY < 0));
                 }
