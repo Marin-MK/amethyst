@@ -11,7 +11,7 @@ namespace amethyst.Windows
 
         public BaseEvent OnCheckChanged;
 
-        public CheckBox(IContainer Parent) : base(Font.Get("Windows/segoeui", 12), Parent)
+        public CheckBox(IContainer Parent) : base(Parent)
         {
             Sprites["box"] = new Sprite(this.Viewport);
             Sprites["box"].Bitmap = new Bitmap(13, 13);

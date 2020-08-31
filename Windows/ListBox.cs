@@ -23,6 +23,11 @@ namespace amethyst.Windows
             ListDrawer.SetPosition(2, 2);
         }
 
+        public void SetFont(Font Font)
+        {
+            ListDrawer.SetFont(Font);
+        }
+
         public void SetSelectedIndex(int SelectedIndex)
         {
             ListDrawer.SetSelectedIndex(SelectedIndex);
@@ -59,7 +64,7 @@ namespace amethyst.Windows
         public Color TextColor { get; protected set; } = Color.BLACK;
         public Color SelectedBackgroundColor { get; protected set; } = SystemColors.SelectionColor;
         public Color SelectedTextColor { get; protected set; } = Color.WHITE;
-        public Font Font { get; protected set; } = Font.Get("Windows/segoeui", 12);
+        public Font Font { get; protected set; }
         public bool DrawSelectionBold = false;
 
         public int SelectedIndex { get; protected set; } = -1;
@@ -82,6 +87,15 @@ namespace amethyst.Windows
                 new Shortcut(this, new Key(Keycode.PAGEUP), delegate (BaseEventArgs e) { GoUp(true); }),
                 new Shortcut(this, new Key(Keycode.PAGEDOWN), delegate (BaseEventArgs e) { GoDown(true); })
             });
+        }
+
+        public void SetFont(Font Font)
+        {
+            if (this.Font != Font)
+            {
+                this.Font = Font;
+                this.Redraw();
+            }
         }
 
         public void GoUp(bool Page = false)
@@ -127,7 +141,6 @@ namespace amethyst.Windows
         public void SetItems(List<ListItem> Items)
         {
             this.Items = Items;
-            if (this.SelectedIndex == -1 && Items.Count > 0) SetSelectedIndex(0);
             this.Redraw();
         }
 
@@ -148,7 +161,7 @@ namespace amethyst.Windows
             ItemPanel.SetSize(width, Items.Count * LineSize);
             // Chunk size doesn't matter as we're redrawing the entire bitmap anyway
             // Only used to be able to exceed the texture size limit to allow for infinite lists
-            ItemPanel.Sprites["items"].Bitmap = new Bitmap(width, Items.Count * LineSize, Graphics.MaxTextureSize);
+            ItemPanel.Sprites["items"].Bitmap = new Bitmap(width, Math.Max(1, Items.Count * LineSize), Graphics.MaxTextureSize);
             ItemPanel.Sprites["items"].Bitmap.Unlock();
             ItemPanel.Sprites["items"].Bitmap.Font = Font;
             for (int i = 0; i < Items.Count; i++)
@@ -159,7 +172,7 @@ namespace amethyst.Windows
                     ItemPanel.Sprites["items"].Bitmap.FillRect(0, i * LineSize, width, LineSize, SelectedBackgroundColor);
                     if (DrawSelectionBold) options |= DrawOptions.Bold;
                 }
-                ItemPanel.Sprites["items"].Bitmap.DrawText(Items[i].ToString(), 3, i * LineSize - 2, i == SelectedIndex ? SelectedTextColor : TextColor, options);
+                ItemPanel.Sprites["items"].Bitmap.DrawText(Items[i].ToString(), 3, i * LineSize - 3, i == SelectedIndex ? SelectedTextColor : TextColor, options);
             }
             ItemPanel.Sprites["items"].Bitmap.Lock();
             ItemContainer.UpdateAutoScroll();

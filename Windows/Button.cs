@@ -19,14 +19,11 @@ namespace amethyst.Windows
         public Color BorderColorSelected { get; protected set; } = SystemColors.ControlBorderColorSelected;
         public Color FillerColorSelected { get; protected set; } = SystemColors.ControlFillerColorSelected;
 
-        public Button(IContainer Parent) : base(Font.Get("Windows/segoeui", 12), Parent)
+        public Button(IContainer Parent) : base(Parent)
         {
             Sprites["box"] = new Sprite(this.Viewport);
             Sprites["text"] = new Sprite(this.Viewport);
             Sprites["text"].Name = "text sprite";
-            this.Font = Font.Get("Windows/segoeui", 12);
-
-            this.SetSize(83, 21);
         }
 
         protected override void DrawText()

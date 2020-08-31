@@ -24,7 +24,6 @@ namespace amethyst.Windows
             Sprites["titles"] = new Sprite(this.Viewport);
             Sprites["filler"] = new Sprite(this.Viewport);
             Sprites["filler"].Y = 21;
-            this.Font = Font.Get("Windows/segoeui", 12);
             this.OnWidgetSelected += WidgetSelected;
         }
 

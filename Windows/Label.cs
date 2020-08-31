@@ -7,7 +7,7 @@ namespace amethyst.Windows
 {
     public class Label : TextWidget
     {
-        public Label(IContainer Parent) : base(Font.Get("Windows/segoeui", 12), Parent)
+        public Label(IContainer Parent) : base(Parent)
         {
             Sprites["text"] = new Sprite(this.Viewport);
         }
@@ -33,7 +33,7 @@ namespace amethyst.Windows
 
     public class MultilineLabel : TextWidget
     {
-        public MultilineLabel(IContainer Parent) : base(Font.Get("Windows/segoeui", 12), Parent)
+        public MultilineLabel(IContainer Parent) : base(Parent)
         {
             Sprites["text"] = new Sprite(this.Viewport);
         }

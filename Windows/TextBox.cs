@@ -1,49 +1,23 @@
-﻿using System;
-using odl;
+﻿using odl;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace amethyst.Windows
 {
-    public class TextBox : ActivatableWidget
+    public class TextBox : amethyst.TextBox
     {
-        public string Text { get { return TextArea.Text; } }
-        public int CaretIndex { get { return TextArea.CaretIndex; } }
-        public int SelectionStartIndex { get { return TextArea.SelectionStartIndex; } }
-        public int SelectionEndIndex { get { return TextArea.SelectionEndIndex; } }
-
-        public TextArea TextArea;
-
-        public BaseEvent OnTextChanged { get { return TextArea.OnTextChanged; } set { TextArea.OnTextChanged = value; } }
-
         public TextBox(IContainer Parent) : base(Parent)
         {
-            Sprites["box"] = new Sprite(this.Viewport);
-            TextArea = new TextArea(this);
-            TextArea.SetPosition(3, 3);
-            TextArea.SetCaretHeight(13);
-            TextArea.SetZIndex(1);
-        }
-
-        public void SetInitialText(string Text)
-        {
-            if (this.Text != Text)
-                TextArea.SetInitialText(Text);
-        }
-
-        public void SetCaretIndex(int Index)
-        {
-            TextArea.CaretIndex = Index;
-            TextArea.RepositionSprites();
-        }
-
-        public override void SizeChanged(BaseEventArgs e)
-        {
-            base.SizeChanged(e);
-            TextArea.SetSize(Size.Width - 6, Size.Height - 6);
+            SetTextColor(Color.BLACK);
+            SetTextY(0);
+            SetCaretHeight(14);
+            MinimumSize.Height = 23;
+            MaximumSize.Height = 23;
         }
 
         protected override void Draw()
         {
-            Console.WriteLine($"Selected: {SelectedWidget}");
             if (Sprites["box"].Bitmap != null) Sprites["box"].Bitmap.Dispose();
             Sprites["box"].Bitmap = new Bitmap(this.Size);
             Sprites["box"].Bitmap.Unlock();
@@ -53,25 +27,6 @@ namespace amethyst.Windows
             Sprites["box"].Bitmap.FillRect(1, 1, Size.Width - 2, Size.Height - 2, filler);
             Sprites["box"].Bitmap.Lock();
             base.Draw();
-        }
-
-        public override void MouseDown(MouseEventArgs e)
-        {
-            base.MouseDown(e);
-            if (!WidgetIM.Hovering && TextArea.SelectedWidget)
-            {
-                Window.UI.SetSelectedWidget(null);
-            }
-        }
-
-        public override object GetValue(string Identifier)
-        {
-            return this.Text;
-        }
-
-        public override void SetValue(string Identifier, object Value)
-        {
-            this.SetInitialText((string) Value);
         }
     }
 }

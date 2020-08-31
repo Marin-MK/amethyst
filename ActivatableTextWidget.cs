@@ -13,9 +13,8 @@ namespace amethyst
 
         protected bool DrawnText = false;
 
-        public ActivatableTextWidget(Font Font, IContainer Parent) : base(Parent)
+        public ActivatableTextWidget(IContainer Parent) : base(Parent)
         {
-            this.SetFont(Font);
             this.SetText(this.GetType().Name);
         }
 

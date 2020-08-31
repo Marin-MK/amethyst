@@ -7,7 +7,7 @@ namespace amethyst.Windows
 {
     public class GroupBox : TextWidget
     {
-        public GroupBox(IContainer Parent) : base(Font.Get("Windows/segoeui", 12), Parent)
+        public GroupBox(IContainer Parent) : base(Parent)
         {
             Sprites["box"] = new Sprite(this.Viewport);
             Sprites["text"] = new Sprite(this.Viewport);

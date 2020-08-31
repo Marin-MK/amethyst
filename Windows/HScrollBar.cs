@@ -30,12 +30,12 @@ namespace amethyst.Windows
             Sprites["arrow1"].Bitmap = new Bitmap(Arrow1Size, Size.Height);
             Sprites["arrow1"].Bitmap.Unlock();
             Sprites["arrow1"].Bitmap.FillRect(Arrow1Size, Size.Height, Arrow1Pressing ? SystemColors.SliderArrowColorPressing : Arrow1Hovering ? SystemColors.SliderArrowColorHovering : SystemColors.SliderArrowColorInactive);
-            Sprites["arrow1"].Bitmap.DrawLine(4, 9, 7, 6, tac);
-            Sprites["arrow1"].Bitmap.DrawLine(4, 10, 7, 7, tac);
-            Sprites["arrow1"].Bitmap.DrawLine(4, 11, 7, 8, tac);
-            Sprites["arrow1"].Bitmap.DrawLine(8, 7, 10, 9, tac);
+            Sprites["arrow1"].Bitmap.DrawLine(9, 4, 6, 7, tac);
+            Sprites["arrow1"].Bitmap.DrawLine(10, 4, 7, 7, tac);
+            Sprites["arrow1"].Bitmap.DrawLine(11, 4, 8, 7, tac);
+            Sprites["arrow1"].Bitmap.DrawLine(7, 8, 9, 10, tac);
             Sprites["arrow1"].Bitmap.DrawLine(8, 8, 10, 10, tac);
-            Sprites["arrow1"].Bitmap.DrawLine(8, 9, 10, 11, tac);
+            Sprites["arrow1"].Bitmap.DrawLine(9, 8, 11, 10, tac);
             Sprites["arrow1"].Bitmap.Lock();
 
             Color dac = Arrow2Pressing ? SystemColors.ControlBackground : Arrow2Hovering ? Color.BLACK : SystemColors.SliderArrowColorArrow;
@@ -43,12 +43,12 @@ namespace amethyst.Windows
             Sprites["arrow2"].Bitmap = new Bitmap(Arrow2Size, Size.Height);
             Sprites["arrow2"].Bitmap.Unlock();
             Sprites["arrow2"].Bitmap.FillRect(Arrow2Size, Size.Height, Arrow2Pressing ? SystemColors.SliderArrowColorPressing : Arrow2Hovering ? SystemColors.SliderArrowColorHovering : SystemColors.SliderArrowColorInactive);
-            Sprites["arrow2"].Bitmap.DrawLine(4, 6, 7, 9, dac);
-            Sprites["arrow2"].Bitmap.DrawLine(4, 7, 7, 10, dac);
-            Sprites["arrow2"].Bitmap.DrawLine(4, 8, 7, 11, dac);
-            Sprites["arrow2"].Bitmap.DrawLine(8, 8, 10, 6, dac);
-            Sprites["arrow2"].Bitmap.DrawLine(8, 9, 10, 7, dac);
-            Sprites["arrow2"].Bitmap.DrawLine(8, 10, 10, 8, dac);
+            Sprites["arrow2"].Bitmap.DrawLine(6, 4, 9, 7, dac);
+            Sprites["arrow2"].Bitmap.DrawLine(7, 4, 10, 7, dac);
+            Sprites["arrow2"].Bitmap.DrawLine(8, 4, 11, 7, dac);
+            Sprites["arrow2"].Bitmap.DrawLine(8, 8, 6, 10, dac);
+            Sprites["arrow2"].Bitmap.DrawLine(9, 8, 7, 10, dac);
+            Sprites["arrow2"].Bitmap.DrawLine(10, 8, 8, 10, dac);
             Sprites["arrow2"].Bitmap.Lock();
             base.Draw();
         }
