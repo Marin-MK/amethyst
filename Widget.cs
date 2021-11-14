@@ -1045,7 +1045,7 @@ namespace amethyst
             // Dispose the viewport and all its sprites.
             // Viewport may already be null if a child of a layoutcontainer has been disposed
             // because they share the same viewport.
-            //if (this.Viewport != null && !this.Viewport.Disposed)
+            if (this.Viewport != null && !this.Viewport.Disposed)
                 this.Viewport.Dispose();
             if (HelpTextWidget != null) HelpTextWidget.Dispose();
             // Dispose all child widgets
