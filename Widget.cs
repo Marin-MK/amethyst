@@ -708,8 +708,12 @@ namespace amethyst
                 DiffX = Parent.Viewport.X - this.Viewport.X;
                 foreach (ISprite s in this.Sprites.Values)
                 {
-                    if (s is MultiSprite) foreach (Sprite ms in (s as MultiSprite).SpriteList.Values) ms.OX += (int) Math.Round(DiffX / s.ZoomX);
-                    else s.OX += (int) Math.Round(DiffX / s.ZoomX);
+                    if (s is MultiSprite) foreach (Sprite ms in (s as MultiSprite).SpriteList.Values) ms.OX += DiffX / s.ZoomX;
+                    else s.OX += DiffX / s.ZoomX;
+                    if (Sprites.ContainsKey("1") && Sprites["1"] == s)
+                    {
+                        Console.WriteLine(DiffX.ToString() + " : " + (DiffX / s.ZoomX).ToString());
+                    }
                 }
                 this.Viewport.X = this.Position.X + Parent.Viewport.X + DiffX - ScrolledX - Parent.AdjustedPosition.X;
                 this.Viewport.Width -= DiffX;
@@ -726,8 +730,8 @@ namespace amethyst
                 DiffY = Parent.Viewport.Y - this.Viewport.Y;
                 foreach (ISprite s in this.Sprites.Values)
                 {
-                    if (s is MultiSprite) foreach (Sprite ms in (s as MultiSprite).SpriteList.Values) ms.OY += (int) Math.Round(DiffY / ms.ZoomY);
-                    else s.OY += (int) Math.Round(DiffY / s.ZoomY);
+                    if (s is MultiSprite) foreach (Sprite ms in (s as MultiSprite).SpriteList.Values) ms.OY += DiffY / ms.ZoomY;
+                    else s.OY += DiffY / s.ZoomY;
                 }
                 this.Viewport.Y = this.Position.Y + Parent.Viewport.Y + DiffY - ScrolledY - Parent.AdjustedPosition.Y;
                 this.Viewport.Height -= DiffY;
