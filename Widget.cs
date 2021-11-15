@@ -710,10 +710,6 @@ namespace amethyst
                 {
                     if (s is MultiSprite) foreach (Sprite ms in (s as MultiSprite).SpriteList.Values) ms.OX += DiffX / s.ZoomX;
                     else s.OX += DiffX / s.ZoomX;
-                    if (Sprites.ContainsKey("1") && Sprites["1"] == s)
-                    {
-                        Console.WriteLine(DiffX.ToString() + " : " + (DiffX / s.ZoomX).ToString());
-                    }
                 }
                 this.Viewport.X = this.Position.X + Parent.Viewport.X + DiffX - ScrolledX - Parent.AdjustedPosition.X;
                 this.Viewport.Width -= DiffX;
