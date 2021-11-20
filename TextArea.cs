@@ -813,7 +813,7 @@ namespace amethyst
                 int startidx = SelectionStartIndex > SelectionEndIndex ? SelectionEndIndex : SelectionStartIndex;
                 int endidx = SelectionStartIndex > SelectionEndIndex ? SelectionStartIndex : SelectionEndIndex;
                 string text = this.Text.Substring(startidx, endidx - startidx);
-                SDL_SetClipboardText(text);
+                Input.SetClipboard(text);
                 DeleteSelection();
                 DrawText();
             }
@@ -829,7 +829,7 @@ namespace amethyst
                 int startidx = SelectionStartIndex > SelectionEndIndex ? SelectionEndIndex : SelectionStartIndex;
                 int endidx = SelectionStartIndex > SelectionEndIndex ? SelectionStartIndex : SelectionEndIndex;
                 string text = this.Text.Substring(startidx, endidx - startidx);
-                SDL_SetClipboardText(text);
+                Input.SetClipboard(text);
             }
         }
 
@@ -840,7 +840,7 @@ namespace amethyst
         {
             if (this.ReadOnly) return;
             if (TimerPassed("paste")) ResetTimer("paste");
-            string text = SDL_GetClipboardText();
+            string text = Input.GetClipboard();
             if (SelectionStartIndex != -1 && SelectionStartIndex != SelectionEndIndex) DeleteSelection();
             InsertText(CaretIndex, text);
             DrawText();
