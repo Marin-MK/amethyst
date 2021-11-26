@@ -6,7 +6,7 @@ namespace amethyst
 {
     public class HelpText : Widget
     {
-        public Font Font { get; protected set; } = Font.Get("Fonts/ProductSans-M", 14);
+        public Font Font { get; protected set; } = Font.Get("assets/fonts/ProductSans-M", 14);
         public int MaxWidth { get; protected set; } = 300;
 
         public HelpText(IContainer Parent) : base(Parent)

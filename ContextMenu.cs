@@ -57,7 +57,7 @@ namespace amethyst
         {
             if (this.Sprites["items"].Bitmap != null) this.Sprites["items"].Bitmap.Dispose();
             this.Sprites["items"].Bitmap = new Bitmap(192, CalcHeight() + 10);
-            Font f = Font.Get("Fonts/ProductSans-M", 12);
+            Font f = Font.Get("assets/fonts/ProductSans-M", 12);
             this.Sprites["items"].Bitmap.Font = f;
             this.Sprites["items"].Bitmap.Unlock();
 

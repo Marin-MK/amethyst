@@ -121,7 +121,7 @@ namespace amethyst
             Sprites["text"] = new Sprite(this.Viewport);
             Sprites["text"].Bitmap = new Bitmap(this.Size);
             Sprites["text"].Bitmap.Unlock();
-            Sprites["text"].Bitmap.Font = Font.Get("Fonts/ProductSans-M", 12);
+            Sprites["text"].Bitmap.Font = Font.Get("assets/fonts/ProductSans-M", 12);
             for (int i = 0; i < Items.Count; i++)
             {
                 Sprites["text"].Bitmap.DrawText(Items[i].Name, 6, i * 18 + 2, Color.WHITE);
