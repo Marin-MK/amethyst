@@ -3,63 +3,62 @@ using System.Collections.Generic;
 using System.Text;
 using odl;
 
-namespace amethyst
+namespace amethyst;
+
+public class ActivatableTextWidget : ActivatableWidget
 {
-    public class ActivatableTextWidget : ActivatableWidget
+    public string Text { get; protected set; } = "";
+    public Color TextColor { get; protected set; } = Color.BLACK;
+    public Font Font { get; protected set; }
+
+    protected bool DrawnText = false;
+
+    public ActivatableTextWidget(IContainer Parent) : base(Parent)
     {
-        public string Text { get; protected set; } = "";
-        public Color TextColor { get; protected set; } = Color.BLACK;
-        public Font Font { get; protected set; }
+        this.SetText(this.GetType().Name);
+    }
 
-        protected bool DrawnText = false;
-
-        public ActivatableTextWidget(IContainer Parent) : base(Parent)
+    public void SetText(string Text)
+    {
+        if (this.Text != Text)
         {
-            this.SetText(this.GetType().Name);
+            this.Text = Text;
+            this.RedrawText();
         }
+    }
 
-        public void SetText(string Text)
+    public void SetTextColor(Color TextColor)
+    {
+        if (this.TextColor != TextColor)
         {
-            if (this.Text != Text)
-            {
-                this.Text = Text;
-                this.RedrawText();
-            }
+            this.TextColor = TextColor;
+            this.RedrawText();
         }
+    }
 
-        public void SetTextColor(Color TextColor)
+    public void SetFont(Font Font)
+    {
+        if (this.Font != Font)
         {
-            if (this.TextColor != TextColor)
-            {
-                this.TextColor = TextColor;
-                this.RedrawText();
-            }
+            this.Font = Font;
+            this.RedrawText();
         }
+    }
 
-        public void SetFont(Font Font)
-        {
-            if (this.Font != Font)
-            {
-                this.Font = Font;
-                this.RedrawText();
-            }
-        }
+    protected virtual void DrawText()
+    {
+        this.DrawnText = true;
+    }
 
-        protected virtual void DrawText()
-        {
-            this.DrawnText = true;
-        }
+    protected override void Draw()
+    {
+        if (!this.DrawnText) DrawText();
+        base.Draw();
+    }
 
-        protected override void Draw()
-        {
-            if (!this.DrawnText) DrawText();
-            base.Draw();
-        }
-
-        public void RedrawText()
-        {
-            this.Redraw();
-            this.DrawnText = false;
-        }
+    public void RedrawText()
+    {
+        this.Redraw();
+        this.DrawnText = false;
     }
 }

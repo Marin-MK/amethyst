@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace amethyst
+namespace amethyst;
+
+public interface IMenuItem { }
+
+public class MenuItem : IMenuItem
 {
-    public interface IMenuItem { }
+    public string Text;
+    public List<IMenuItem> Items;
+    public string HelpText;
+    public string Shortcut;
+    public odl.MouseEvent OnLeftClick;
+    public odl.BoolEvent IsClickable;
+    public bool LastClickable = true;
 
-    public class MenuItem : IMenuItem
+    public MenuItem(string Text)
     {
-        public string Text;
-        public List<IMenuItem> Items;
-        public string HelpText;
-        public string Shortcut;
-        public odl.MouseEvent OnLeftClick;
-        public odl.BoolEvent IsClickable;
-        public bool LastClickable = true;
-
-        public MenuItem(string Text)
-        {
-            this.Text = Text;
-            this.Items = new List<IMenuItem>();
-        }
+        this.Text = Text;
+        this.Items = new List<IMenuItem>();
     }
-
-    public class MenuSeparator : IMenuItem { }
 }
+
+public class MenuSeparator : IMenuItem { }

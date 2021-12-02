@@ -4,23 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace amethyst
+namespace amethyst;
+
+public class GridSize
 {
-    public class GridSize
-    {
-        public double Value { get; }
-        public Unit Unit { get; }
+    public double Value { get; }
+    public Unit Unit { get; }
 
-        public GridSize(double Value, Unit Unit = Unit.Relative)
-        {
-            this.Value = Value;
-            this.Unit = Unit;
-        }
-    }
-
-    public enum Unit
+    public GridSize(double Value, Unit Unit = Unit.Relative)
     {
-        Pixels,
-        Relative
+        this.Value = Value;
+        this.Unit = Unit;
     }
+}
+
+public enum Unit
+{
+    Pixels,
+    Relative
 }

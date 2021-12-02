@@ -2,338 +2,337 @@
 using System.Collections.Generic;
 using odl;
 
-namespace amethyst
+namespace amethyst;
+
+public class UIManager : IContainer
 {
-    public class UIManager : IContainer
+    public UIWindow Window { get; protected set; }
+    public Point AdjustedPosition { get { return new Point(0, 0); } set { throw new MethodNotSupportedException(this); } }
+    public Point Position { get { return new Point(0, 0); } }
+    public int ScrolledX { get { return 0; } set { throw new MethodNotSupportedException(this); } }
+    public int ScrolledY { get { return 0; } set { throw new MethodNotSupportedException(this); } }
+    public int ZIndex { get { return 0; } }
+    public Point ScrolledPosition { get { return new Point(0, 0); } }
+    public Size Size { get { return new Size(this.Window.Width, this.Window.Height); } }
+    public Viewport Viewport { get { return this.Window.Viewport; } }
+    public List<Widget> Widgets { get; protected set; } = new List<Widget>();
+    public Color BackgroundColor { get { return this.Window.BackgroundColor; } }
+    public Widget SelectedWidget { get; protected set; }
+    public ScrollBar HScrollBar { get { return null; } set { throw new MethodNotSupportedException(this); } }
+    public ScrollBar VScrollBar { get { return null; } set { throw new MethodNotSupportedException(this); } }
+    public List<Shortcut> Shortcuts { get; protected set; } = new List<Shortcut>();
+    public int WindowLayer { get { return 0; } set { throw new MethodNotSupportedException(this); } }
+    public List<Timer> Timers = new List<Timer>();
+    public Container Container;
+
+    private List<MouseInputManager> IMs = new List<MouseInputManager>();
+
+    public IContainer Parent { get { throw new MethodNotSupportedException(this); } }
+
+    public UIManager(UIWindow Window)
     {
-        public UIWindow Window { get; protected set; }
-        public Point AdjustedPosition { get { return new Point(0, 0); } set { throw new MethodNotSupportedException(this); } }
-        public Point Position { get { return new Point(0, 0); } }
-        public int ScrolledX { get { return 0; } set { throw new MethodNotSupportedException(this); } }
-        public int ScrolledY { get { return 0; } set { throw new MethodNotSupportedException(this); } }
-        public int ZIndex { get { return 0; } }
-        public Point ScrolledPosition { get { return new Point(0, 0); } }
-        public Size Size { get { return new Size(this.Window.Width, this.Window.Height); } }
-        public Viewport Viewport { get { return this.Window.Viewport; } }
-        public List<Widget> Widgets { get; protected set; } = new List<Widget>();
-        public Color BackgroundColor { get { return this.Window.BackgroundColor; } }
-        public Widget SelectedWidget { get; protected set; }
-        public ScrollBar HScrollBar { get { return null; } set { throw new MethodNotSupportedException(this); } }
-        public ScrollBar VScrollBar { get { return null; } set { throw new MethodNotSupportedException(this); } }
-        public List<Shortcut> Shortcuts { get; protected set; } = new List<Shortcut>();
-        public int WindowLayer { get { return 0; } set { throw new MethodNotSupportedException(this); } }
-        public List<Timer> Timers = new List<Timer>();
-        public Container Container;
+        this.Window = Window;
+        this.Window.SetActiveWidget(this);
+    }
 
-        private List<MouseInputManager> IMs = new List<MouseInputManager>();
+    public void Add(Widget w)
+    {
+        this.Widgets.Add(w);
+    }
 
-        public IContainer Parent { get { throw new MethodNotSupportedException(this); } }
-
-        public UIManager(UIWindow Window)
+    public Widget Remove(Widget w)
+    {
+        for (int i = 0; i < this.Widgets.Count; i++)
         {
-            this.Window = Window;
-            this.Window.SetActiveWidget(this);
-        }
-
-        public void Add(Widget w)
-        {
-            this.Widgets.Add(w);
-        }
-
-        public Widget Remove(Widget w)
-        {
-            for (int i = 0; i < this.Widgets.Count; i++)
+            if (this.Widgets[i] == w)
             {
-                if (this.Widgets[i] == w)
-                {
-                    this.Widgets.RemoveAt(i);
-                    return w;
-                }
-            }
-            return null;
-        }
-
-        public void AddInput(MouseInputManager input)
-        {
-            IMs.Add(input);
-        }
-
-        public void RemoveInput(MouseInputManager input)
-        {
-            IMs.Remove(input);
-        }
-
-        public void MouseDown(MouseEventArgs e)
-        {
-            bool DoMoveEvent = false;
-            for (int i = 0; i < IMs.Count; i++)
-            {
-                if (IMs[i].Widget.Disposed)
-                {
-                    IMs.RemoveAt(i);
-                    i--;
-                    continue;
-                }
-                IMs[i].MouseDown(e);
-                if (e.Handled)
-                {
-                    DoMoveEvent = true;
-                    break;
-                }
-            }
-            if (DoMoveEvent)
-            {
-                e.Handled = false;
-                MouseMoving(e);
+                this.Widgets.RemoveAt(i);
+                return w;
             }
         }
+        return null;
+    }
 
-        public void MousePress(MouseEventArgs e)
+    public void AddInput(MouseInputManager input)
+    {
+        IMs.Add(input);
+    }
+
+    public void RemoveInput(MouseInputManager input)
+    {
+        IMs.Remove(input);
+    }
+
+    public void MouseDown(MouseEventArgs e)
+    {
+        bool DoMoveEvent = false;
+        for (int i = 0; i < IMs.Count; i++)
         {
-            for (int i = 0; i < IMs.Count; i++)
+            if (IMs[i].Widget.Disposed)
             {
-                if (IMs[i].Widget.Disposed)
-                {
-                    IMs.RemoveAt(i);
-                    i--;
-                    continue;
-                }
-                IMs[i].MousePress(e);
-                if (e.Handled) break;
+                IMs.RemoveAt(i);
+                i--;
+                continue;
+            }
+            IMs[i].MouseDown(e);
+            if (e.Handled)
+            {
+                DoMoveEvent = true;
+                break;
             }
         }
-
-        public void MouseUp(MouseEventArgs e)
+        if (DoMoveEvent)
         {
-            for (int i = 0; i < IMs.Count; i++)
+            e.Handled = false;
+            MouseMoving(e);
+        }
+    }
+
+    public void MousePress(MouseEventArgs e)
+    {
+        for (int i = 0; i < IMs.Count; i++)
+        {
+            if (IMs[i].Widget.Disposed)
             {
-                if (IMs[i].Widget.Disposed)
-                {
-                    IMs.RemoveAt(i);
-                    i--;
-                    continue;
-                }
-                IMs[i].MouseUp(e);
-                if (e.Handled) break;
+                IMs.RemoveAt(i);
+                i--;
+                continue;
             }
+            IMs[i].MousePress(e);
+            if (e.Handled) break;
         }
+    }
 
-        public void MouseMoving(MouseEventArgs e)
+    public void MouseUp(MouseEventArgs e)
+    {
+        for (int i = 0; i < IMs.Count; i++)
         {
-            for (int i = 0; i < IMs.Count; i++)
+            if (IMs[i].Widget.Disposed)
             {
-                if (IMs[i].Widget.Disposed)
-                {
-                    IMs.RemoveAt(i);
-                    i--;
-                    continue;
-                }
-                IMs[i].MouseMoving(e);
-                if (e.Handled) break;
+                IMs.RemoveAt(i);
+                i--;
+                continue;
             }
+            IMs[i].MouseUp(e);
+            if (e.Handled) break;
         }
+    }
 
-        public void MouseWheel(MouseEventArgs e)
+    public void MouseMoving(MouseEventArgs e)
+    {
+        for (int i = 0; i < IMs.Count; i++)
         {
-            for (int i = 0; i < IMs.Count; i++)
+            if (IMs[i].Widget.Disposed)
             {
-                if (IMs[i].Widget.Disposed)
-                {
-                    IMs.RemoveAt(i);
-                    i--;
-                    continue;
-                }
-                IMs[i].MouseWheel(e);
-                if (e.Handled) break;
+                IMs.RemoveAt(i);
+                i--;
+                continue;
             }
+            IMs[i].MouseMoving(e);
+            if (e.Handled) break;
         }
+    }
 
-        public void SizeChanged(BaseEventArgs e)
+    public void MouseWheel(MouseEventArgs e)
+    {
+        for (int i = 0; i < IMs.Count; i++)
         {
-            this.Viewport.Width = Size.Width;
-            this.Viewport.Height = Size.Height;
-            this.Widgets.ForEach(w =>
+            if (IMs[i].Widget.Disposed)
             {
-                w.SetSize(this.Size);
-                w.OnParentSizeChanged(new BaseEventArgs());
-                w.Redraw();
-            });
+                IMs.RemoveAt(i);
+                i--;
+                continue;
+            }
+            IMs[i].MouseWheel(e);
+            if (e.Handled) break;
         }
+    }
 
-        public void Update()
+    public void SizeChanged(BaseEventArgs e)
+    {
+        this.Viewport.Width = Size.Width;
+        this.Viewport.Height = Size.Height;
+        this.Widgets.ForEach(w =>
         {
-            foreach (Shortcut s in this.Shortcuts)
+            w.SetSize(this.Size);
+            w.OnParentSizeChanged(new BaseEventArgs());
+            w.Redraw();
+        });
+    }
+
+    public void Update()
+    {
+        foreach (Shortcut s in this.Shortcuts)
+        {
+            if (!s.GlobalShortcut) continue; // Handled by the Widget it's bound to
+
+            if (s.Widget != null && (s.Widget.WindowLayer < Window.ActiveWidget.WindowLayer || !s.Widget.IsVisible() || s.Widget.Disposed)) continue;
+
+            Key k = s.Key;
+            bool Valid = false;
+            if (Input.Press((odl.SDL2.SDL.SDL_Keycode)k.MainKey))
             {
-                if (!s.GlobalShortcut) continue; // Handled by the Widget it's bound to
-
-                if (s.Widget != null && (s.Widget.WindowLayer < Window.ActiveWidget.WindowLayer || !s.Widget.IsVisible() || s.Widget.Disposed)) continue;
-
-                Key k = s.Key;
-                bool Valid = false;
-                if (Input.Press((odl.SDL2.SDL.SDL_Keycode) k.MainKey))
+                if (TimerPassed($"key_{s.Key.ID}"))
                 {
-                    if (TimerPassed($"key_{s.Key.ID}"))
+                    ResetTimer($"key_{s.Key.ID}");
+                    Valid = true;
+                }
+                else if (TimerPassed($"key_{s.Key.ID}_initial"))
+                {
+                    SetTimer($"key_{s.Key.ID}", 50);
+                    DestroyTimer($"key_{s.Key.ID}_initial");
+                    Valid = true;
+                }
+                else if (!TimerExists($"key_{s.Key.ID}") && !TimerExists($"key_{s.Key.ID}_initial"))
+                {
+                    SetTimer($"key_{s.Key.ID}_initial", 300);
+                    Valid = true;
+                }
+            }
+            else
+            {
+                if (TimerExists($"key_{s.Key.ID}")) DestroyTimer($"key_{s.Key.ID}");
+                if (TimerExists($"key_{s.Key.ID}_initial")) DestroyTimer($"key_{s.Key.ID}_initial");
+            }
+            if (!Valid) continue;
+
+            // Modifiers
+            foreach (Keycode mod in k.Modifiers)
+            {
+                bool onefound = false;
+                List<odl.SDL2.SDL.SDL_Keycode> codes = new List<odl.SDL2.SDL.SDL_Keycode>();
+                if (mod == Keycode.CTRL) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LCTRL); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RCTRL); }
+                else if (mod == Keycode.SHIFT) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LSHIFT); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RSHIFT); }
+                else if (mod == Keycode.ALT) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LALT); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RALT); }
+                else codes.Add((odl.SDL2.SDL.SDL_Keycode)mod);
+
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (Input.Press(codes[i]))
                     {
-                        ResetTimer($"key_{s.Key.ID}");
-                        Valid = true;
-                    }
-                    else if (TimerPassed($"key_{s.Key.ID}_initial"))
-                    {
-                        SetTimer($"key_{s.Key.ID}", 50);
-                        DestroyTimer($"key_{s.Key.ID}_initial");
-                        Valid = true;
-                    }
-                    else if (!TimerExists($"key_{s.Key.ID}") && !TimerExists($"key_{s.Key.ID}_initial"))
-                    {
-                        SetTimer($"key_{s.Key.ID}_initial", 300);
-                        Valid = true;
-                    }
-                }
-                else
-                {
-                    if (TimerExists($"key_{s.Key.ID}")) DestroyTimer($"key_{s.Key.ID}");
-                    if (TimerExists($"key_{s.Key.ID}_initial")) DestroyTimer($"key_{s.Key.ID}_initial");
-                }
-                if (!Valid) continue;
-
-                // Modifiers
-                foreach (Keycode mod in k.Modifiers)
-                {
-                    bool onefound = false;
-                    List<odl.SDL2.SDL.SDL_Keycode> codes = new List<odl.SDL2.SDL.SDL_Keycode>();
-                    if (mod == Keycode.CTRL) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LCTRL); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RCTRL); }
-                    else if (mod == Keycode.SHIFT) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LSHIFT); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RSHIFT); }
-                    else if (mod == Keycode.ALT) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LALT); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RALT); }
-                    else codes.Add((odl.SDL2.SDL.SDL_Keycode) mod);
-
-                    for (int i = 0; i < codes.Count; i++)
-                    {
-                        if (Input.Press(codes[i]))
-                        {
-                            onefound = true;
-                            break;
-                        }
-                    }
-
-                    if (!onefound)
-                    {
-                        Valid = false;
+                        onefound = true;
                         break;
                     }
                 }
 
-                if (!Valid) continue;
-
-                s.Event(new BaseEventArgs());
-            }
-
-            for (int i = 0; i < this.Widgets.Count; i++)
-            {
-                if (this.Widgets[i].Disposed)
+                if (!onefound)
                 {
-                    this.Widgets.RemoveAt(i);
-                    i--;
-                    continue;
+                    Valid = false;
+                    break;
                 }
-                this.Widgets[i].Update();
             }
+
+            if (!Valid) continue;
+
+            s.Event(new BaseEventArgs());
         }
 
-        /// <summary>
-        /// Sets a timer.
-        /// </summary>
-        /// <param name="identifier">Unique string identifier.</param>
-        /// <param name="milliseconds">Number of milliseconds to run the timer for.</param>
-        public void SetTimer(string identifier, long milliseconds)
+        for (int i = 0; i < this.Widgets.Count; i++)
         {
-            Timers.Add(new Timer(identifier, DateTime.Now.Ticks, 10000 * milliseconds));
-        }
-
-        /// <summary>
-        /// Returns whether or not the specified timer's time has elapsed.
-        /// </summary>
-        public bool TimerPassed(string identifier)
-        {
-            Timer t = Timers.Find(timer => timer.Identifier == identifier);
-            if (t == null) return false;
-            return DateTime.Now.Ticks >= t.StartTime + t.Timespan;
-        }
-
-        /// <summary>
-        /// Returns whether or not the specified timer exists.
-        /// </summary>
-        public bool TimerExists(string identifier)
-        {
-            return Timers.Exists(t => t.Identifier == identifier);
-        }
-
-        /// <summary>
-        /// Destroys the specified timer object.
-        /// </summary>
-        public void DestroyTimer(string identifier)
-        {
-            Timer t = Timers.Find(timer => timer.Identifier == identifier);
-            if (t == null) throw new Exception("No timer by the identifier of '" + identifier + "' was found.");
-            Timers.Remove(t);
-        }
-
-        /// <summary>
-        /// Resets the specified timer with the former timespan.
-        /// </summary>
-        public void ResetTimer(string identifier)
-        {
-            Timer t = Timers.Find(timer => timer.Identifier == identifier);
-            if (t == null) throw new Exception("No timer by the identifier of '" + identifier + "' was found.");
-            t.StartTime = DateTime.Now.Ticks;
-        }
-
-        public void SetSelectedWidget(Widget w)
-        {
-            if (this.SelectedWidget == w) return;
-            if (this.SelectedWidget != null && !this.SelectedWidget.Disposed)
+            if (this.Widgets[i].Disposed)
             {
-                this.SelectedWidget.SelectedWidget = false;
-                Widget selbefore = this.SelectedWidget;
-                this.SelectedWidget.OnWidgetDeselected(new BaseEventArgs());
-                if (!selbefore.Disposed) selbefore.Redraw();
-                // Possible if OnWidgetDeselected itself called SetSelectedWidget on a different widget.
-                // In that case we should skip the setting-bit below, as it would
-                // set the selected widget to null AFTER the previous SetSelectedWidget call.
-                if (selbefore != this.SelectedWidget)
-                    return;
+                this.Widgets.RemoveAt(i);
+                i--;
+                continue;
             }
-            this.SelectedWidget = w;
-            if (w != null)
-            {
-                this.SelectedWidget.SelectedWidget = true;
-                this.SelectedWidget.Redraw();
-            }
+            this.Widgets[i].Update();
         }
+    }
 
-        public void TextInput(TextEventArgs e)
-        {
-            this.SelectedWidget?.OnTextInput(e);
-        }
+    /// <summary>
+    /// Sets a timer.
+    /// </summary>
+    /// <param name="identifier">Unique string identifier.</param>
+    /// <param name="milliseconds">Number of milliseconds to run the timer for.</param>
+    public void SetTimer(string identifier, long milliseconds)
+    {
+        Timers.Add(new Timer(identifier, DateTime.Now.Ticks, 10000 * milliseconds));
+    }
 
-        public void RegisterShortcut(Shortcut s)
-        {
-            this.Shortcuts.Add(s);
-        }
+    /// <summary>
+    /// Returns whether or not the specified timer's time has elapsed.
+    /// </summary>
+    public bool TimerPassed(string identifier)
+    {
+        Timer t = Timers.Find(timer => timer.Identifier == identifier);
+        if (t == null) return false;
+        return DateTime.Now.Ticks >= t.StartTime + t.Timespan;
+    }
 
-        public void DeregisterShortcut(Shortcut s)
-        {
-            this.Shortcuts.Remove(s);
-            if (TimerExists($"key_{s.Key.ID}")) DestroyTimer($"key_{s.Key.ID}");
-            if (TimerExists($"key_{s.Key.ID}_initial")) DestroyTimer($"key_{s.Key.ID}_initial");
-        }
+    /// <summary>
+    /// Returns whether or not the specified timer exists.
+    /// </summary>
+    public bool TimerExists(string identifier)
+    {
+        return Timers.Exists(t => t.Identifier == identifier);
+    }
 
-        public void SetBackgroundColor(Color c)
+    /// <summary>
+    /// Destroys the specified timer object.
+    /// </summary>
+    public void DestroyTimer(string identifier)
+    {
+        Timer t = Timers.Find(timer => timer.Identifier == identifier);
+        if (t == null) throw new Exception("No timer by the identifier of '" + identifier + "' was found.");
+        Timers.Remove(t);
+    }
+
+    /// <summary>
+    /// Resets the specified timer with the former timespan.
+    /// </summary>
+    public void ResetTimer(string identifier)
+    {
+        Timer t = Timers.Find(timer => timer.Identifier == identifier);
+        if (t == null) throw new Exception("No timer by the identifier of '" + identifier + "' was found.");
+        t.StartTime = DateTime.Now.Ticks;
+    }
+
+    public void SetSelectedWidget(Widget w)
+    {
+        if (this.SelectedWidget == w) return;
+        if (this.SelectedWidget != null && !this.SelectedWidget.Disposed)
         {
-            Window.SetBackgroundColor(c);
+            this.SelectedWidget.SelectedWidget = false;
+            Widget selbefore = this.SelectedWidget;
+            this.SelectedWidget.OnWidgetDeselected(new BaseEventArgs());
+            if (!selbefore.Disposed) selbefore.Redraw();
+            // Possible if OnWidgetDeselected itself called SetSelectedWidget on a different widget.
+            // In that case we should skip the setting-bit below, as it would
+            // set the selected widget to null AFTER the previous SetSelectedWidget call.
+            if (selbefore != this.SelectedWidget)
+                return;
         }
-        public void SetBackgroundColor(byte r, byte g, byte b, byte a = 255)
+        this.SelectedWidget = w;
+        if (w != null)
         {
-            Window.SetBackgroundColor(new Color(r, g, b, a));
+            this.SelectedWidget.SelectedWidget = true;
+            this.SelectedWidget.Redraw();
         }
+    }
+
+    public void TextInput(TextEventArgs e)
+    {
+        this.SelectedWidget?.OnTextInput(e);
+    }
+
+    public void RegisterShortcut(Shortcut s)
+    {
+        this.Shortcuts.Add(s);
+    }
+
+    public void DeregisterShortcut(Shortcut s)
+    {
+        this.Shortcuts.Remove(s);
+        if (TimerExists($"key_{s.Key.ID}")) DestroyTimer($"key_{s.Key.ID}");
+        if (TimerExists($"key_{s.Key.ID}_initial")) DestroyTimer($"key_{s.Key.ID}_initial");
+    }
+
+    public void SetBackgroundColor(Color c)
+    {
+        Window.SetBackgroundColor(c);
+    }
+    public void SetBackgroundColor(byte r, byte g, byte b, byte a = 255)
+    {
+        Window.SetBackgroundColor(new Color(r, g, b, a));
     }
 }
