@@ -1052,7 +1052,13 @@ namespace amethyst
             for (int i = Widgets.Count - 1; i >= 0; i--) Widgets[i].Dispose();
             // Remove this widget from the parent's widget list.
             this.Window.UI.RemoveInput(WidgetIM);
-            this.Parent.Widgets.Remove(this);
+            if (!this.Parent.Widgets.Remove(this))
+            {
+                if (this.Parent.Widgets.Contains(this))
+                {
+                    throw new Exception("Failed to detach widget from parent.");
+                }
+            }
             // Set viewport and sprites to null to ensure no methods can use them anymore.
             this.Viewport = null;
             this.Sprites = null;
@@ -1205,9 +1211,16 @@ namespace amethyst
             // Update child widgets
             for (int i = 0; i < this.Widgets.Count; i++)
             {
+                if (this.Widgets[i].Disposed)
+                {
+                    this.Widgets.RemoveAt(i);
+                    i--;
+                    continue;
+                }
                 this.Widgets[i].Update();
             }
         }
+
         public virtual void MouseDown(MouseEventArgs e)
         {
             if (this.Disposed) throw new Exception("Got an extra WidgetIM.OnMouseDown += MouseDown call somewhere.");

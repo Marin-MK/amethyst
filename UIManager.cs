@@ -229,6 +229,12 @@ namespace amethyst
 
             for (int i = 0; i < this.Widgets.Count; i++)
             {
+                if (this.Widgets[i].Disposed)
+                {
+                    this.Widgets.RemoveAt(i);
+                    i--;
+                    continue;
+                }
                 this.Widgets[i].Update();
             }
         }
