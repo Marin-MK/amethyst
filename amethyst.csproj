@@ -1,12 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Platforms>x64</Platforms>
     <ApplicationIcon />
     <OutputType>Library</OutputType>
     <StartupObject />
     <Configurations>Debug</Configurations>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <Authors>Marijn Herrebout</Authors>
+    <Copyright>Marijn Herrebout</Copyright>
+    <RepositoryUrl>https://github.com/Marin-MK/amethyst</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>True</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
