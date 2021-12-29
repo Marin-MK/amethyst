@@ -10,6 +10,7 @@ public class DropdownBox : TextBox
     public int SelectedIndex { get; protected set; } = 0;
     public List<ListItem> Items { get; protected set; } = new List<ListItem>();
     public bool Enabled { get; protected set; } = true;
+    public int DropdownWidth = 31;
 
     public BaseEvent OnDropDownClicked;
     public BaseEvent OnSelectionChanged;
@@ -22,7 +23,7 @@ public class DropdownBox : TextBox
     public override void SizeChanged(BaseEventArgs e)
     {
         base.SizeChanged(e);
-        TextArea.SetSize(this.Size.Width - 21, this.Size.Height - 3);
+        TextArea.SetSize(this.Size.Width - DropdownWidth, this.Size.Height - 3);
     }
 
     public void SetEnabled(bool Enabled)
@@ -66,7 +67,7 @@ public class DropdownBox : TextBox
         }
         int rx = e.X - Viewport.X;
         int ry = e.Y - Viewport.Y;
-        if (rx >= Size.Width - 18 && rx < Size.Width - 1 &&
+        if (rx >= Size.Width - DropdownWidth && rx < Size.Width - 1 &&
             ry >= 1 && ry < Size.Height - 1 && this.Enabled)
         {
             this.OnDropDownClicked?.Invoke(new BaseEventArgs());
