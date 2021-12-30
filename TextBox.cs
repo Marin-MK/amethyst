@@ -80,4 +80,14 @@ public class TextBox : ActivatableWidget
     {
         this.SetText((string)Value);
     }
+
+    public TextAreaState GetState()
+    {
+        return TextArea.GetState();
+    }
+
+    public void SetState(TextAreaState State)
+    {
+        TextArea.SetState(State);
+    }
 }

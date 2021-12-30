@@ -34,6 +34,9 @@ public class TextArea : Widget
 
     public BaseEvent OnTextChanged;
 
+    List<TextAreaState> UndoList = new List<TextAreaState>();
+    List<TextAreaState> RedoList = new List<TextAreaState>();
+
     public TextArea(IContainer Parent) : base(Parent)
     {
         Sprites["text"] = new Sprite(this.Viewport);
@@ -49,6 +52,12 @@ public class TextArea : Widget
         {
             this.Window.UI.SetSelectedWidget(null);
             Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
+        };
+        OnTextChanged += delegate (BaseEventArgs e)
+        {
+            RedoList.Clear();
+            UndoList.Add(GetState());
+            Console.WriteLine($"Added state: \"{this.Text}\"");
         };
     }
 
@@ -98,6 +107,11 @@ public class TextArea : Widget
             RX = 0;
             CaretIndex = 0;
             DrawText();
+            int width = Sprites["text"].Bitmap.Width;
+            int inviswidth = width - Size.Width;
+            if (inviswidth > 0) X = inviswidth;
+            RX = inviswidth > 0 ? Size.Width - 1 : width;
+            CaretIndex = this.Text.Length;
             this.OnTextChanged?.Invoke(new BaseEventArgs());
         }
     }
@@ -325,6 +339,11 @@ public class TextArea : Widget
             if (TimerExists("right")) DestroyTimer("right");
             if (TimerExists("right_initial")) DestroyTimer("right_initial");
             if (TimerExists("paste")) DestroyTimer("paste");
+            if (TimerExists("paste_initial")) DestroyTimer("paste_initial");
+            if (TimerExists("undo")) DestroyTimer("undo");
+            if (TimerExists("undo_initial")) DestroyTimer("undo_initial");
+            if (TimerExists("redo")) DestroyTimer("redo");
+            if (TimerExists("redo_initial")) DestroyTimer("redo_initial");
             if (EnteringText) WidgetDeselected(new BaseEventArgs());
             if (Sprites["caret"].Visible) Sprites["caret"].Visible = false;
             return;
@@ -460,6 +479,14 @@ public class TextArea : Widget
             {
                 PasteText();
             }
+            if (Input.Trigger(SDL_Keycode.SDLK_z) || TimerPassed("undo"))
+            {
+                UndoText();
+            }
+            if (!Input.Press(SDL_Keycode.SDLK_z) && (Input.Trigger(SDL_Keycode.SDLK_y) || TimerPassed("redo")))
+            {
+                RedoText();
+            }
         }
 
         // Timers for repeated input
@@ -497,22 +524,66 @@ public class TextArea : Widget
             if (TimerExists("right")) DestroyTimer("right");
             if (TimerExists("right_initial")) DestroyTimer("right_initial");
         }
-        if ((Input.Press(SDL_Keycode.SDLK_LCTRL) || Input.Press(SDL_Keycode.SDLK_RCTRL)) && Input.Press(SDL_Keycode.SDLK_v))
+        if (Input.Press(SDL_Keycode.SDLK_LCTRL) || Input.Press(SDL_Keycode.SDLK_RCTRL))
         {
-            if (!TimerExists("paste_initial") && !TimerExists("paste"))
+            if (Input.Press(SDL_Keycode.SDLK_v))
             {
-                SetTimer("paste_initial", 300);
+                if (!TimerExists("paste_initial") && !TimerExists("paste"))
+                {
+                    SetTimer("paste_initial", 300);
+                }
+                else if (TimerPassed("paste_initial"))
+                {
+                    DestroyTimer("paste_initial");
+                    SetTimer("paste", 50);
+                }
             }
-            else if (TimerPassed("paste_initial"))
+            else
             {
-                DestroyTimer("paste_initial");
-                SetTimer("paste", 50);
+                if (TimerExists("paste")) DestroyTimer("paste");
+                if (TimerExists("paste_initial")) DestroyTimer("paste_initial");
+            }
+            if (Input.Press(SDL_Keycode.SDLK_z))
+            {
+                if (!TimerExists("undo_initial") && !TimerExists("undo"))
+                {
+                    SetTimer("undo_initial", 300);
+                }
+                else if (TimerPassed("undo_initial"))
+                {
+                    DestroyTimer("undo_initial");
+                    SetTimer("undo", 50);
+                }
+            }
+            else
+            {
+                if (TimerExists("undo")) DestroyTimer("undo");
+                if (TimerExists("undo_initial")) DestroyTimer("undo_initial");
+            }
+            if (Input.Press(SDL_Keycode.SDLK_y) && !Input.Press(SDL_Keycode.SDLK_z))
+            {
+                if (!TimerExists("redo_initial") && !TimerExists("redo"))
+                {
+                    SetTimer("redo_initial", 300);
+                }
+                else if (TimerPassed("redo_initial"))
+                {
+                    DestroyTimer("redo_initial");
+                    SetTimer("redo", 50);
+                }
+            }
+            else
+            {
+                if (TimerExists("redo")) DestroyTimer("redo");
+                if (TimerExists("redo_initial")) DestroyTimer("redo_initial");
             }
         }
         else
         {
-            if (TimerExists("paste")) DestroyTimer("paste");
-            if (TimerExists("paste_initial")) DestroyTimer("paste_initial");
+            if (TimerExists("undo")) DestroyTimer("undo");
+            if (TimerExists("undo_initial")) DestroyTimer("undo_initial");
+            if (TimerExists("redo")) DestroyTimer("redo");
+            if (TimerExists("redo_initial")) DestroyTimer("redo_initial");
         }
 
         if (TimerPassed("double")) DestroyTimer("double");
@@ -951,5 +1022,82 @@ public class TextArea : Widget
         {
             Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
         }
+    }
+
+    void UndoText()
+    {
+        if (this.ReadOnly) return;
+        if (TimerPassed("undo")) ResetTimer("undo");
+        if (UndoList.Count > 1)
+        {
+            TextAreaState NewState = UndoList[UndoList.Count - 2];
+            SetState(NewState);
+            TextAreaState OldState = UndoList[UndoList.Count - 1];
+            UndoList.RemoveAt(UndoList.Count - 1);
+            RedoList.Add(OldState);
+        }
+    }
+
+    void RedoText()
+    {
+        if (this.ReadOnly) return;
+        if (TimerPassed("redo")) ResetTimer("redo");
+        if (RedoList.Count > 0)
+        {
+            TextAreaState NewState = RedoList[RedoList.Count - 1];
+            SetState(NewState);
+            RedoList.RemoveAt(RedoList.Count - 1);
+            UndoList.Add(NewState);
+        }
+    }
+
+    public TextAreaState GetState()
+    {
+        return new TextAreaState(Text, X, RX, Width, CaretIndex,
+            SelectionStartIndex, SelectionEndIndex, SelectionStartX);
+    }
+
+    public void SetState(TextAreaState State)
+    {
+        this.Text = State.Text;
+        this.X = State.X;
+        this.RX = State.RX;
+        this.Width = State.Width;
+        this.CaretIndex = State.CaretIndex;
+        this.SelectionStartIndex = State.SelectionStartIndex;
+        this.SelectionEndIndex = State.SelectionEndIndex;
+        this.SelectionStartX = State.SelectionStartX;
+        DrawText();
+        RepositionSprites();
+    }
+}
+
+public class TextAreaState
+{
+    public string Text;
+    public int X;
+    public int RX;
+    public int Width;
+    public int CaretIndex;
+    public int SelectionStartIndex;
+    public int SelectionEndIndex;
+    public int SelectionStartX;
+
+    public TextAreaState(string Text, int X, int RX, int Width, int CaretIndex,
+        int SelectionStartIndex, int SelectionEndIndex, int SelectionStartX)
+    {
+        this.Text = Text;
+        this.X = X;
+        this.RX = RX;
+        this.Width = Width;
+        this.CaretIndex = CaretIndex;
+        this.SelectionStartIndex = SelectionStartIndex;
+        this.SelectionEndIndex = SelectionEndIndex;
+        this.SelectionStartX = SelectionStartX;
+    }
+
+    public override string ToString()
+    {
+        return this.Text;
     }
 }
