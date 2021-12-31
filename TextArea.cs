@@ -32,10 +32,11 @@ public class TextArea : Widget
 
     public int SelectionStartX = -1;
 
-    public BaseEvent OnTextChanged;
+    public TextEvent OnTextChanged;
 
     List<TextAreaState> UndoList = new List<TextAreaState>();
     List<TextAreaState> RedoList = new List<TextAreaState>();
+    bool UndoingOrRedoing = false;
 
     public TextArea(IContainer Parent) : base(Parent)
     {
@@ -53,11 +54,13 @@ public class TextArea : Widget
             this.Window.UI.SetSelectedWidget(null);
             Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
         };
-        OnTextChanged += delegate (BaseEventArgs e)
+        OnTextChanged += delegate (TextEventArgs e)
         {
-            RedoList.Clear();
-            UndoList.Add(GetState());
-            Console.WriteLine($"Added state: \"{this.Text}\"");
+            if (!UndoingOrRedoing)
+            {
+                RedoList.Clear();
+                UndoList.Add(GetState());
+            }
         };
     }
 
@@ -102,6 +105,7 @@ public class TextArea : Widget
     {
         if (this.Text != Text)
         {
+            string OldText = this.Text;
             this.Text = Text ?? "";
             X = 0;
             RX = 0;
@@ -112,7 +116,7 @@ public class TextArea : Widget
             if (inviswidth > 0) X = inviswidth;
             RX = inviswidth > 0 ? Size.Width - 1 : width;
             CaretIndex = this.Text.Length;
-            this.OnTextChanged?.Invoke(new BaseEventArgs());
+            this.OnTextChanged?.Invoke(new TextEventArgs(this.Text, OldText));
         }
     }
 
@@ -242,7 +246,7 @@ public class TextArea : Widget
         }
         if (this.Text != text)
         {
-            this.OnTextChanged?.Invoke(new BaseEventArgs());
+            this.OnTextChanged?.Invoke(new TextEventArgs(this.Text, text));
         }
         DrawText();
     }
@@ -1030,11 +1034,15 @@ public class TextArea : Widget
         if (TimerPassed("undo")) ResetTimer("undo");
         if (UndoList.Count > 1)
         {
+            string OldText = this.Text;
             TextAreaState NewState = UndoList[UndoList.Count - 2];
             SetState(NewState);
             TextAreaState OldState = UndoList[UndoList.Count - 1];
             UndoList.RemoveAt(UndoList.Count - 1);
             RedoList.Add(OldState);
+            UndoingOrRedoing = true;
+            OnTextChanged?.Invoke(new TextEventArgs(this.Text, OldText));
+            UndoingOrRedoing = false;
         }
     }
 
@@ -1044,10 +1052,14 @@ public class TextArea : Widget
         if (TimerPassed("redo")) ResetTimer("redo");
         if (RedoList.Count > 0)
         {
+            string OldText = this.Text;
             TextAreaState NewState = RedoList[RedoList.Count - 1];
             SetState(NewState);
             RedoList.RemoveAt(RedoList.Count - 1);
             UndoList.Add(NewState);
+            UndoingOrRedoing = true;
+            OnTextChanged?.Invoke(new TextEventArgs(this.Text, OldText));
+            UndoingOrRedoing = false;
         }
     }
 

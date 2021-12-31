@@ -14,7 +14,7 @@ public class TextBox : ActivatableWidget
 
     public TextArea TextArea;
 
-    public BaseEvent OnTextChanged { get { return TextArea.OnTextChanged; } set { TextArea.OnTextChanged = value; } }
+    public TextEvent OnTextChanged { get { return TextArea.OnTextChanged; } set { TextArea.OnTextChanged = value; } }
 
     public TextBox(IContainer Parent) : base(Parent)
     {
