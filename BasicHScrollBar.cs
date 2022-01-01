@@ -227,6 +227,7 @@ public abstract class BasicHScrollBar : ScrollBar
             // Return if not pressing shift (i.e. VScrollBar will scroll instead)
             if (!Input.Press(odl.SDL2.SDL.SDL_Keycode.SDLK_LSHIFT) && !Input.Press(odl.SDL2.SDL.SDL_Keycode.SDLK_RSHIFT)) return;
         }
+        if (LinkedWidget != null && !LinkedWidget.HAutoScroll) return;
         base.MouseWheel(e);
     }
 
