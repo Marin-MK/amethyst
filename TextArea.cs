@@ -111,7 +111,7 @@ public class TextArea : Widget
             RX = 0;
             CaretIndex = 0;
             DrawText();
-            int width = Sprites["text"].Bitmap.Width;
+            int width = Sprites["text"].Bitmap?.Width ?? 0;
             int inviswidth = width - Size.Width;
             if (inviswidth > 0) X = inviswidth;
             RX = inviswidth > 0 ? Size.Width - 1 : width;
@@ -804,6 +804,7 @@ public class TextArea : Widget
     {
         RepositionSprites();
         Sprites["text"].Bitmap?.Dispose();
+        Sprites["text"].Bitmap = null;
         if (string.IsNullOrEmpty(this.Text)) return;
         Size s = Font.TextSize(this.Text);
         if (s.Width < 1 || s.Height < 1) return;
