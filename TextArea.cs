@@ -888,9 +888,11 @@ public class TextArea : Widget
         {
             int startidx = SelectionStartIndex > SelectionEndIndex ? SelectionEndIndex : SelectionStartIndex;
             int endidx = SelectionStartIndex > SelectionEndIndex ? SelectionStartIndex : SelectionEndIndex;
+            string OldText = this.Text;
             string text = this.Text.Substring(startidx, endidx - startidx);
             Input.SetClipboard(text);
             DeleteSelection();
+            if (this.Text != OldText) OnTextChanged?.Invoke(new TextEventArgs(this.Text, OldText));
             DrawText();
         }
     }
@@ -917,8 +919,10 @@ public class TextArea : Widget
         if (this.ReadOnly) return;
         if (TimerPassed("paste")) ResetTimer("paste");
         string text = Input.GetClipboard();
+        string OldText = this.Text;
         if (SelectionStartIndex != -1 && SelectionStartIndex != SelectionEndIndex) DeleteSelection();
         InsertText(CaretIndex, text);
+        if (this.Text != OldText) OnTextChanged?.Invoke(new TextEventArgs(this.Text, OldText));
         DrawText();
     }
 
