@@ -11,12 +11,13 @@ public class OpenFileDialog
     odl.NativeLibrary tfd;
 
     internal delegate IntPtr OFDDelegate(string Title, string DefaultPath, int NumFilePatterns, string[] FilterPatterns, string SingleFilterDescription, int AllowMultiple);
+    internal delegate IntPtr SFDDelegate(string Title, string DefaultPath);
     internal OFDDelegate FUNC_OpenFileDialog;
+    internal SFDDelegate FUNC_SelectFolderDialog;
 
     public string Title;
     public string DefaultFolder;
     public FileFilter FileFilter;
-    public bool AllowMultiple;
 
     public OpenFileDialog()
     {
@@ -39,10 +40,10 @@ public class OpenFileDialog
                 throw new Exception("Failed to detect platform.");
             }
             FUNC_OpenFileDialog = tfd.GetFunction<OFDDelegate>("tinyfd_openFileDialog");
+            FUNC_SelectFolderDialog = tfd.GetFunction<SFDDelegate>("tinyfd_selectFolderDialog");
         }
         this.Title = "Open File";
         this.DefaultFolder = Directory.GetCurrentDirectory();
-        this.AllowMultiple = false;
     }
 
     public void SetTitle(string Title)
@@ -62,12 +63,7 @@ public class OpenFileDialog
         this.FileFilter = FileFilter;
     }
 
-    public void SetAllowMultiple(bool AllowMultiple)
-    {
-        this.AllowMultiple = AllowMultiple;
-    }
-
-    public object Show()
+    public string ChooseFile()
     {
         IntPtr ptr = FUNC_OpenFileDialog(
             this.Title,
@@ -75,7 +71,29 @@ public class OpenFileDialog
             this.FileFilter == null ? 0 : this.FileFilter.Extensions.Count,
             this.FileFilter.Extensions.Select(e => "*." + e).ToArray(),
             this.FileFilter.ToString(),
-            this.AllowMultiple ? 1 : 0
+            0
+        );
+        if (ptr != IntPtr.Zero)
+        {
+            string File = Marshal.PtrToStringAnsi(ptr);
+            if (!string.IsNullOrEmpty(File))
+            {
+                while (File.Contains('\\')) File = File.Replace('\\', '/');
+                return File;
+            }
+        }
+        return null;
+    }
+
+    public List<string> ChooseFiles()
+    {
+        IntPtr ptr = FUNC_OpenFileDialog(
+            this.Title,
+            this.DefaultFolder,
+            this.FileFilter == null ? 0 : this.FileFilter.Extensions.Count,
+            this.FileFilter.Extensions.Select(e => "*." + e).ToArray(),
+            this.FileFilter.ToString(),
+            1
         );
         if (ptr != IntPtr.Zero)
         {
@@ -85,7 +103,23 @@ public class OpenFileDialog
                 while (Files.Contains("\\")) Files = Files.Replace('\\', '/');
                 if (Files.Contains('|'))
                     return Files.Split('|').ToList();
-                else return Files;
+                else return new List<string>() { Files };
+            }
+        }
+        return null;
+    }
+
+
+    public string ChooseFolder()
+    {
+        IntPtr ptr = FUNC_SelectFolderDialog(this.Title, this.DefaultFolder);
+        if (ptr != IntPtr.Zero)
+        {
+            string Folder = Marshal.PtrToStringAnsi(ptr);
+            if (!string.IsNullOrEmpty(Folder))
+            {
+                while (Folder.Contains('\\')) Folder = Folder.Replace('\\', '/');
+                return Folder;
             }
         }
         return null;
