@@ -174,9 +174,9 @@ public class ContextMenu : Widget
     {
         if ((this.SelectedItem as MenuItem).LastClickable)
         {
+            this.Dispose();
             (SelectedItem as MenuItem).OnLeftClick?.Invoke(e);
             OnItemInvoked?.Invoke(new BaseEventArgs());
-            this.Dispose();
         }
     }
 
