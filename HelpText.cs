@@ -10,11 +10,12 @@ public class HelpText : Widget
 
     public HelpText(IContainer Parent) : base(Parent)
     {
-        Sprites["rect"] = new RectSprite(this.Viewport);
-        (Sprites["rect"] as RectSprite).SetOuterColor(55, 187, 255);
-        (Sprites["rect"] as RectSprite).SetInnerColor(48, 96, 148);
+        Sprites["shadow"] = new Sprite(this.Viewport);
+        Sprites["filler"] = new Sprite(this.Viewport, new SolidBitmap(1, 1, new Color(84, 80, 156)));
+        Sprites["filler"].X = 7;
+        Sprites["filler"].Y = 7;
         Sprites["text"] = new Sprite(this.Viewport);
-        Sprites["text"].X = Sprites["text"].Y = 7;
+        Sprites["text"].X = Sprites["text"].Y = 14;
     }
 
     public void SetText(string Text)
@@ -56,7 +57,7 @@ public class HelpText : Widget
         }
         if (Sprites["text"].Bitmap != null) Sprites["text"].Bitmap.Dispose();
         Sprites["text"].Bitmap = new Bitmap(w, h);
-        SetSize(w + 14, h + 14);
+        SetSize(w + 28, h + 20);
         Sprites["text"].Bitmap.Font = this.Font;
         Sprites["text"].Bitmap.Unlock();
         for (int i = 0; i < Lines.Count; i++)
@@ -69,6 +70,17 @@ public class HelpText : Widget
     public override void SizeChanged(BaseEventArgs e)
     {
         base.SizeChanged(e);
-        (Sprites["rect"] as RectSprite).SetSize(Size);
+        Sprites["shadow"].Bitmap?.Dispose();
+        Sprites["shadow"].Bitmap = new Bitmap(Size);
+        Sprites["shadow"].Bitmap.Unlock();
+        Sprites["shadow"].Bitmap.FillGradientRectOutside(
+            new Rect(Size),
+            new Rect(7, 7, Size.Width - 14, Size.Height - 14),
+            new Color(0, 0, 0, 200),
+            Color.ALPHA,
+            false
+        );
+        Sprites["shadow"].Bitmap.Lock();
+        (Sprites["filler"].Bitmap as SolidBitmap).SetSize(Size.Width - 14, Size.Height - 14);
     }
 }
