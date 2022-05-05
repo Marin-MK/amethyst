@@ -60,14 +60,14 @@ public class ActivatableWidget : Widget
                 OnPressed?.Invoke(new BaseEventArgs());
                 Pressing = false;
                 StartedPressingInside = false;
-                Redraw();
+                if (!Disposed) Redraw();
             }
             else
             {
                 Pressing = false;
                 StartedPressingInside = false;
                 Hovering = false;
-                Redraw();
+                if (!Disposed) Redraw();
             }
         }
     }

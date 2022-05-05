@@ -64,9 +64,12 @@ public class Button : ActivatableTextWidget
     public override void SizeChanged(BaseEventArgs e)
     {
         base.SizeChanged(e);
-        Size s = this.Font.TextSize(this.Text);
-        Sprites["text"].X = Size.Width / 2 - s.Width / 2;
-        Sprites["text"].Y = Size.Height / 2 - s.Height / 2 - 1;
+        if (!string.IsNullOrEmpty(this.Text) && this.Font != null)
+        {
+            Size s = this.Font.TextSize(this.Text);
+            Sprites["text"].X = Size.Width / 2 - s.Width / 2;
+            Sprites["text"].Y = Size.Height / 2 - s.Height / 2 - 1;
+        }
         Redraw();
     }
 }

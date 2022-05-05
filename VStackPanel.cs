@@ -27,13 +27,13 @@ public class VStackPanel : Widget, ILayout
         for (int i = 0; i < this.Widgets.Count; i++)
         {
             Widget w = this.Widgets[i];
-            y += w.Margin.Up;
-            int x = w.Margin.Left;
-            int width = this.Size.Width - x - w.Margin.Right;
+            y += w.Margins.Up;
+            int x = w.Margins.Left;
+            int width = this.Size.Width - x - w.Margins.Right;
             w.SetWidth(width);
             w.SetPosition(x, y);
             y += w.Size.Height;
-            y += w.Margin.Down;
+            y += w.Margins.Down;
         }
         SetHeight(y);
     }

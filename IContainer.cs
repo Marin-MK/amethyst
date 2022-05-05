@@ -18,6 +18,9 @@ public interface IContainer
     ScrollBar HScrollBar { get; }
     ScrollBar VScrollBar { get; }
 
+    int LeftCutOff { get; }
+    int TopCutOff { get; }
+
     IContainer Parent { get; }
     int WindowLayer { get; set; }
 

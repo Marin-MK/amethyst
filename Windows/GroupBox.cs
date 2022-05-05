@@ -4,6 +4,8 @@ namespace amethyst.Windows;
 
 public class GroupBox : TextWidget
 {
+    public int LineY = 6;
+
     public GroupBox(IContainer Parent) : base(Parent)
     {
         Sprites["box"] = new Sprite(this.Viewport);
@@ -33,9 +35,9 @@ public class GroupBox : TextWidget
         Sprites["box"].Bitmap?.Dispose();
         Sprites["box"].Bitmap = new Bitmap(Size);
         Sprites["box"].Bitmap.Unlock();
-        Sprites["box"].Bitmap.DrawRect(0, 6, Size.Width, Size.Height - 6, SystemColors.LightBorderColor);
+        Sprites["box"].Bitmap.DrawRect(0, LineY, Size.Width, Size.Height - LineY, SystemColors.LightBorderColor);
         Size s = this.Font.TextSize(this.Text);
-        Sprites["box"].Bitmap.DrawLine(7, 6, s.Width + 11, 6, Color.ALPHA);
+        Sprites["box"].Bitmap.DrawLine(7, LineY, s.Width + 11, LineY, Color.ALPHA);
         Sprites["box"].Bitmap.Lock();
     }
 

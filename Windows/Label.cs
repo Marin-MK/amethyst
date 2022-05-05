@@ -20,7 +20,7 @@ public class Label : TextWidget
             Sprites["text"].Bitmap = new Bitmap(s);
             Sprites["text"].Bitmap.Unlock();
             Sprites["text"].Bitmap.Font = this.Font;
-            Sprites["text"].Bitmap.DrawText(this.Text, this.TextColor);
+            Sprites["text"].Bitmap.DrawText(this.Text, this.TextColor, this.DrawOptions);
             Sprites["text"].Bitmap.Lock();
             Sprites["text"].X = Size.Width / 2 - s.Width / 2;
             Sprites["text"].Y = Size.Height / 2 - s.Height / 2 - 1;
@@ -49,13 +49,13 @@ public class MultilineLabel : TextWidget
         {
             List<string> Lines = FormatString(this.Font, Text, Size.Width);
             if (Sprites["text"].Bitmap != null) Sprites["text"].Bitmap.Dispose();
-            SetSize(Size.Width, (Font.Size + 4) * Lines.Count);
+            SetSize(Size.Width, (Font.Size + 6) * Lines.Count);
             Sprites["text"].Bitmap = new Bitmap(Size);
             Sprites["text"].Bitmap.Unlock();
             Sprites["text"].Bitmap.Font = this.Font;
             for (int i = 0; i < Lines.Count; i++)
             {
-                Sprites["text"].Bitmap.DrawText(Lines[i], 0, (Font.Size + 2) * i, this.TextColor);
+                Sprites["text"].Bitmap.DrawText(Lines[i], 0, (Font.Size + 2) * i, this.TextColor, this.DrawOptions);
             }
             Sprites["text"].Bitmap.Lock();
         }

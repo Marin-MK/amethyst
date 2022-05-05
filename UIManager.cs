@@ -22,6 +22,8 @@ public class UIManager : IContainer
     public ScrollBar VScrollBar { get { return null; } set { throw new MethodNotSupportedException(this); } }
     public List<Shortcut> Shortcuts { get; protected set; } = new List<Shortcut>();
     public int WindowLayer { get { return 0; } set { throw new MethodNotSupportedException(this); } }
+    public int LeftCutOff { get { return 0; } }
+    public int TopCutOff { get { return 0; } }
     public List<Timer> Timers = new List<Timer>();
     public Container Container;
 

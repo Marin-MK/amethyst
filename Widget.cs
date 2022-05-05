@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using odl;
 
 namespace amethyst;
@@ -132,6 +133,46 @@ public class Widget : IDisposable, IContainer
     /// </summary>
     public bool ConsiderInAutoScrollPositioning = true;
 
+    /// <summary>
+    /// The number of pixels the widget and all its parents have been clipped off on the left side.
+    /// </summary>
+    public int LeftCutOff { get; protected set; } = 0;
+
+    /// <summary>
+    /// The number of pixels the widget and all its parents have been clipped off on the top side.
+    /// </summary>
+    public int TopCutOff { get; protected set; } = 0;
+
+    /// <summary>
+    /// Whether the widget is docked horizontally to its parent.
+    /// </summary>
+    public bool HDocked { get; protected set; }
+
+    /// <summary>
+    /// Whether the widget is docked vertically to its parent.
+    /// </summary>
+    public bool VDocked { get; protected set; }
+
+    /// <summary>
+    /// Whether the docking will stick to the left side of the parent widget.
+    /// </summary>
+    public bool LeftDocked { get; protected set; } = true;
+
+    /// <summary>
+    /// Whether the docking will stick to the right side of the parent widget.
+    /// </summary>
+    public bool RightDocked { get; protected set; } = false;
+
+    /// <summary>
+    /// Whether the docking will stick to the top side of the parent widget.
+    /// </summary>
+    public bool TopDocked { get; protected set; } = true;
+
+    /// <summary>
+    /// Whether the docking will stick to the bottom side of the parent widget.
+    /// </summary>
+    public bool BottomDocked { get; protected set; } = false;
+
     private int _WindowLayer = 0;
     /// <summary>
     /// Which pseudo-window or layer this widget is on.
@@ -205,7 +246,7 @@ public class Widget : IDisposable, IContainer
     /// <summary>
     /// The margin to use for grids and stackpanels.
     /// </summary>
-    public Margin Margin { get; protected set; } = new Margin();
+    public Margins Margins { get; protected set; } = new Margins();
 
     /// <summary>
     /// Which grid row this widget starts in.
@@ -680,62 +721,196 @@ public class Widget : IDisposable, IContainer
     public void UpdateBounds()
     {
         AssertUndisposed();
-        foreach (ISprite s in this.Sprites.Values)
+        foreach (ISprite sprite in this.Sprites.Values)
         {
-            if (s is MultiSprite) foreach (Sprite ms in (s as MultiSprite).SpriteList.Values) ms.OX = ms.OY = 0;
-            else s.OX = s.OY = 0;
+            if (sprite is MultiSprite) foreach (Sprite s in ((MultiSprite) sprite).SpriteList.Values) s.OX = s.OY = 0;
+            else sprite.OX = sprite.OY = 0;
         }
 
-        int ScrolledX = this.Position.X - this.ScrolledPosition.X;
-        int ScrolledY = this.Position.Y - this.ScrolledPosition.Y;
-        if (!ConsiderInAutoScrollPositioning) ScrolledX = ScrolledY = 0;
+        int xoffset = ConsiderInAutoScrollPositioning ? Parent.ScrolledX : 0;
+        int yoffset = ConsiderInAutoScrollPositioning ? Parent.ScrolledY : 0;
 
-        this.Viewport.X = this.Position.X + Parent.Viewport.X - Parent.AdjustedPosition.X - ScrolledX;
-        this.Viewport.Y = this.Position.Y + Parent.Viewport.Y - Parent.AdjustedPosition.Y - ScrolledY;
+        this.Viewport.X = this.Parent.Viewport.X + this.Position.X + this.Margins.Left - this.Parent.LeftCutOff - xoffset;
+        this.Viewport.Y = this.Parent.Viewport.Y + this.Position.Y + this.Margins.Up - this.Parent.TopCutOff - yoffset;
         this.Viewport.Width = this.Size.Width;
         this.Viewport.Height = this.Size.Height;
-        int DiffX = 0;
-        int DiffY = 0;
-        /* Handles width manipulation */
-        if (this.Viewport.X + this.Size.Width > Parent.Viewport.X + Parent.Viewport.Width)
+
+        // Handles width exceeding parent viewport
+        if (this.Viewport.X + this.Size.Width > this.Parent.Viewport.X + this.Parent.Viewport.Width)
         {
-            int DiffWidth = this.Viewport.X + this.Size.Width - (Parent.Viewport.X + Parent.Viewport.Width);
-            this.Viewport.Width -= DiffWidth;
+            int Diff = this.Viewport.X + this.Size.Width - (this.Parent.Viewport.X + this.Parent.Viewport.Width);
+            this.Viewport.Width -= Diff;
         }
-        /* Handles X positioning */
-        if (this.Viewport.X < Parent.Viewport.X)
+        // Handles X being negative
+        if (this.Viewport.X < this.Parent.Viewport.X)
         {
-            DiffX = Parent.Viewport.X - this.Viewport.X;
-            foreach (ISprite s in this.Sprites.Values)
+            int Diff = this.Parent.Viewport.X - this.Viewport.X;
+            this.Viewport.X += Diff;
+            this.Viewport.Width -= Diff;
+            foreach (ISprite sprite in this.Sprites.Values)
             {
-                if (s is MultiSprite) foreach (Sprite ms in (s as MultiSprite).SpriteList.Values) ms.OX += DiffX / s.ZoomX;
-                else s.OX += DiffX / s.ZoomX;
+                if (sprite is MultiSprite) foreach (Sprite s in ((MultiSprite) sprite).SpriteList.Values) s.OX += Diff / s.ZoomX;
+                else sprite.OX += Diff / sprite.ZoomX;
             }
-            this.Viewport.X = this.Position.X + Parent.Viewport.X + DiffX - ScrolledX - Parent.AdjustedPosition.X;
-            this.Viewport.Width -= DiffX;
+            LeftCutOff = Diff;
         }
-        /* Handles height manipulation */
-        if (this.Viewport.Y + this.Size.Height > Parent.Viewport.Y + Parent.Viewport.Height)
+        else LeftCutOff = 0;
+        // Handles height exceeding parent viewport
+        if (this.Viewport.Y + this.Size.Height > this.Parent.Viewport.Y + this.Parent.Viewport.Height)
         {
-            int DiffHeight = this.Viewport.Y + this.Size.Height - (Parent.Viewport.Y + Parent.Viewport.Height);
-            this.Viewport.Height -= DiffHeight;
+            int Diff = this.Viewport.Y + this.Size.Height - (this.Parent.Viewport.Y + this.Parent.Viewport.Height);
+            this.Viewport.Height -= Diff;
         }
-        /* Handles Y positioning */
-        if (this.Viewport.Y < Parent.Viewport.Y)
+        // Handles Y being negative
+        if (this.Viewport.Y < this.Parent.Viewport.Y)
         {
-            DiffY = Parent.Viewport.Y - this.Viewport.Y;
-            foreach (ISprite s in this.Sprites.Values)
+            int Diff = this.Parent.Viewport.Y - this.Viewport.Y;
+            this.Viewport.Y += Diff;
+            this.Viewport.Height -= Diff;
+            foreach (ISprite sprite in this.Sprites.Values)
             {
-                if (s is MultiSprite) foreach (Sprite ms in (s as MultiSprite).SpriteList.Values) ms.OY += DiffY / ms.ZoomY;
-                else s.OY += DiffY / s.ZoomY;
+                if (sprite is MultiSprite) foreach (Sprite s in ((MultiSprite) sprite).SpriteList.Values) s.OY += Diff / s.ZoomY;
+                else sprite.OY += Diff / sprite.ZoomY;
             }
-            this.Viewport.Y = this.Position.Y + Parent.Viewport.Y + DiffY - ScrolledY - Parent.AdjustedPosition.Y;
-            this.Viewport.Height -= DiffY;
+            TopCutOff = Diff;
         }
-        this.AdjustedPosition = new Point(DiffX, DiffY);
-        foreach (Widget w in this.Widgets)
+        else TopCutOff = 0;
+
+        this.Widgets.ForEach(child => child.UpdateBounds());
+    }
+
+    /// <summary>
+    /// Sets whether the widget should be docked to its parent.
+    /// </summary>
+    /// <param name="Docked">Vertical and horizontal docking.</param>
+    public virtual void SetDocked(bool Docked)
+    {
+        SetHDocked(Docked);
+        SetVDocked(Docked);
+    }
+
+    /// <summary>
+    /// Sets whether the widget should be docked to its parent.
+    /// </summary>
+    /// <param name="HDocked">Horizontal docking.</param>
+    /// <param name="VDocked">Vertical docking.</param>
+    public virtual void SetDocked(bool HDocked, bool VDocked)
+    {
+        SetHDocked(HDocked);
+        SetVDocked(VDocked);
+    }
+
+    /// <summary>
+    /// Sets whether the widget should be docked to its parent.
+    /// </summary>
+    /// <param name="HDocked">Horizontal docking.</param>
+    public virtual void SetHDocked(bool HDocked)
+    {
+        this.HDocked = HDocked;
+        UpdatePositionAndSizeIfDocked();
+    }
+
+    /// <summary>
+    /// Sets whether the widget should be docked to its parent.
+    /// </summary>
+    /// <param name="VDocked">Vertical docking.</param>
+    public virtual void SetVDocked(bool VDocked)
+    {
+        this.VDocked = VDocked;
+        UpdatePositionAndSizeIfDocked();
+    }
+
+    public virtual void SetLeftDocked(bool LeftDocked)
+    {
+        this.RightDocked = !LeftDocked;
+        this.LeftDocked = LeftDocked;
+        this.UpdatePositionAndSizeIfDocked();
+    }
+
+    public virtual void SetRightDocked(bool RightDocked)
+    {
+        this.RightDocked = RightDocked;
+        this.LeftDocked = !RightDocked;
+        this.UpdatePositionAndSizeIfDocked();
+    }
+
+    public virtual void SetTopDocked(bool TopDocked)
+    {
+        this.BottomDocked = !TopDocked;
+        this.TopDocked = TopDocked;
+        this.UpdatePositionAndSizeIfDocked();
+    }
+
+    public virtual void SetBottomDocked(bool BottomDocked)
+    {
+        this.BottomDocked = BottomDocked;
+        this.TopDocked = !BottomDocked;
+        this.UpdatePositionAndSizeIfDocked();
+    }
+
+    /// <summary>
+    /// Sets the widget margins.
+    /// </summary>
+    /// <param name="All">Margins in all directions.</param>
+    public virtual void SetMargins(int All)
+    {
+        this.SetMargins(new Margins(All));
+    }
+
+    /// <summary>
+    /// Sets the widget margins.
+    /// </summary>
+    /// <param name="Horizontal">Horizontal margins.</param>
+    /// <param name="Vertical">Vertical margins.</param>
+    public virtual void SetMargins(int Horizontal, int Vertical)
+    {
+        this.SetMargins(new Margins(Horizontal, Vertical));
+    }
+
+    /// <summary>
+    /// Sets the widget margins.
+    /// </summary>
+    /// <param name="Left">Left margins.</param>
+    /// <param name="Up">Top margins.</param>
+    /// <param name="Right">Right margins.</param>
+    /// <param name="Down">Bottom margins.</param>
+    public virtual void SetMargins(int Left, int Up, int Right, int Down)
+    {
+        this.SetMargins(new Margins(Left, Up, Right, Down));
+    }
+
+    /// <summary>
+    /// Sets the widget margins.
+    /// </summary>
+    /// <param name="Margins">The widget's margins.</param>
+    public virtual void SetMargins(Margins Margins)
+    {
+        this.Margins = Margins;
+        UpdatePositionAndSizeIfDocked();
+        UpdateLayout();
+    }
+
+    /// <summary>
+    /// Updates the widget's size based on its docked state.
+    /// </summary>
+    public virtual void UpdatePositionAndSizeIfDocked()
+    {
+        if (this.HDocked || this.VDocked)
         {
-            w.UpdateBounds();
+            int neww = this.Size.Width;
+            int newh = this.Size.Height;
+            if (this.HDocked) neww = Parent.Size.Width - this.Position.X - this.Margins.Left - this.Margins.Right;
+            if (this.VDocked) newh = Parent.Size.Height - this.Position.Y - this.Margins.Up - this.Margins.Down;
+            this.SetSize(neww, newh);
+        }
+        if (this.RightDocked || this.BottomDocked)
+        {
+            if (this is PictureBox) this.Update();
+            int newx = this.Position.X;
+            int newy = this.Position.Y;
+            if (this.RightDocked) newx = Parent.Size.Width - Size.Width - this.Margins.Right;
+            if (this.BottomDocked) newy = Parent.Size.Height - Size.Height - this.Margins.Down;
+            this.SetPosition(newx, newy);
         }
     }
 
@@ -752,10 +927,13 @@ public class Widget : IDisposable, IContainer
     public virtual void SetPosition(Point p)
     {
         AssertUndisposed();
-        this.Position = p;
-        // Update the viewport boundaries
-        UpdateBounds();
-        this.OnPositionChanged(new BaseEventArgs());
+        if (this.Position.X != p.X || this.Position.Y != p.Y)
+        {
+            this.Position = p;
+            this.UpdatePositionAndSizeIfDocked();
+            this.UpdateBounds();
+            this.OnPositionChanged(new BaseEventArgs());
+        }
     }
 
     /// <summary>
@@ -786,6 +964,9 @@ public class Widget : IDisposable, IContainer
     {
         AssertUndisposed();
         Size oldsize = this.Size;
+        // Ensures the set size matches the parent size if the widget is docked
+        size.Width = HDocked ? Parent.Size.Width - this.Position.X - this.Margins.Left - this.Margins.Right : size.Width;
+        size.Height = VDocked ? Parent.Size.Height - this.Position.Y - this.Margins.Up - this.Margins.Down : size.Height;
         // Ensures the new size doesn't exceed the set minimum and maximum values.
         if (size.Width < MinimumSize.Width) size.Width = MinimumSize.Width;
         else if (size.Width > MaximumSize.Width && MaximumSize.Width != -1) size.Width = MaximumSize.Width;
@@ -807,6 +988,7 @@ public class Widget : IDisposable, IContainer
                 w.OnSizeChanged(new BaseEventArgs());
             });
             this.OnSizeChanged(new BaseEventArgs());
+            this.Widgets.ForEach(child => child.UpdatePositionAndSizeIfDocked());
             Redraw();
             if (this.Parent is Widget && !(this is ScrollBar))
             {
@@ -928,30 +1110,6 @@ public class Widget : IDisposable, IContainer
     public virtual void SetValue(string Identifier, object Value)
     {
         throw new Exception($"Attempted to set a value to an unsupported widget");
-    }
-
-    /// <summary>
-    /// Sets the margin for this widget. Used for grids and stackpanels.
-    /// </summary>
-    public Widget SetMargin(int all)
-    {
-        return this.SetMargin(all, all, all, all);
-    }
-    /// <summary>
-    /// Sets the margin for this widget. Used for grids and stackpanels.
-    /// </summary>
-    public Widget SetMargin(int horizontal, int vertical)
-    {
-        return this.SetMargin(horizontal, vertical, horizontal, vertical);
-    }
-    /// <summary>
-    /// Sets the margin for this widget. Used for grids and stackpanels.
-    /// </summary>
-    public Widget SetMargin(int left, int up, int right, int down)
-    {
-        this.Margin = new Margin(left, up, right, down);
-        this.UpdateLayout();
-        return this;
     }
 
     /// <summary>

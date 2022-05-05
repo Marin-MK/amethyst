@@ -27,13 +27,13 @@ public class HStackPanel : Widget, ILayout
         for (int i = 0; i < this.Widgets.Count; i++)
         {
             Widget w = this.Widgets[i];
-            x += w.Margin.Left;
-            int y = w.Margin.Up;
-            int height = this.Size.Height - y - w.Margin.Down;
+            x += w.Margins.Left;
+            int y = w.Margins.Up;
+            int height = this.Size.Height - y - w.Margins.Down;
             w.SetHeight(height);
             w.SetPosition(x, y);
             x += w.Size.Width;
-            x += w.Margin.Right;
+            x += w.Margins.Right;
         }
     }
 

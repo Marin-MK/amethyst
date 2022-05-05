@@ -17,7 +17,7 @@ public class Grid : Widget, ILayout
 
     public Grid(IContainer Parent) : base(Parent)
     {
-
+        this.SetDocked(true);
     }
 
     public override void SizeChanged(BaseEventArgs e)
@@ -69,10 +69,10 @@ public class Grid : Widget, ILayout
             Point p = this.Positions[w.GridRowStart * this.Columns.Count + w.GridColumnStart];
             int x = p.X;
             int y = p.Y;
-            x += w.Margin.Left;
-            width -= w.Margin.Left + w.Margin.Right;
-            y += w.Margin.Up;
-            height -= w.Margin.Up + w.Margin.Down;
+            x += w.Margins.Left;
+            width -= w.Margins.Left + w.Margins.Right;
+            y += w.Margins.Up;
+            height -= w.Margins.Up + w.Margins.Down;
             w.SetPosition(x, y);
             w.SetSize(width, height);
         }
@@ -157,12 +157,6 @@ public class Grid : Widget, ILayout
     public void SetColumns(params GridSize[] Columns)
     {
         this.Columns = Columns.ToList();
-        this.RedrawContainers = true;
-    }
-
-    public override void ParentSizeChanged(BaseEventArgs e)
-    {
-        this.SetSize(Parent.Size);
         this.RedrawContainers = true;
     }
 
