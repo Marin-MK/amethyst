@@ -151,7 +151,7 @@ public class TabView : Widget
         base.MouseMoving(e);
         int rx = e.X - Viewport.X;
         int ry = e.Y - Viewport.Y;
-        if (!WidgetIM.Hovering || ry >= 21)
+        if (!Mouse.Inside || ry >= 21)
         {
             if (HoveringIndex != -1)
             {

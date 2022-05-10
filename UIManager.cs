@@ -26,8 +26,107 @@ public class UIManager : IContainer
     public int TopCutOff { get { return 0; } }
     public List<Timer> Timers = new List<Timer>();
     public Container Container;
+    public bool EvaluatedLastMouseEvent { get; set; }
 
-    private List<MouseInputManager> IMs = new List<MouseInputManager>();
+    /// <summary>
+    /// This object aids in fetching mouse input.
+    /// </summary>
+    public MouseManager Mouse { get; protected set; }
+
+    /// <summary>
+    /// Called whenever the mouse moves across the window.
+    /// </summary>
+    public MouseEvent OnMouseMoving { get; set; }
+
+    /// <summary>
+    /// Called whenever the mouse moves in or out of the widget.
+    /// </summary>
+    public MouseEvent OnHoverChanged { get; set; }
+
+    /// <summary>
+    /// Called whenever a mouse button is pressed down.
+    /// </summary>
+    public MouseEvent OnMouseDown { get; set; }
+
+    /// <summary>
+    /// Called whenever a mouse button is released.
+    /// </summary>
+    public MouseEvent OnMouseUp { get; set; }
+
+    /// <summary>
+    /// Called while a mouse button is being held down.
+    /// </summary>
+    public MouseEvent OnMousePress { get; set; }
+
+    /// <summary>
+    /// Called whenever the left mouse button is pressed down.
+    /// </summary>
+    public MouseEvent OnLeftMouseDown { get; set; }
+
+    /// <summary>
+    /// Called whenever the left mouse button is pressed down inside the widget.
+    /// </summary>
+    public MouseEvent OnLeftMouseDownInside { get; set; }
+
+    /// <summary>
+    /// Called whenever the left mouse button is released.
+    /// </summary>
+    public MouseEvent OnLeftMouseUp { get; set; }
+
+    /// <summary>
+    /// Called while the left mouse button is being held down.
+    /// </summary>
+    public MouseEvent OnLeftMousePress { get; set; }
+
+    /// <summary>
+    /// Called whenever the right mouse button is pressed down.
+    /// </summary>
+    public MouseEvent OnRightMouseDown { get; set; }
+
+    /// <summary>
+    /// Called whenever the right mouse button is pressed down inside the widget.
+    /// </summary>
+    public MouseEvent OnRightMouseDownInside { get; set; }
+
+    /// <summary>
+    /// Called whenever the right mouse button is released.
+    /// </summary>
+    public MouseEvent OnRightMouseUp { get; set; }
+
+    /// <summary>
+    /// Called while the right mouse button is being held down.
+    /// </summary>
+    public MouseEvent OnRightMousePress { get; set; }
+
+    /// <summary>
+    /// Called whenever the middle mouse button is pressed down.
+    /// </summary>
+    public MouseEvent OnMiddleMouseDown { get; set; }
+
+    /// <summary>
+    /// Called whenever the middle mouse button is pressed down inside the widget.
+    /// </summary>
+    public MouseEvent OnMiddleMouseDownInside { get; set; }
+
+    /// <summary>
+    /// Called whenever the middle mouse button is released.
+    /// </summary>
+    public MouseEvent OnMiddleMouseUp { get; set; }
+
+    /// <summary>
+    /// Called while the middle mouse button is being held down.
+    /// </summary>
+    public MouseEvent OnMiddleMousePress { get; set; }
+
+    /// <summary>
+    /// Called whenever the mouse wheel is scrolled.
+    /// </summary>
+    public MouseEvent OnMouseWheel { get; set; }
+
+    /// <summary>
+    /// Called whenever the left mouse button is pressed down twice inside the widget in short succession.
+    /// </summary>
+    public MouseEvent OnDoubleLeftMouseDownInside { get; set; }
 
     public IContainer Parent { get { throw new MethodNotSupportedException(this); } }
 
@@ -35,6 +134,21 @@ public class UIManager : IContainer
     {
         this.Window = Window;
         this.Window.SetActiveWidget(this);
+        this.Mouse = new MouseManager(this);
+        this.Window.OnMouseMoving += e => Mouse.ProcessMouseMoving(e, true);
+        this.Window.OnMouseDown += e =>
+        {
+            Mouse.ProcessMouseDown(e, true);
+            Mouse.ProcessMouseMoving(e, true);
+        };
+        this.Window.OnMouseUp += e =>
+        {
+            Mouse.ProcessMouseUp(e, true);
+            Mouse.ProcessMouseMoving(e, true);
+        };
+        this.Window.OnMousePress += e => Mouse.ProcessMousePress(e, true);
+        this.Window.OnMouseWheel += e => Mouse.ProcessMouseWheel(e, true);
+        this.Window.OnTick += _ => Update();
     }
 
     public void Add(Widget w)
@@ -53,101 +167,6 @@ public class UIManager : IContainer
             }
         }
         return null;
-    }
-
-    public void AddInput(MouseInputManager input)
-    {
-        IMs.Add(input);
-    }
-
-    public void RemoveInput(MouseInputManager input)
-    {
-        IMs.Remove(input);
-    }
-
-    public void MouseDown(MouseEventArgs e)
-    {
-        bool DoMoveEvent = false;
-        for (int i = 0; i < IMs.Count; i++)
-        {
-            if (IMs[i].Widget.Disposed)
-            {
-                IMs.RemoveAt(i);
-                i--;
-                continue;
-            }
-            IMs[i].MouseDown(e);
-            if (e.Handled)
-            {
-                DoMoveEvent = true;
-                break;
-            }
-        }
-        if (DoMoveEvent)
-        {
-            e.Handled = false;
-            MouseMoving(e);
-        }
-    }
-
-    public void MousePress(MouseEventArgs e)
-    {
-        for (int i = 0; i < IMs.Count; i++)
-        {
-            if (IMs[i].Widget.Disposed)
-            {
-                IMs.RemoveAt(i);
-                i--;
-                continue;
-            }
-            IMs[i].MousePress(e);
-            if (e.Handled) break;
-        }
-    }
-
-    public void MouseUp(MouseEventArgs e)
-    {
-        for (int i = 0; i < IMs.Count; i++)
-        {
-            if (IMs[i].Widget.Disposed)
-            {
-                IMs.RemoveAt(i);
-                i--;
-                continue;
-            }
-            IMs[i].MouseUp(e);
-            if (e.Handled) break;
-        }
-    }
-
-    public void MouseMoving(MouseEventArgs e)
-    {
-        for (int i = 0; i < IMs.Count; i++)
-        {
-            if (IMs[i].Widget.Disposed)
-            {
-                IMs.RemoveAt(i);
-                i--;
-                continue;
-            }
-            IMs[i].MouseMoving(e);
-            if (e.Handled) break;
-        }
-    }
-
-    public void MouseWheel(MouseEventArgs e)
-    {
-        for (int i = 0; i < IMs.Count; i++)
-        {
-            if (IMs[i].Widget.Disposed)
-            {
-                IMs.RemoveAt(i);
-                i--;
-                continue;
-            }
-            IMs[i].MouseWheel(e);
-            if (e.Handled) break;
-        }
     }
 
     public void SizeChanged(BaseEventArgs e)

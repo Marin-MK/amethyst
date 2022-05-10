@@ -61,7 +61,7 @@ public class DropdownBox : TextBox
     public override void MouseDown(MouseEventArgs e)
     {
         base.MouseDown(e);
-        if (!TextArea.WidgetIM.Hovering && TextArea.SelectedWidget)
+        if (!TextArea.Mouse.Inside && TextArea.SelectedWidget)
         {
             Window.UI.SetSelectedWidget(null);
         }
@@ -169,7 +169,7 @@ public class DropdownWidget : Widget
     public override void MouseDown(MouseEventArgs e)
     {
         base.MouseDown(e);
-        if (!WidgetIM.Hovering) SelectedIndex = -1;
+        if (!Mouse.Inside) SelectedIndex = -1;
         else SelectedIndex = HoveringIndex;
         Dispose();
     }
@@ -177,7 +177,7 @@ public class DropdownWidget : Widget
     public override void MouseMoving(MouseEventArgs e)
     {
         base.MouseMoving(e);
-        if (WidgetIM.Hovering)
+        if (Mouse.Inside)
         {
             int ry = e.Y - Viewport.Y;
             if (ry < 2 || ry >= this.Size.Height - 2) SetHovering(-1);

@@ -65,7 +65,7 @@ public class TextBox : ActivatableWidget
     public override void MouseDown(MouseEventArgs e)
     {
         base.MouseDown(e);
-        if (!WidgetIM.Hovering && TextArea.SelectedWidget)
+        if (!Mouse.Inside && TextArea.SelectedWidget)
         {
             Window.UI.SetSelectedWidget(null);
         }

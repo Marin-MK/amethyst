@@ -70,36 +70,6 @@ public class UIWindow : Window
         TopViewport.Z = Z;
     }
 
-    public override void MouseDown(MouseEventArgs e)
-    {
-        base.MouseDown(e);
-        UI.MouseDown(e);
-    }
-
-    public override void MousePress(MouseEventArgs e)
-    {
-        base.MousePress(e);
-        UI.MousePress(e);
-    }
-
-    public override void MouseUp(MouseEventArgs e)
-    {
-        base.MouseUp(e);
-        UI.MouseUp(e);
-    }
-
-    public override void MouseMoving(MouseEventArgs e)
-    {
-        base.MouseMoving(e);
-        UI.MouseMoving(e);
-    }
-
-    public override void MouseWheel(MouseEventArgs e)
-    {
-        base.MouseWheel(e);
-        UI.MouseWheel(e);
-    }
-
     public override void TextInput(TextEventArgs e)
     {
         base.TextInput(e);

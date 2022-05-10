@@ -203,7 +203,7 @@ public class ListDrawer : Widget
     public override void MouseMoving(MouseEventArgs e)
     {
         base.MouseMoving(e);
-        if (e.LeftButton && WidgetIM.Hovering && ClickedInList)
+        if (e.LeftButton && Mouse.Inside && ClickedInList)
         {
             int rx = e.X - ItemPanel.Viewport.X;
             int ry = e.Y - ItemPanel.Viewport.Y + ItemPanel.Position.Y - ItemPanel.ScrolledPosition.Y;

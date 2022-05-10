@@ -19,7 +19,7 @@ public class ActivatableWidget : Widget
     public override void HoverChanged(MouseEventArgs e)
     {
         base.HoverChanged(e);
-        Hovering = WidgetIM.Hovering;
+        Hovering = Mouse.Inside;
         if (Hovering)
         {
             if (StartedPressingInside)

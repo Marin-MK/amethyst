@@ -60,7 +60,7 @@ public class Widget : IDisposable, IContainer
     /// <summary>
     /// This object aids in fetching mouse input.
     /// </summary>
-    public MouseInputManager WidgetIM { get; protected set; }
+    public MouseManager Mouse { get; protected set; }
 
     /// <summary>
     /// The parent of this widget.
@@ -288,50 +288,102 @@ public class Widget : IDisposable, IContainer
     /// </summary>
     public object ObjectData;
 
+    public bool EvaluatedLastMouseEvent { get; set; }
+
     /// <summary>
-    /// Called once whenever a new mouse button is pressed.
+    /// Called whenever the mouse moves across the window.
     /// </summary>
-    public MouseEvent OnMouseDown;
+    public MouseEvent OnMouseMoving { get; set; }
+
+    /// <summary>
+    /// Called whenever the mouse moves in or out of the widget.
+    /// </summary>
+    public MouseEvent OnHoverChanged { get; set; }
+
+    /// <summary>
+    /// Called whenever a mouse button is pressed down.
+    /// </summary>
+    public MouseEvent OnMouseDown { get; set; }
+
+    /// <summary>
+    /// Called whenever a mouse button is released.
+    /// </summary>
+    public MouseEvent OnMouseUp { get; set; }
 
     /// <summary>
     /// Called while a mouse button is being held down.
     /// </summary>
-    public MouseEvent OnMousePress;
+    public MouseEvent OnMousePress { get; set; }
 
     /// <summary>
-    /// Called once whenever a mouse button is released.
+    /// Called whenever the left mouse button is pressed down.
     /// </summary>
-    public MouseEvent OnMouseUp;
+    public MouseEvent OnLeftMouseDown { get; set; }
 
     /// <summary>
-    /// Called whenever the mouse enters or leaves a widget.
+    /// Called whenever the left mouse button is pressed down inside the widget.
     /// </summary>
-    public MouseEvent OnHoverChanged;
+    public MouseEvent OnLeftMouseDownInside { get; set; }
 
     /// <summary>
-    /// Called once per mouse wheel scroll.
+    /// Called whenever the left mouse button is released.
     /// </summary>
-    public MouseEvent OnMouseWheel;
+    public MouseEvent OnLeftMouseUp { get; set; }
 
     /// <summary>
-    /// Called while the mouse is moving.
+    /// Called while the left mouse button is being held down.
     /// </summary>
-    public MouseEvent OnMouseMoving;
+    public MouseEvent OnLeftMousePress { get; set; }
 
     /// <summary>
-    /// Called whenever this widget is left clicked.
+    /// Called whenever the right mouse button is pressed down.
     /// </summary>
-    public MouseEvent OnLeftClick;
+    public MouseEvent OnRightMouseDown { get; set; }
 
     /// <summary>
-    /// Called whenever this widget is middle clicked.
+    /// Called whenever the right mouse button is pressed down inside the widget.
     /// </summary>
-    public MouseEvent OnMiddleClick;
+    public MouseEvent OnRightMouseDownInside { get; set; }
 
     /// <summary>
-    /// Called whenever this widget is right clicked.
+    /// Called whenever the right mouse button is released.
     /// </summary>
-    public MouseEvent OnRightClick;
+    public MouseEvent OnRightMouseUp { get; set; }
+
+    /// <summary>
+    /// Called while the right mouse button is being held down.
+    /// </summary>
+    public MouseEvent OnRightMousePress { get; set; }
+
+    /// <summary>
+    /// Called whenever the middle mouse button is pressed down.
+    /// </summary>
+    public MouseEvent OnMiddleMouseDown { get; set; }
+
+    /// <summary>
+    /// Called whenever the middle mouse button is pressed down inside the widget.
+    /// </summary>
+    public MouseEvent OnMiddleMouseDownInside { get; set; }
+
+    /// <summary>
+    /// Called whenever the middle mouse button is released.
+    /// </summary>
+    public MouseEvent OnMiddleMouseUp { get; set; }
+
+    /// <summary>
+    /// Called while the middle mouse button is being held down.
+    /// </summary>
+    public MouseEvent OnMiddleMousePress { get; set; }
+
+    /// <summary>
+    /// Called whenever the mouse wheel is scrolled.
+    /// </summary>
+    public MouseEvent OnMouseWheel { get; set; }
+
+    /// <summary>
+    /// Called whenever the left mouse button is pressed down twice inside the widget in short succession.
+    /// </summary>
+    public MouseEvent OnDoubleLeftMouseDownInside { get; set; }
 
     /// <summary>
     /// Called when this widget becomes the active widget.
@@ -429,23 +481,34 @@ public class Widget : IDisposable, IContainer
         // In the same viewport as all other sprites, but at a very large negative Z index.
         this.Sprites["_bg"].Z = -999999999;
         // Set some default events.
+
+        this.OnMouseMoving = MouseMoving;
+        this.OnHoverChanged = HoverChanged;
         this.OnMouseDown = MouseDown;
         this.OnMouseUp = MouseUp;
         this.OnMousePress = MousePress;
-        this.OnMouseMoving = MouseMoving;
-        this.OnHoverChanged = HoverChanged;
+        this.OnLeftMouseDown = LeftMouseDown;
+        this.OnLeftMouseDownInside = LeftMouseDownInside;
+        this.OnLeftMouseUp = LeftMouseUp;
+        this.OnLeftMousePress = LeftMousePress;
+        this.OnRightMouseDown = RightMouseDown;
+        this.OnRightMouseDownInside = RightMouseDownInside;
+        this.OnRightMouseUp = RightMouseUp;
+        this.OnRightMousePress = RightMousePress;
+        this.OnMiddleMouseDown = MiddleMouseDown;
+        this.OnMiddleMouseDownInside = MiddleMouseDownInside;
+        this.OnMiddleMouseUp = MiddleMouseUp;
+        this.OnMiddleMousePress = MiddleMousePress;
         this.OnMouseWheel = MouseWheel;
-        this.OnLeftClick = LeftClick;
-        this.OnMiddleClick = MiddleClick;
-        this.OnRightClick = RightClick;
+        this.OnDoubleLeftMouseDownInside = DoubleLeftMouseDownInside;
         this.OnWidgetDeselected = WidgetDeselected;
         this.OnTextInput = TextInput;
         this.OnPositionChanged = PositionChanged;
-        this.OnSizeChanged = SizeChanged;
         this.OnParentSizeChanged = ParentSizeChanged;
+        this.OnSizeChanged = SizeChanged;
         this.OnChildBoundsChanged = ChildBoundsChanged;
         // Creates the input manager object responsible for fetching mouse input.
-        this.WidgetIM = new MouseInputManager(this);
+        this.Mouse = new MouseManager(this);
         this.OnFetchHelpText = FetchHelpText;
         this.SetVisible(true);
     }
@@ -1208,8 +1271,6 @@ public class Widget : IDisposable, IContainer
         if (HelpTextWidget != null) HelpTextWidget.Dispose();
         // Dispose all child widgets
         for (int i = Widgets.Count - 1; i >= 0; i--) Widgets[i].Dispose();
-        // Remove this widget from the parent's widget list.
-        this.Window.UI.RemoveInput(WidgetIM);
         if (!this.Parent.Widgets.Remove(this))
         {
             if (this.Parent.Widgets.Contains(this))
@@ -1362,8 +1423,6 @@ public class Widget : IDisposable, IContainer
             }
         }
 
-        // Updates the MouseInputManager in case this widget's boundaries changes.
-        this.WidgetIM.Update(this.Viewport.Rect);
         // If this widget needs a redraw, perform the redraw
         if (!this.Drawn) this.Draw();
         // Update child widgets
@@ -1381,8 +1440,7 @@ public class Widget : IDisposable, IContainer
 
     public virtual void MouseDown(MouseEventArgs e)
     {
-        if (this.Disposed) throw new Exception("Got an extra WidgetIM.OnMouseDown += MouseDown call somewhere.");
-        if (this.WidgetIM.Hovering)
+        if (this.Mouse.Inside)
         {
             if (e.RightButton != e.OldRightButton && ShowContextMenu && ContextMenuList != null && ContextMenuList.Count > 0)
             {
@@ -1409,17 +1467,18 @@ public class Widget : IDisposable, IContainer
             }
         }
     }
-    public virtual void MousePress(MouseEventArgs e) { }
-    public virtual void MouseUp(MouseEventArgs e) { }
-    public virtual void MouseWheel(MouseEventArgs e) { }
+
     public virtual void MouseMoving(MouseEventArgs e)
     {
         if (TimerExists("helptext")) ResetTimer("helptext");
     }
+
     public virtual void HoverChanged(MouseEventArgs e)
     {
-        if (WidgetIM.Hovering)
+        if (Mouse.Inside)
+        {
             SetTimer("helptext", 1000);
+        }
         else if (TimerExists("helptext"))
         {
             if (HelpTextWidget != null) HelpTextWidget.Dispose();
@@ -1427,28 +1486,65 @@ public class Widget : IDisposable, IContainer
             DestroyTimer("helptext");
         }
     }
-    public virtual void LeftClick(MouseEventArgs e) { }
-    public virtual void MiddleClick(MouseEventArgs e) { }
-    public virtual void RightClick(MouseEventArgs e) { }
+
+    public virtual void MouseUp(MouseEventArgs e) { }
+
+    public virtual void MousePress(MouseEventArgs e) { }
+
+    public virtual void LeftMouseDown(MouseEventArgs e) { }
+
+    public virtual void LeftMouseDownInside(MouseEventArgs e) { }
+
+    public virtual void LeftMouseUp(MouseEventArgs e) { }
+
+    public virtual void LeftMousePress(MouseEventArgs e) { }
+
+    public virtual void RightMouseDown(MouseEventArgs e) { }
+
+    public virtual void RightMouseDownInside(MouseEventArgs e) { }
+
+    public virtual void RightMouseUp(MouseEventArgs e) { }
+
+    public virtual void RightMousePress(MouseEventArgs e) { }
+
+    public virtual void MiddleMouseDown(MouseEventArgs e) { }
+
+    public virtual void MiddleMouseDownInside(MouseEventArgs e) { }
+
+    public virtual void MiddleMouseUp(MouseEventArgs e) { }
+
+    public virtual void MiddleMousePress(MouseEventArgs e) { }
+
+    public virtual void MouseWheel(MouseEventArgs e) { }
+
+    public virtual void DoubleLeftMouseDownInside(MouseEventArgs e) { }
+
     public virtual void WidgetSelected(BaseEventArgs e)
     {
         this.Window.UI.SetSelectedWidget(this);
     }
+
     public virtual void WidgetDeselected(BaseEventArgs e) { }
+
     public virtual void TextInput(TextEventArgs e) { }
+
     public virtual void PositionChanged(BaseEventArgs e)
     {
         UpdateAutoScroll();
     }
+
+    public virtual void ParentSizeChanged(BaseEventArgs e) { }
+
     public virtual void SizeChanged(BaseEventArgs e)
     {
         UpdateAutoScroll();
     }
-    public virtual void ParentSizeChanged(BaseEventArgs e) { }
+
     public virtual void ChildBoundsChanged(BaseEventArgs e)
     {
         UpdateAutoScroll();
     }
+
     public virtual void FetchHelpText(StringEventArgs e)
     {
         e.String = this.HelpText;

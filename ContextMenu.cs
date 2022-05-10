@@ -125,7 +125,7 @@ public class ContextMenu : Widget
         base.MouseMoving(e);
         int rx = e.X - this.Viewport.X;
         int ry = e.Y - this.Viewport.Y;
-        if (!WidgetIM.Hovering || rx < 0 || rx > this.Size.Width)
+        if (!Mouse.Inside || rx < 0 || rx > this.Size.Width)
         {
             this.Sprites["selector"].Visible = false;
             this.SelectedItem = null;
@@ -183,7 +183,7 @@ public class ContextMenu : Widget
     public override void MouseDown(MouseEventArgs e)
     {
         base.MouseDown(e);
-        if (WidgetIM.Hovering && this.SelectedItem != null && this.SelectedItem is MenuItem)
+        if (Mouse.Inside && this.SelectedItem != null && this.SelectedItem is MenuItem)
         {
             TryClick(e);
         }

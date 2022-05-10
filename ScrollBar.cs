@@ -7,7 +7,7 @@ public abstract class ScrollBar : Widget
 {
     public double SliderSize { get; protected set; }
     public double Value { get; protected set; }
-    public int ScrollStep = 11;
+    public float ScrollStep = 32 / 3f;
     public Rect MouseInputRect { get; set; }
     public bool SliderHovering { get; protected set; } = false;
     public bool SliderDragging { get; protected set; } = false;
