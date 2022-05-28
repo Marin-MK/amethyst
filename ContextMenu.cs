@@ -180,13 +180,16 @@ public class ContextMenu : Widget
         }
     }
 
-    public override void MouseDown(MouseEventArgs e)
+    public override void LeftMouseDown(MouseEventArgs e)
     {
         base.MouseDown(e);
         if (Mouse.Inside && this.SelectedItem != null && this.SelectedItem is MenuItem)
         {
             TryClick(e);
         }
+        else this.Dispose();
+        // Ensure no other events can be called from this mouse click
+        e.Handled = true;
     }
 
     public void HelpTextWidgetCreated(BaseEventArgs e)
