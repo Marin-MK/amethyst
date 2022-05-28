@@ -107,17 +107,29 @@ public class MouseManager
             if (LeftMouseTriggered)
             {
                 Widget.OnLeftMouseDown?.Invoke(Args);
-                if (Inside) Widget.OnLeftMouseDownInside?.Invoke(Args);
+                if (Inside)
+                {
+                    if (Widget is Widget) ((Widget) Widget).OnWidgetSelected?.Invoke(Args);
+                    Widget.OnLeftMouseDownInside?.Invoke(Args);
+                }
             }
             if (RightMouseTriggered)
             {
                 Widget.OnRightMouseDown?.Invoke(Args);
-                if (Inside) Widget.OnRightMouseDownInside?.Invoke(Args);
+                if (Inside)
+                {
+                    if (Widget is Widget) ((Widget) Widget).OnWidgetSelected?.Invoke(Args);
+                    Widget.OnRightMouseDownInside?.Invoke(Args);
+                }
             }
             if (MiddleMouseTriggered)
             {
                 Widget.OnMiddleMouseDown?.Invoke(Args);
-                if (Inside) Widget.OnMiddleMouseDownInside?.Invoke(Args);
+                if (Inside)
+                {
+                    if (Widget is Widget) ((Widget) Widget).OnWidgetSelected?.Invoke(Args);
+                    Widget.OnMiddleMouseDownInside?.Invoke(Args);
+                }
             }
         }
         RecursivelyPerform(m => m.ProcessMouseDown(Args, false));
