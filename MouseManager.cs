@@ -29,7 +29,7 @@ public class MouseManager
     public bool RightStartedInside = false;
     public bool MiddleStartedInside = false;
 
-    public bool Inside => Accessible && Widget.Viewport.Rect.Contains(CurrentArgs.X, CurrentArgs.Y);
+    public bool Inside = false;
 
     /// <summary>
     /// For this property to be true, there must be a valid mouse event.
@@ -48,12 +48,18 @@ public class MouseManager
 
     public void ProcessMouseMoving(MouseEventArgs Args, bool Root)
     {
-        if (Args.Handled) return;
-        bool WasInside = this.Inside;
+        if (Args.Handled)
+        {
+            Widget.EvaluatedLastMouseEvent = true;
+            if (Root) ResetEventStates();
+            return;
+        }
+        bool OldInside = this.Inside;
         this.CurrentArgs = Args;
         Widget.OnMouseMoving?.Invoke(Args);
         RecursivelyPerform(m => m.ProcessMouseMoving(Args, false));
-        if (WasInside != this.Inside) Widget.OnHoverChanged?.Invoke(Args);
+        this.Inside = Accessible && Widget.Viewport.Rect.Contains(Args.X, Args.Y);
+        if (OldInside != this.Inside) Widget.OnHoverChanged?.Invoke(Args);
         if (Root) ResetEventStates();
     }
 
@@ -85,7 +91,7 @@ public class MouseManager
 
     public void ProcessMouseDown(MouseEventArgs Args, bool Root)
     {
-        if (Args.Handled)
+        if (Args.Handled || !Accessible)
         {
             Widget.EvaluatedLastMouseEvent = true;
             if (Root) ResetEventStates();
@@ -117,7 +123,12 @@ public class MouseManager
 
     public void ProcessMouseUp(MouseEventArgs Args, bool Root)
     {
-        if (Args.Handled) return;
+        if (Args.Handled)
+        {
+            Widget.EvaluatedLastMouseEvent = true;
+            if (Root) ResetEventStates();
+            return;
+        }
         this.CurrentArgs = Args;
         Widget.OnMouseUp?.Invoke(Args);
         if (LeftMouseReleased)
@@ -141,7 +152,12 @@ public class MouseManager
 
     public void ProcessMousePress(MouseEventArgs Args, bool Root)
     {
-        if (Args.Handled) return;
+        if (Args.Handled || !Accessible)
+        {
+            Widget.EvaluatedLastMouseEvent = true;
+            if (Root) ResetEventStates();
+            return;
+        }
         this.CurrentArgs = Args;
         Widget.OnMousePress?.Invoke(Args);
         if (LeftMousePressed) Widget.OnLeftMousePress?.Invoke(Args);
@@ -153,7 +169,12 @@ public class MouseManager
 
     public void ProcessMouseWheel(MouseEventArgs Args, bool Root)
     {
-        if (Args.Handled) return;
+        if (Args.Handled || !Accessible)
+        {
+            Widget.EvaluatedLastMouseEvent = true;
+            if (Root) ResetEventStates();
+            return;
+        }
         this.CurrentArgs = Args;
         Widget.OnMouseWheel?.Invoke(Args);
         RecursivelyPerform(m => m.ProcessMouseWheel(Args, false));
