@@ -56,10 +56,10 @@ public class MouseManager
         }
         bool OldInside = this.Inside;
         this.CurrentArgs = Args;
-        Widget.OnMouseMoving?.Invoke(Args);
+        if (Accessible) Widget.OnMouseMoving?.Invoke(Args);
         RecursivelyPerform(m => m.ProcessMouseMoving(Args, false));
         this.Inside = Accessible && Widget.Viewport.Rect.Contains(Args.X, Args.Y);
-        if (OldInside != this.Inside) Widget.OnHoverChanged?.Invoke(Args);
+        if (Accessible && OldInside != this.Inside) Widget.OnHoverChanged?.Invoke(Args);
         if (Root) ResetEventStates();
     }
 
@@ -91,7 +91,7 @@ public class MouseManager
 
     public void ProcessMouseDown(MouseEventArgs Args, bool Root)
     {
-        if (Args.Handled || !Accessible)
+        if (Args.Handled)
         {
             Widget.EvaluatedLastMouseEvent = true;
             if (Root) ResetEventStates();
@@ -101,21 +101,24 @@ public class MouseManager
         if (LeftMouseTriggered) this.LeftStartedInside = Inside;
         if (RightMouseTriggered) this.RightStartedInside = Inside;
         if (MiddleMouseTriggered) this.MiddleStartedInside = Inside;
-        Widget.OnMouseDown?.Invoke(Args);
-        if (LeftMouseTriggered)
+        if (Accessible)
         {
-            Widget.OnLeftMouseDown?.Invoke(Args);
-            if (Inside) Widget.OnLeftMouseDownInside?.Invoke(Args);
-        }
-        if (RightMouseTriggered)
-        {
-            Widget.OnRightMouseDown?.Invoke(Args);
-            if (Inside) Widget.OnRightMouseDownInside?.Invoke(Args);
-        }
-        if (MiddleMouseTriggered)
-        {
-            Widget.OnMiddleMouseDown?.Invoke(Args);
-            if (Inside) Widget.OnMiddleMouseDownInside?.Invoke(Args);
+            Widget.OnMouseDown?.Invoke(Args);
+            if (LeftMouseTriggered)
+            {
+                Widget.OnLeftMouseDown?.Invoke(Args);
+                if (Inside) Widget.OnLeftMouseDownInside?.Invoke(Args);
+            }
+            if (RightMouseTriggered)
+            {
+                Widget.OnRightMouseDown?.Invoke(Args);
+                if (Inside) Widget.OnRightMouseDownInside?.Invoke(Args);
+            }
+            if (MiddleMouseTriggered)
+            {
+                Widget.OnMiddleMouseDown?.Invoke(Args);
+                if (Inside) Widget.OnMiddleMouseDownInside?.Invoke(Args);
+            }
         }
         RecursivelyPerform(m => m.ProcessMouseDown(Args, false));
         if (Root) ResetEventStates();
@@ -152,31 +155,34 @@ public class MouseManager
 
     public void ProcessMousePress(MouseEventArgs Args, bool Root)
     {
-        if (Args.Handled || !Accessible)
+        if (Args.Handled)
         {
             Widget.EvaluatedLastMouseEvent = true;
             if (Root) ResetEventStates();
             return;
         }
         this.CurrentArgs = Args;
-        Widget.OnMousePress?.Invoke(Args);
-        if (LeftMousePressed) Widget.OnLeftMousePress?.Invoke(Args);
-        if (RightMousePressed) Widget.OnRightMousePress?.Invoke(Args);
-        if (MiddleMousePressed) Widget.OnMiddleMousePress?.Invoke(Args);
+        if (Accessible)
+        {
+            Widget.OnMousePress?.Invoke(Args);
+            if (LeftMousePressed) Widget.OnLeftMousePress?.Invoke(Args);
+            if (RightMousePressed) Widget.OnRightMousePress?.Invoke(Args);
+            if (MiddleMousePressed) Widget.OnMiddleMousePress?.Invoke(Args);
+        }
         RecursivelyPerform(m => m.ProcessMousePress(Args, false));
         if (Root) ResetEventStates();
     }
 
     public void ProcessMouseWheel(MouseEventArgs Args, bool Root)
     {
-        if (Args.Handled || !Accessible)
+        if (Args.Handled)
         {
             Widget.EvaluatedLastMouseEvent = true;
             if (Root) ResetEventStates();
             return;
         }
         this.CurrentArgs = Args;
-        Widget.OnMouseWheel?.Invoke(Args);
+        if (Accessible) Widget.OnMouseWheel?.Invoke(Args);
         RecursivelyPerform(m => m.ProcessMouseWheel(Args, false));
         if (Root) ResetEventStates();
     }
