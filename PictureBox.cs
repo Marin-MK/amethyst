@@ -20,7 +20,7 @@ public class PictureBox : Widget
             {
                 if (this.Sprite.SrcRect.Width != this.Size.Width || this.Sprite.SrcRect.Height != this.Size.Height)
                 {
-                    this.SetSize(this.Sprite.SrcRect.Width, this.Sprite.SrcRect.Height);
+                    this.SetSize(this.Sprite.SrcRect.Width + Sprite.X, this.Sprite.SrcRect.Height + Sprite.Y);
                 }
             }
             else

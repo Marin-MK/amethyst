@@ -143,7 +143,10 @@ public class Grid : Widget, ILayout
             x = 0;
             y += height;
         }
-        this.SetSize(Positions.Last().X + Sizes.Last().Width, Positions.Last().Y + Sizes.Last().Height);
+
+        int maxw = Positions.Last().X + Sizes.Last().Width;
+        int maxh = Positions.Last().Y + Sizes.Last().Height;
+        this.SetSize(maxw, maxh);
 
         this.NeedUpdate = true;
     }
