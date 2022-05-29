@@ -69,30 +69,4 @@ public class UIWindow : Window
     {
         TopViewport.Z = Z;
     }
-
-    public override void TextInput(TextEventArgs e)
-    {
-        base.TextInput(e);
-        UI.TextInput(e);
-    }
-
-    public override void SizeChanged(BaseEventArgs e)
-    {
-        base.SizeChanged(e);
-        UI.SizeChanged(e);
-    }
-
-    /// <summary>
-    /// Updates the UIManager, and subsequently all widgets.
-    /// </summary>
-    public override void Tick(BaseEventArgs e)
-    {
-        base.Tick(e);
-        this.UI.Update();
-    }
-
-    public override void SetBackgroundColor(Color c)
-    {
-        base.SetBackgroundColor(c);
-    }
 }

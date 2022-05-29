@@ -149,6 +149,8 @@ public class UIManager : IContainer
         this.Window.OnMousePress += e => Mouse.ProcessMousePress(e, true);
         this.Window.OnMouseWheel += e => Mouse.ProcessMouseWheel(e, true);
         this.Window.OnTick += _ => Update();
+        this.Window.OnSizeChanged += e => SizeChanged(e);
+        this.Window.OnTextInput += e => TextInput(e);
     }
 
     public void Add(Widget w)

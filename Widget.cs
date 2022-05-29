@@ -1493,7 +1493,19 @@ public class Widget : IDisposable, IContainer
 
     public virtual void LeftMouseDown(MouseEventArgs e) { }
 
-    public virtual void LeftMouseDownInside(MouseEventArgs e) { }
+    public virtual void LeftMouseDownInside(MouseEventArgs e)
+    {
+        if (TimerExists("double_left_inside"))
+        {
+            if (!TimerPassed("double_left_inside"))
+            {
+                this.OnDoubleLeftMouseDownInside?.Invoke(e);
+                DestroyTimer("double_left_inside");
+            }
+            else ResetTimer("double_left_inside");
+        }
+        else SetTimer("double_left_inside", 300);
+    }
 
     public virtual void LeftMouseUp(MouseEventArgs e) { }
 
@@ -1556,6 +1568,7 @@ public class Shortcut
     public Widget Widget;
     public Key Key;
     public BaseEvent Event;
+    public BoolEvent? Condition;
     public bool GlobalShortcut = false;
 
     /// <summary>
@@ -1565,12 +1578,13 @@ public class Shortcut
     /// <param name="Key">The actual key combination required to activate this shortcut.</param>
     /// <param name="Event">The event to trigger when the key is pressed.</param>
     /// <param name="GlobalShortcut">Whether the given widget needs to be active, or if this is a global shortcut.</param>
-    public Shortcut(Widget Widget, Key Key, BaseEvent Event, bool GlobalShortcut = false)
+    public Shortcut(Widget Widget, Key Key, BaseEvent Event, bool GlobalShortcut = false, BoolEvent? Condition = null)
     {
         this.Widget = Widget;
         this.Key = Key;
         this.Event = Event;
         this.GlobalShortcut = GlobalShortcut;
+        this.Condition = Condition;
     }
 }
 

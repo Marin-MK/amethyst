@@ -8,16 +8,18 @@ namespace amethyst;
 public class TextArea : Widget
 {
     public string Text { get; protected set; } = "";
+    public int TextX { get; protected set; } = 0;
     public int TextY { get; protected set; } = 0;
     public int CaretY { get; protected set; } = 2;
     public int CaretHeight { get; protected set; } = 13;
     public Font Font { get; protected set; }
     public Color TextColor { get; protected set; } = Color.WHITE;
     public Color DisabledTextColor { get; protected set; } = new Color(120, 120, 120);
-    public Color CaretColor { get; protected set; } = Color.BLACK;
+    public Color CaretColor { get; protected set; } = Color.WHITE;
     public Color FillerColor { get; protected set; } = new Color(0, 120, 215);
     public bool ReadOnly { get; protected set; } = false;
     public bool Enabled { get; protected set; } = true;
+    public bool NumericOnly { get; protected set; } = false;
 
     public bool EnteringText = false;
 
@@ -111,11 +113,11 @@ public class TextArea : Widget
             RX = 0;
             CaretIndex = 0;
             DrawText();
-            int width = Sprites["text"].Bitmap?.Width ?? 0;
-            int inviswidth = width - Size.Width;
-            if (inviswidth > 0) X = inviswidth;
-            RX = inviswidth > 0 ? Size.Width - 1 : width;
-            CaretIndex = this.Text.Length;
+            //int width = Sprites["text"].Bitmap?.Width ?? 0;
+            //int inviswidth = width - Size.Width;
+            //if (inviswidth > 0) X = inviswidth;
+            //RX = inviswidth > 0 ? Size.Width - 1 : width;
+            //CaretIndex = this.Text.Length;
             this.OnTextChanged?.Invoke(new TextEventArgs(this.Text, OldText));
         }
     }
@@ -123,7 +125,14 @@ public class TextArea : Widget
     public void SetFont(Font f)
     {
         this.Font = f;
+        SetCaretHeight(this.Font.Size + 1);
         DrawText();
+    }
+
+    public void SetTextX(int TextX)
+    {
+        this.TextX = TextX;
+        RepositionSprites();
     }
 
     public void SetTextY(int TextY)
@@ -179,6 +188,14 @@ public class TextArea : Widget
         }
     }
 
+    public void SetNumericOnly(bool NumericOnly)
+    {
+        if (this.NumericOnly != NumericOnly)
+        {
+            this.NumericOnly = NumericOnly;
+        }
+    }
+
     public override void SizeChanged(BaseEventArgs e)
     {
         base.SizeChanged(e);
@@ -204,6 +221,7 @@ public class TextArea : Widget
     public override void TextInput(TextEventArgs e)
     {
         base.TextInput(e);
+        if (this.ReadOnly) return;
         string text = this.Text;
         if (e.Text == "\n")
         {
@@ -212,6 +230,7 @@ public class TextArea : Widget
         }
         else if (!string.IsNullOrEmpty(e.Text))
         {
+            if (NumericOnly && !IsNumeric(e.Text)) return;
             if (SelectionStartIndex != -1 && SelectionStartIndex != SelectionEndIndex) DeleteSelection();
             InsertText(CaretIndex, e.Text);
         }
@@ -315,7 +334,6 @@ public class TextArea : Widget
     /// </summary>
     public void DeleteSelection()
     {
-        if (this.ReadOnly) return;
         int startidx = SelectionStartIndex > SelectionEndIndex ? SelectionEndIndex : SelectionStartIndex;
         int endidx = SelectionStartIndex > SelectionEndIndex ? SelectionStartIndex : SelectionEndIndex;
         CancelSelectionRight();
@@ -597,8 +615,6 @@ public class TextArea : Widget
             Sprites["caret"].Visible = !Sprites["caret"].Visible;
             ResetTimer("idle");
         }
-
-        if (this.ReadOnly) Sprites["caret"].Visible = false;
     }
 
     /// <summary>
@@ -716,8 +732,8 @@ public class TextArea : Widget
     /// <param name="Count">The number of characters to skip.</param>
     public void MoveCaretLeft(int Count = 1)
     {
-        if (this.ReadOnly) return;
-        if (CaretIndex - Count < 0) return;
+        if (CaretIndex - Count < 0) Count = CaretIndex;
+        if (Count <= 0) return;
         string TextToCaret = this.Text.Substring(0, CaretIndex);
         int charw = Font.TextSize(TextToCaret).Width - Font.TextSize(TextToCaret.Substring(0, TextToCaret.Length - Count)).Width;
         if (RX - charw < 0)
@@ -739,7 +755,6 @@ public class TextArea : Widget
     /// <param name="Count">The number of characters to skip.</param>
     public void MoveCaretRight(int Count = 1)
     {
-        if (this.ReadOnly) return;
         if (CaretIndex + Count > this.Text.Length) return;
         string TextToCaret = this.Text.Substring(0, CaretIndex);
         string TextToCaretPlusOne = this.Text.Substring(0, CaretIndex + Count);
@@ -820,23 +835,23 @@ public class TextArea : Widget
     /// </summary>
     public void RepositionSprites()
     {
-        Sprites["text"].X = -X;
+        Sprites["text"].X = TextX - X;
         int add = 1;
         if (this.Text.Length > 0 && CaretIndex > 0 && this.Text[CaretIndex - 1] == ' ' && RX != Width) add = 0;
-        Sprites["caret"].X = Math.Max(0, RX - add);
+        Sprites["caret"].X = TextX + Math.Max(0, RX - add);
 
         // Selections
         if (SelectionStartIndex > SelectionEndIndex)
         {
             if (X + Width < SelectionStartX)
             {
-                Sprites["filler"].X = RX;
+                Sprites["filler"].X = TextX + RX;
                 (Sprites["filler"].Bitmap as SolidBitmap).SetSize(Width - RX, CaretHeight);
                 Sprites["filler"].Visible = true;
             }
             else
             {
-                Sprites["filler"].X = RX;
+                Sprites["filler"].X = TextX + RX;
                 (Sprites["filler"].Bitmap as SolidBitmap).SetSize(SelectionStartX - X - RX, CaretHeight);
                 Sprites["filler"].Visible = true;
             }
@@ -845,13 +860,13 @@ public class TextArea : Widget
         {
             if (SelectionStartX < X)
             {
-                Sprites["filler"].X = 0;
+                Sprites["filler"].X = TextX;
                 (Sprites["filler"].Bitmap as SolidBitmap).SetSize(RX, CaretHeight);
                 Sprites["filler"].Visible = true;
             }
             else
             {
-                Sprites["filler"].X = SelectionStartX - X;
+                Sprites["filler"].X = TextX + SelectionStartX - X;
                 (Sprites["filler"].Bitmap as SolidBitmap).SetSize(X + RX - SelectionStartX, CaretHeight);
                 Sprites["filler"].Visible = true;
             }
@@ -870,7 +885,6 @@ public class TextArea : Widget
     /// </summary>
     public void SelectAll()
     {
-        if (this.ReadOnly) return;
         MoveCaretRight(this.Text.Length - CaretIndex);
         SelectionStartIndex = 0;
         SelectionEndIndex = this.Text.Length;
@@ -919,6 +933,8 @@ public class TextArea : Widget
         if (this.ReadOnly) return;
         if (TimerPassed("paste")) ResetTimer("paste");
         string text = Input.GetClipboard();
+        if (string.IsNullOrEmpty(text)) return;
+        if (NumericOnly && !IsNumeric(text)) return;
         string OldText = this.Text;
         if (SelectionStartIndex != -1 && SelectionStartIndex != SelectionEndIndex) DeleteSelection();
         InsertText(CaretIndex, text);
@@ -929,7 +945,7 @@ public class TextArea : Widget
     public override void MouseDown(MouseEventArgs e)
     {
         base.MouseDown(e);
-        if (!Mouse.Inside || this.Text.Length == 0 || this.ReadOnly || !this.Enabled) return;
+        if (!Mouse.Inside || this.Text.Length == 0 || !this.Enabled) return;
         if (SelectionStartIndex != -1 && SelectionStartIndex != SelectionEndIndex) CancelSelectionHidden();
         int OldRX = RX;
         int OldCaretIndex = CaretIndex;
@@ -976,13 +992,14 @@ public class TextArea : Widget
     public override void MouseMoving(MouseEventArgs e)
     {
         base.MouseMoving(e);
-        if (!e.LeftButton || !Mouse.LeftStartedInside || this.ReadOnly || !this.Enabled) return;
+        if (!e.LeftButton || !Mouse.LeftStartedInside || !this.Enabled) return;
         int OldRX = RX;
         int OldCaretIndex = CaretIndex;
         int rmx = e.X - Viewport.X;
         if (rmx >= Width && Sprites["text"].Bitmap.Width - X >= Width)
         {
-            MoveCaretRight();
+            if (CaretIndex == this.Text.Length) X += Sprites["text"].Bitmap.Width - X - Width;
+            else MoveCaretRight();
             SelectionEndIndex = CaretIndex;
             RepositionSprites();
             return;
@@ -1023,7 +1040,7 @@ public class TextArea : Widget
     public override void HoverChanged(MouseEventArgs e)
     {
         base.HoverChanged(e);
-        if (Mouse.Inside && Enabled && !ReadOnly)
+        if (Mouse.Inside && Enabled)
         {
             Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_IBEAM);
         }
@@ -1066,6 +1083,17 @@ public class TextArea : Widget
             OnTextChanged?.Invoke(new TextEventArgs(this.Text, OldText));
             UndoingOrRedoing = false;
         }
+    }
+
+    bool IsNumeric(string s)
+    {
+        for (int i = 0; i < s.Length; i++)
+        {
+            char c = s[i];
+            if (c == '-' && i == 0) continue;
+            if (c < '0' || c > '9') return false;
+        }
+        return true;
     }
 
     public TextAreaState GetState()
