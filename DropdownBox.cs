@@ -86,17 +86,6 @@ public class DropdownBox : TextBox
             }
         };
     }
-
-    public override object GetValue(string Identifier)
-    {
-        if (Identifier == "bool") return this.SelectedIndex == 0;
-        else return this.SelectedIndex;
-    }
-
-    public override void SetValue(string Identifier, object Value)
-    {
-        this.SetSelectedIndex(Convert.ToInt32(Value));
-    }
 }
 
 public class DropdownWidget : Widget

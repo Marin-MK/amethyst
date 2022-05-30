@@ -185,6 +185,7 @@ public class UIManager : IContainer
 
     public void Update()
     {
+        this.Shortcuts.RemoveAll(s => s.PendingRemoval);
         foreach (Shortcut s in this.Shortcuts)
         {
             if (!s.GlobalShortcut) continue; // Handled by the Widget it's bound to
@@ -208,8 +209,15 @@ public class UIManager : IContainer
                 }
                 else if (!TimerExists($"key_{s.Key.ID}") && !TimerExists($"key_{s.Key.ID}_initial"))
                 {
-                    SetTimer($"key_{s.Key.ID}_initial", 300);
-                    Valid = true;
+                    if (Input.Trigger((odl.SDL2.SDL.SDL_Keycode) k.MainKey))
+                    {
+                        SetTimer($"key_{s.Key.ID}_initial", 300);
+                        Valid = true;
+                    }
+                }
+                else
+                {
+
                 }
             }
             else
@@ -247,7 +255,19 @@ public class UIManager : IContainer
 
             if (!Valid) continue;
 
-            s.Event(new BaseEventArgs());
+            if (s.Condition != null)
+            {
+                BoolEventArgs e = new BoolEventArgs(true);
+                s.Condition(e);
+                if (!e.Value) Valid = false;
+            }
+
+            if (Valid)
+            {
+                s.Event(new BaseEventArgs());
+                // Remove any other key triggers for this iteration
+                ResetShortcutTimers(this);
+            }
         }
 
         for (int i = 0; i < this.Widgets.Count; i++)
@@ -260,6 +280,24 @@ public class UIManager : IContainer
             }
             this.Widgets[i].Update();
         }
+    }
+
+    public void ResetShortcutTimers(IContainer Exception)
+    {
+        if (this != Exception)
+        {
+            foreach (Shortcut s in this.Shortcuts)
+            {
+                if (!s.GlobalShortcut) continue;
+                if (TimerExists($"key_{s.Key.ID}")) DestroyTimer($"key_{s.Key.ID}");
+                if (TimerExists($"key_{s.Key.ID}_initial")) DestroyTimer($"key_{s.Key.ID}_initial");
+            }
+        }
+        for (int i = 0; i < this.Widgets.Count; i++)
+        {
+            this.Widgets[i].ResetShortcutTimers(Exception);
+        }
+        Input.IterationEnd();
     }
 
     /// <summary>

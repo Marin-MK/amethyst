@@ -71,16 +71,6 @@ public class TextBox : ActivatableWidget
         }
     }
 
-    public override object GetValue(string Identifier)
-    {
-        return this.Text;
-    }
-
-    public override void SetValue(string Identifier, object Value)
-    {
-        this.SetText((string)Value);
-    }
-
     public TextAreaState GetState()
     {
         return TextArea.GetState();

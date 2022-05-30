@@ -1157,30 +1157,6 @@ public class Widget : IDisposable, IContainer
     }
 
     /// <summary>
-    /// Retrieves a value from this widget.
-    /// </summary>
-    public virtual object GetValue(string Identifier)
-    {
-        throw new Exception($"Attempted to load a value from an unsupported widget");
-    }
-
-    /// <summary>
-    /// Sets the child widgets of this widget in bulk.
-    /// </summary>
-    public void SetWidgets(List<Widget> Widgets)
-    {
-        this.Widgets = Widgets;
-    }
-
-    /// <summary>
-    /// Sets a value to this widget.
-    /// </summary>
-    public virtual void SetValue(string Identifier, object Value)
-    {
-        throw new Exception($"Attempted to set a value to an unsupported widget");
-    }
-
-    /// <summary>
     /// Sets the grid row this widget is in. Used for grids.
     /// </summary>
     /// <param name="Row"></param>
@@ -1268,6 +1244,10 @@ public class Widget : IDisposable, IContainer
         }
         // Mark this widget as disposed.
         this.Disposed = true;
+        foreach (Shortcut s in this.Shortcuts)
+        {
+            if (s.GlobalShortcut) s.PendingRemoval = true;
+        }
         // Dispose the viewport and all its sprites.
         // Viewport may already be null if a child of a layoutcontainer has been disposed
         // because they share the same viewport.
@@ -1399,8 +1379,15 @@ public class Widget : IDisposable, IContainer
                     }
                     else if (!TimerExists($"key_{s.Key.ID}") && !TimerExists($"key_{s.Key.ID}_initial"))
                     {
-                        SetTimer($"key_{s.Key.ID}_initial", 300);
-                        Valid = true;
+                        if (Input.Trigger((odl.SDL2.SDL.SDL_Keycode) k.MainKey))
+                        {
+                            SetTimer($"key_{s.Key.ID}_initial", 300);
+                            Valid = true;
+                        }
+                    }
+                    else
+                    {
+
                     }
                 }
                 else
@@ -1438,8 +1425,20 @@ public class Widget : IDisposable, IContainer
 
                 if (!Valid) continue;
 
+                if (s.Condition != null)
+                {
+                    BoolEventArgs e = new BoolEventArgs(true);
+                    s.Condition(e);
+                    if (!e.Value) Valid = false;
+                }
+
                 // Execute this shortcut's event.
-                s.Event(new BaseEventArgs());
+                if (Valid)
+                {
+                    s.Event(new BaseEventArgs());
+                    // Remove any other key triggers for this iteration
+                    Window.UI.ResetShortcutTimers(this);
+                }
             }
         }
 
@@ -1455,6 +1454,23 @@ public class Widget : IDisposable, IContainer
                 continue;
             }
             this.Widgets[i].Update();
+        }
+    }
+
+    public void ResetShortcutTimers(IContainer Exception)
+    {
+        if (this != Exception)
+        {
+            foreach (Shortcut s in this.Shortcuts)
+            {
+                if (s.GlobalShortcut) continue;
+                if (TimerExists($"key_{s.Key.ID}")) DestroyTimer($"key_{s.Key.ID}");
+                if (TimerExists($"key_{s.Key.ID}_initial")) DestroyTimer($"key_{s.Key.ID}_initial");
+            }
+        }
+        for (int i = 0; i < this.Widgets.Count; i++)
+        {
+            this.Widgets[i].ResetShortcutTimers(Exception);
         }
     }
 
@@ -1575,6 +1591,7 @@ public class Shortcut
     public BaseEvent Event;
     public BoolEvent? Condition;
     public bool GlobalShortcut = false;
+    public bool PendingRemoval = false;
 
     /// <summary>
     /// Creates a new Shortcut object.
