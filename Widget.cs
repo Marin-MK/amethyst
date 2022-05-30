@@ -460,6 +460,11 @@ public class Widget : IDisposable, IContainer
     /// </summary>
     public BaseEvent OnZIndexChanged;
 
+    /// <summary>
+    /// Indicates whether the context menu is set to be opened on next update.
+    /// </summary>
+    public bool OpenContextMenuOnNextUpdate = false;
+
 
     /// <summary>
     /// Creates a new Widget object.
@@ -1321,6 +1326,21 @@ public class Widget : IDisposable, IContainer
     {
         AssertUndisposed();
 
+        if (OpenContextMenuOnNextUpdate)
+        {
+            OpenContextMenuOnNextUpdate = false;
+            ContextMenu cm = new ContextMenu(Window.UI);
+            cm.SetItems(ContextMenuList);
+            Size s = cm.Size;
+            int x = Graphics.LastMouseEvent.X;
+            int y = Graphics.LastMouseEvent.Y;
+            if (x + s.Width >= Window.Width) x -= s.Width;
+            if (y + s.Height >= Window.Height) y -= s.Height;
+            x = Math.Max(0, x);
+            y = Math.Max(0, y);
+            cm.SetPosition(x, y);
+        }
+
         if (TimerPassed("helptext") && HelpTextWidget == null)
         {
             string text = "";
@@ -1438,35 +1458,7 @@ public class Widget : IDisposable, IContainer
         }
     }
 
-    public virtual void MouseDown(MouseEventArgs e)
-    {
-        if (this.Mouse.Inside)
-        {
-            if (e.RightButton != e.OldRightButton && ShowContextMenu && ContextMenuList != null && ContextMenuList.Count > 0)
-            {
-                bool cont = true;
-                if (OnContextMenuOpening != null)
-                {
-                    BoolEventArgs args = new BoolEventArgs();
-                    this.OnContextMenuOpening(args);
-                    if (args.Value) cont = false;
-                }
-                if (cont)
-                {
-                    ContextMenu cm = new ContextMenu(Window.UI);
-                    cm.SetItems(ContextMenuList);
-                    Size s = cm.Size;
-                    int x = e.X;
-                    int y = e.Y;
-                    if (e.X + s.Width >= Window.Width) x -= s.Width;
-                    if (e.Y + s.Height >= Window.Height) y -= s.Height;
-                    x = Math.Max(0, x);
-                    y = Math.Max(0, y);
-                    cm.SetPosition(x, y);
-                }
-            }
-        }
-    }
+    public virtual void MouseDown(MouseEventArgs e) { }
 
     public virtual void MouseMoving(MouseEventArgs e)
     {
@@ -1487,7 +1479,20 @@ public class Widget : IDisposable, IContainer
         }
     }
 
-    public virtual void MouseUp(MouseEventArgs e) { }
+    public virtual void MouseUp(MouseEventArgs e)
+    {
+        if (Mouse.Inside && Mouse.RightMouseReleased && Mouse.RightStartedInside && ShowContextMenu && ContextMenuList != null && ContextMenuList.Count > 0)
+        {
+            bool cont = true;
+            if (OnContextMenuOpening != null)
+            {
+                BoolEventArgs args = new BoolEventArgs();
+                this.OnContextMenuOpening(args);
+                if (args.Value) cont = false;
+            }
+            if (cont) OpenContextMenuOnNextUpdate = true;
+        }
+    }
 
     public virtual void MousePress(MouseEventArgs e) { }
 
