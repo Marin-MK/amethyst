@@ -50,7 +50,7 @@ public class Widget : IDisposable, IContainer
     /// <summary>
     /// The list of sprites that create the graphics of this widget. All sprites MUST be stored in here to be properly displayed.
     /// </summary>
-    public Dictionary<string, ISprite> Sprites { get; protected set; } = new Dictionary<string, ISprite>();
+    public Dictionary<string, Sprite> Sprites { get; protected set; } = new Dictionary<string, Sprite>();
 
     /// <summary>
     /// Children widgets of this widget.
@@ -789,10 +789,9 @@ public class Widget : IDisposable, IContainer
     public void UpdateBounds()
     {
         AssertUndisposed();
-        foreach (ISprite sprite in this.Sprites.Values)
+        foreach (Sprite sprite in this.Sprites.Values)
         {
-            if (sprite is MultiSprite) foreach (Sprite s in ((MultiSprite) sprite).SpriteList.Values) s.OX = s.OY = 0;
-            else sprite.OX = sprite.OY = 0;
+            sprite.OX = sprite.OY = 0;
         }
 
         int xoffset = ConsiderInAutoScrollPositioning ? Parent.ScrolledX : 0;
@@ -815,10 +814,9 @@ public class Widget : IDisposable, IContainer
             int Diff = this.Parent.Viewport.X - this.Viewport.X;
             this.Viewport.X += Diff;
             this.Viewport.Width -= Diff;
-            foreach (ISprite sprite in this.Sprites.Values)
+            foreach (Sprite sprite in this.Sprites.Values)
             {
-                if (sprite is MultiSprite) foreach (Sprite s in ((MultiSprite) sprite).SpriteList.Values) s.OX += Diff / s.ZoomX;
-                else sprite.OX += Diff / sprite.ZoomX;
+                sprite.OX += Diff / sprite.ZoomX;
             }
             LeftCutOff = Diff;
         }
@@ -835,10 +833,9 @@ public class Widget : IDisposable, IContainer
             int Diff = this.Parent.Viewport.Y - this.Viewport.Y;
             this.Viewport.Y += Diff;
             this.Viewport.Height -= Diff;
-            foreach (ISprite sprite in this.Sprites.Values)
+            foreach (Sprite sprite in this.Sprites.Values)
             {
-                if (sprite is MultiSprite) foreach (Sprite s in ((MultiSprite) sprite).SpriteList.Values) s.OY += Diff / s.ZoomY;
-                else sprite.OY += Diff / sprite.ZoomY;
+                sprite.OY += Diff / sprite.ZoomY;
             }
             TopCutOff = Diff;
         }
@@ -1384,10 +1381,6 @@ public class Widget : IDisposable, IContainer
                             SetTimer($"key_{s.Key.ID}_initial", 300);
                             Valid = true;
                         }
-                    }
-                    else
-                    {
-
                     }
                 }
                 else

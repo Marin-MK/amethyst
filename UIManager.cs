@@ -215,10 +215,6 @@ public class UIManager : IContainer
                         Valid = true;
                     }
                 }
-                else
-                {
-
-                }
             }
             else
             {

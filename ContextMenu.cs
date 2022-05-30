@@ -8,23 +8,41 @@ public class ContextMenu : Widget
     public List<IMenuItem> Items = new List<IMenuItem>();
     public IMenuItem SelectedItem;
 
+    public Color InnerColor { get; protected set; } = new Color(45, 69, 107);
+    public Color OuterColor { get; protected set; } = Color.BLACK;
+
     public BaseEvent OnItemInvoked;
 
     public ContextMenu(IContainer Parent) : base(Parent)
     {
-        this.SetZIndex(Window.ActiveWidget is UIManager ? 9 : (Window.ActiveWidget as Widget).ZIndex + 9);
-        this.SetWidth(192);
-        this.Sprites["bg"] = new RectSprite(this.Viewport);
-        (this.Sprites["bg"] as RectSprite).SetColor(Color.BLACK, new Color(45, 69, 107));
-        this.Sprites["selector"] = new Sprite(this.Viewport, new SolidBitmap(2, 18, new Color(55, 187, 255)));
-        this.Sprites["selector"].X = 4;
-        this.Sprites["selector"].Visible = false;
-        this.Sprites["items"] = new Sprite(this.Viewport);
-        this.OnHelpTextWidgetCreated += HelpTextWidgetCreated;
-        this.OnFetchHelpText += FetchHelpText;
+        SetZIndex(Window.ActiveWidget is UIManager ? 9 : (Window.ActiveWidget as Widget).ZIndex + 9);
+        Sprites["bg"] = new Sprite(this.Viewport);
+        Sprites["selector"] = new Sprite(this.Viewport, new SolidBitmap(2, 18, new Color(55, 187, 255)));
+        Sprites["selector"].X = 4;
+        Sprites["selector"].Visible = false;
+        Sprites["items"] = new Sprite(this.Viewport);
+        OnHelpTextWidgetCreated += HelpTextWidgetCreated;
+        OnFetchHelpText += FetchHelpText;
 
-        this.WindowLayer = Window.ActiveWidget.WindowLayer + 1;
-        this.Window.SetActiveWidget(this);
+        WindowLayer = Window.ActiveWidget.WindowLayer + 1;
+        Window.SetActiveWidget(this);
+        SetWidth(192);
+    }
+
+    public override void SizeChanged(BaseEventArgs e)
+    {
+        base.SizeChanged(e);
+        RedrawBox();
+    }
+
+    private void RedrawBox()
+    {
+        Sprites["bg"].Bitmap?.Dispose();
+        Sprites["bg"].Bitmap = new Bitmap(Size);
+        Sprites["bg"].Bitmap.Unlock();
+        Sprites["bg"].Bitmap.DrawRect(0, 0, Size.Width, Size.Height, OuterColor);
+        Sprites["bg"].Bitmap.FillRect(1, 1, Size.Width - 2, Size.Height - 2, InnerColor);
+        Sprites["bg"].Bitmap.Lock();
     }
 
     public void SetInnerColor(byte R, byte G, byte B, byte A = 255)
@@ -33,7 +51,11 @@ public class ContextMenu : Widget
     }
     public void SetInnerColor(Color c)
     {
-        (Sprites["bg"] as RectSprite).SetInnerColor(c);
+        if (this.InnerColor != c)
+        {
+            this.InnerColor = c;
+            RedrawBox();
+        }
     }
 
     public void SetOuterColor(byte R, byte G, byte B, byte A = 255)
@@ -42,23 +64,26 @@ public class ContextMenu : Widget
     }
     public void SetOuterColor(Color c)
     {
-        (Sprites["bg"] as RectSprite).SetOuterColor(c);
+        if (this.OuterColor != c)
+        {
+            this.OuterColor = c;
+            RedrawBox();
+        }
     }
 
     public void SetItems(List<IMenuItem> Items)
     {
         this.Items = new List<IMenuItem>(Items);
         this.SetSize(192, CalcHeight() + 10);
-        (this.Sprites["bg"] as RectSprite).SetSize(this.Size);
     }
 
     protected override void Draw()
     {
-        if (this.Sprites["items"].Bitmap != null) this.Sprites["items"].Bitmap.Dispose();
-        this.Sprites["items"].Bitmap = new Bitmap(192, CalcHeight() + 10);
+        Sprites["items"].Bitmap?.Dispose();
+        Sprites["items"].Bitmap = new Bitmap(192, CalcHeight() + 10);
         Font f = Font.Get("assets/fonts/ProductSans-M", 12);
-        this.Sprites["items"].Bitmap.Font = f;
-        this.Sprites["items"].Bitmap.Unlock();
+        Sprites["items"].Bitmap.Font = f;
+        Sprites["items"].Bitmap.Unlock();
 
         int y = 5;
         for (int i = 0; i < this.Items.Count; i++)
