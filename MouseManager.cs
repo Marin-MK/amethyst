@@ -29,7 +29,8 @@ public class MouseManager
     public bool RightStartedInside = false;
     public bool MiddleStartedInside = false;
 
-    public bool Inside = false;
+    private bool _inside = false;
+    public bool Inside { get { return _inside && Accessible; } set { _inside = value; } }
 
     /// <summary>
     /// For this property to be true, there must be a valid mouse event.
