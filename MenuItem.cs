@@ -10,9 +10,11 @@ public class MenuItem : IMenuItem
     public List<IMenuItem> Items;
     public string HelpText;
     public string Shortcut;
-    public odl.MouseEvent OnLeftClick;
+    public odl.BaseEvent OnClicked;
     public odl.BoolEvent IsClickable;
-    public bool LastClickable = true;
+    public bool HasChildren => Items.Count > 0;
+    public bool IsCheckable = false;
+    public odl.BoolEvent IsChecked;
 
     public MenuItem(string Text)
     {

@@ -1,22 +1,30 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using odl;
 
 namespace amethyst;
 
 public class ContextMenu : Widget
 {
-    public List<IMenuItem> Items = new List<IMenuItem>();
-    public IMenuItem SelectedItem;
-
+    public List<IMenuItem> Items { get; protected set; } = new List<IMenuItem>();
     public Color InnerColor { get; protected set; } = new Color(45, 69, 107);
     public Color OuterColor { get; protected set; } = Color.BLACK;
 
-    public BaseEvent OnItemInvoked;
+    public MenuItem HoveringItem;
+    public ContextMenu ChildMenu;
+    public ContextMenu ParentMenu;
+    public MenuItem ParentItem;
 
-    public ContextMenu(IContainer Parent) : base(Parent)
+    bool AnyCheckables = false;
+
+    public ContextMenu(IContainer Parent, ContextMenu ParentMenu = null, MenuItem ParentItem = null) : base(Parent)
     {
-        SetZIndex(Window.ActiveWidget is UIManager ? 9 : (Window.ActiveWidget as Widget).ZIndex + 9);
+        this.ParentMenu = ParentMenu;
+        this.ParentItem = ParentItem;
+        if (ParentMenu != null) SetZIndex(ParentMenu.ZIndex);
+        else SetZIndex(Window.ActiveWidget is UIManager ? 9 : (Window.ActiveWidget as Widget).ZIndex + 9);
         Sprites["bg"] = new Sprite(this.Viewport);
+        Sprites["ext"] = new Sprite(this.Viewport);
         Sprites["selector"] = new Sprite(this.Viewport, new SolidBitmap(2, 18, new Color(55, 187, 255)));
         Sprites["selector"].X = 4;
         Sprites["selector"].Visible = false;
@@ -24,8 +32,12 @@ public class ContextMenu : Widget
         OnHelpTextWidgetCreated += HelpTextWidgetCreated;
         OnFetchHelpText += FetchHelpText;
 
-        WindowLayer = Window.ActiveWidget.WindowLayer + 1;
-        Window.SetActiveWidget(this);
+        if (ParentMenu != null) WindowLayer = ParentMenu.WindowLayer;
+        else
+        {
+            WindowLayer = Window.ActiveWidget.WindowLayer + 1;
+            Window.SetActiveWidget(this);
+        }
         SetWidth(192);
     }
 
@@ -75,6 +87,7 @@ public class ContextMenu : Widget
     {
         this.Items = new List<IMenuItem>(Items);
         this.SetSize(192, CalcHeight() + 10);
+        AnyCheckables = Items.Exists(i => i is MenuItem && ((MenuItem) i).IsCheckable);
     }
 
     protected override void Draw()
@@ -85,6 +98,11 @@ public class ContextMenu : Widget
         Sprites["items"].Bitmap.Font = f;
         Sprites["items"].Bitmap.Unlock();
 
+        Sprites["ext"].Bitmap?.Dispose();
+        Sprites["ext"].Bitmap = new Bitmap(Sprites["items"].Bitmap.Width, Sprites["items"].Bitmap.Height);
+        Sprites["ext"].Bitmap.Unlock();
+
+        int x = AnyCheckables ? 22 : 10;
         int y = 5;
         for (int i = 0; i < this.Items.Count; i++)
         {
@@ -92,17 +110,55 @@ public class ContextMenu : Widget
             if (item is MenuItem)
             {
                 MenuItem menuitem = item as MenuItem;
-                Color c = Color.WHITE;
+
+                bool Clickable = true;
                 if (menuitem.IsClickable != null)
                 {
-                    BoolEventArgs e = new BoolEventArgs();
+                    BoolEventArgs e = new BoolEventArgs(true);
                     menuitem.IsClickable(e);
-                    if (!e.Value) c = new Color(155, 164, 178);
-                    menuitem.LastClickable = e.Value;
+                    Clickable = e.Value;
                 }
-                this.Sprites["items"].Bitmap.DrawText(menuitem.Text, 10, y + 4, c);
+
+                // Draw check
+                if (menuitem.IsCheckable)
+                {
+                    BoolEventArgs e = new BoolEventArgs(false);
+                    menuitem.IsChecked(e);
+                    if (e.Value)
+                    {
+                        int ox = 8;
+                        int oy = y + 6;
+                        Color w = Clickable ? Color.WHITE : new Color(120, 120, 120);
+                        Sprites["ext"].Bitmap.DrawLine(ox, oy + 5, ox + 1, oy + 5, w);
+                        Sprites["ext"].Bitmap.DrawLine(ox + 1, oy + 6, ox + 4, oy + 6, w);
+                        Sprites["ext"].Bitmap.DrawLine(ox + 2, oy + 7, ox + 4, oy + 7, w);
+                        Sprites["ext"].Bitmap.SetPixel(ox + 3, oy + 8, w);
+                        Sprites["ext"].Bitmap.FillRect(ox + 4, oy + 4, 2, 2, w);
+                        Sprites["ext"].Bitmap.FillRect(ox + 5, oy + 2, 2, 2, w);
+                        Sprites["ext"].Bitmap.DrawLine(ox + 6, oy + 1, ox + 7, oy + 1, w);
+                        Sprites["ext"].Bitmap.SetPixel(ox + 7, oy, w);
+                    }
+                }
+
+                // Draw Text
+                Color TextColor = Clickable ? Color.WHITE : new Color(155, 164, 178);
+                Sprites["items"].Bitmap.DrawText(menuitem.Text, x, y + 4, TextColor);
                 if (!string.IsNullOrEmpty(menuitem.Shortcut))
-                    this.Sprites["items"].Bitmap.DrawText(menuitem.Shortcut, Size.Width - 9, y + 4, c, DrawOptions.RightAlign);
+                    Sprites["items"].Bitmap.DrawText(menuitem.Shortcut, Size.Width - 9, y + 4, TextColor, DrawOptions.RightAlign);
+
+                // Draw dropdown arrow
+                if (menuitem.HasChildren)
+                {
+                    int ox = Size.Width - 10;
+                    int oy = y + 10;
+                    Color edge = new Color(131, 131, 131);
+                    Color inside = new Color(214, 214, 214);
+                    Sprites["ext"].Bitmap.DrawLine(ox, oy, ox + 3, oy + 3, edge);
+                    Sprites["ext"].Bitmap.DrawLine(ox, oy + 6, ox + 2, oy + 4, edge);
+                    Sprites["ext"].Bitmap.DrawLine(ox, oy + 1, ox, oy + 5, inside);
+                    Sprites["ext"].Bitmap.DrawLine(ox + 1, oy + 2, ox + 1, oy + 4, inside);
+                    Sprites["ext"].Bitmap.SetPixel(ox + 2, oy + 3, inside);
+                }
                 y += 23;
             }
             else if (item is MenuSeparator)
@@ -111,12 +167,15 @@ public class ContextMenu : Widget
                 y += 5;
             }
         }
-        this.Sprites["items"].Bitmap.Lock();
+        Sprites["items"].Bitmap.Lock();
+        Sprites["ext"].Bitmap.Lock();
         base.Draw();
     }
 
     public override void Dispose()
     {
+        if (ChildMenu != null && !ChildMenu.Disposed) ChildMenu?.Dispose();
+        ChildMenu = null;
         if (this.Window.ActiveWidget == this)
         {
             this.Window.Widgets.RemoveAt(Window.Widgets.Count - 1);
@@ -125,24 +184,16 @@ public class ContextMenu : Widget
         base.Dispose();
     }
 
-    private int CalcHeight(int upto = -1)
+    private int CalcHeight(IMenuItem StopAtMenuItem = null)
     {
         int h = 0;
         for (int i = 0; i < Items.Count; i++)
         {
-            if (upto == -1 || i <= upto)
-            {
-                if (Items[i] is MenuSeparator) h += 5;
-                else h += 23;
-            }
+            if (Items[i] == StopAtMenuItem) break;
+            if (Items[i] is MenuSeparator) h += 5;
+            else h += 23;
         }
         return h;
-    }
-
-    public override void HoverChanged(MouseEventArgs e)
-    {
-        base.HoverChanged(e);
-        this.MouseMoving(e);
     }
 
     public override void MouseMoving(MouseEventArgs e)
@@ -150,20 +201,12 @@ public class ContextMenu : Widget
         base.MouseMoving(e);
         int rx = e.X - this.Viewport.X;
         int ry = e.Y - this.Viewport.Y;
-        if (!Mouse.Inside || rx < 0 || rx > this.Size.Width)
-        {
-            this.Sprites["selector"].Visible = false;
-            this.SelectedItem = null;
-            return;
-        }
+        Sprites["selector"].Visible = false;
+        if (!Mouse.Inside || rx < 0 || rx > this.Size.Width) return;
         int y = 4;
-        if (ry < y)
-        {
-            Sprites["selector"].Visible = false;
-            this.SelectedItem = null;
-            return;
-        }
-        IMenuItem OldSelected = SelectedItem;
+        if (ry < y) return;
+        MenuItem OldHovering = HoveringItem;
+        HoveringItem = null;
         for (int i = 0; i < this.Items.Count; i++)
         {
             if (Items[i] is MenuItem)
@@ -172,52 +215,139 @@ public class ContextMenu : Widget
                 {
                     Sprites["selector"].Y = y + 2;
                     Sprites["selector"].Visible = true;
-                    this.SelectedItem = Items[i];
+                    HoveringItem = (MenuItem) Items[i];
                     break;
                 }
                 y += 23;
             }
-            else
-            {
-                if (y <= ry && y + 5 > ry)
-                {
-                    Sprites["selector"].Visible = false;
-                    this.SelectedItem = Items[i];
-                    break;
-                }
-                y += 5;
-            }
+            else y += 5;
         }
-        if (OldSelected != SelectedItem)
+        if (OldHovering != HoveringItem)
         {
             if (HelpTextWidget != null) HelpTextWidget.Dispose();
             HelpTextWidget = null;
+            if (ChildMenu != null)
+            {
+                if (HoveringItem != null && ChildMenu.ParentItem != HoveringItem)
+                {
+                    // The hovered item is no longer the same as the child menu we have open
+                    // So we will close the child menu shortly.
+                    if (TimerExists("open_child_menu")) DestroyTimer("open_child_menu");
+                    if (!TimerExists("close_child_menu")) SetTimer("close_child_menu", 400);
+                }
+            }
+            else if (HoveringItem != null && HoveringItem.HasChildren)
+            {
+                // We're hovering over an item that has children, so open that menu momentarily.
+                if (TimerExists("close_child_menu")) DestroyTimer("close_child_menu");
+                if (TimerExists("open_child_menu")) DestroyTimer("open_child_menu");
+                SetTimer("open_child_menu", 400);
+            }
         }
     }
 
-    public void TryClick(MouseEventArgs e)
+    public override void Update()
     {
-        if ((this.SelectedItem as MenuItem).LastClickable)
+        base.Update();
+        if (TimerPassed("close_child_menu"))
         {
-            this.Dispose();
-            (SelectedItem as MenuItem).OnLeftClick?.Invoke(e);
-            OnItemInvoked?.Invoke(new BaseEventArgs());
+            DestroyTimer("close_child_menu");
+            if (ChildMenu != null && HoveringItem != null && !ChildMenu.IsInsideSelfOrChild())
+            {
+                if (ChildMenu.ParentItem != HoveringItem)
+                {
+                    ChildMenu?.Dispose();
+                    ChildMenu = null;
+                    if (HoveringItem.HasChildren) OpenChildMenu();
+                }
+            }
+            if (TimerExists("open_child_menu")) DestroyTimer("open_child_menu");
         }
+        else if (TimerPassed("open_child_menu"))
+        {
+            if (HoveringItem != null && HoveringItem.HasChildren && (ChildMenu == null || ChildMenu.ParentItem != HoveringItem && !ChildMenu.IsInsideSelfOrChild()))
+                OpenChildMenu();
+            DestroyTimer("open_child_menu");
+        }
+    }
+
+    private void OpenChildMenu()
+    {
+        ChildMenu?.Dispose();
+        ChildMenu = null;
+        if (!CanOpenHoveredItem()) return;
+        ChildMenu = new ContextMenu(Parent, this, HoveringItem);
+        ChildMenu.SetInnerColor(InnerColor);
+        ChildMenu.SetOuterColor(OuterColor);
+        ChildMenu.SetItems(HoveringItem.Items);
+        int x = Position.X + Size.Width;
+        int y = Position.Y + CalcHeight(HoveringItem);
+        int w = ChildMenu.Size.Width;
+        int h = ChildMenu.Size.Height;
+        ChildMenu.SetPosition(x, y);
+    }
+
+    public void OpenHoveredItem()
+    {
+        if (HoveringItem.HasChildren)
+        {
+            // Don't close child menu if that menu is the same as the currently open menu
+            if (ChildMenu != null && ChildMenu.ParentItem == HoveringItem) return;
+            OpenChildMenu();
+        }
+        else
+        {
+            // Disposes from the first ancestor downwards
+            DisposeFromTopDown();
+            HoveringItem.OnClicked?.Invoke(new BaseEventArgs());
+        }
+    }
+
+    public bool CanOpenHoveredItem()
+    {
+        BoolEventArgs e = new BoolEventArgs(true);
+        HoveringItem.IsClickable?.Invoke(e);
+        return e.Value;
     }
 
     public override void MouseDown(MouseEventArgs e)
     {
         base.MouseDown(e);
-        if (Mouse.Inside && this.SelectedItem != null && this.SelectedItem is MenuItem)
+        if (Mouse.Inside)
         {
             if (Mouse.LeftMouseTriggered)
             {
-                TryClick(e);
-                // Ensure no other events can be called from this mouse click
-                e.Handled = true;
+                if (HoveringItem != null && CanOpenHoveredItem())
+                {
+                    OpenHoveredItem();
+                    // Ensure no other events can be called from this mouse click
+                    e.Handled = true;
+                }
+                else
+                {
+                    ChildMenu?.Dispose();
+                    ChildMenu = null;
+                }
             }
         }
-        else this.Dispose();
+        else if (ParentMenu == null) // Only do clicking outside menu check for the main parent menu
+        {
+            // Mouse was outside Main context menu; now check if mouse was also not inside any child menus
+            bool WasInsideChild = false;
+            if (ChildMenu != null && ChildMenu.IsInsideSelfOrChild()) WasInsideChild = true;
+            if (!WasInsideChild) Dispose();
+        }
+    }
+
+    public bool IsInsideSelfOrChild()
+    {
+        return Mouse.Inside || ChildMenu != null && ChildMenu.IsInsideSelfOrChild();
+    }
+
+    public void DisposeFromTopDown()
+    {
+        if (ParentMenu != null) ParentMenu.DisposeFromTopDown();
+        else Dispose();
     }
 
     public void HelpTextWidgetCreated(BaseEventArgs e)
@@ -229,10 +359,6 @@ public class ContextMenu : Widget
     {
         base.FetchHelpText(e);
         e.String = null;
-        if (SelectedItem != null && SelectedItem is MenuItem)
-        {
-            e.String = (SelectedItem as MenuItem).HelpText;
-            if (!(SelectedItem as MenuItem).LastClickable) e.String += "\nUnavailable.";
-        }
+        if (HoveringItem != null && !string.IsNullOrEmpty(HoveringItem.HelpText)) e.String = HoveringItem.HelpText;
     }
 }
