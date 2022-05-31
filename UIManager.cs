@@ -194,7 +194,7 @@ public class UIManager : IContainer
 
             Key k = s.Key;
             bool Valid = false;
-            if (Input.Press((odl.SDL2.SDL.SDL_Keycode)k.MainKey))
+            if (Input.Press(k.MainKey))
             {
                 if (TimerPassed($"key_{s.Key.ID}"))
                 {
@@ -209,7 +209,7 @@ public class UIManager : IContainer
                 }
                 else if (!TimerExists($"key_{s.Key.ID}") && !TimerExists($"key_{s.Key.ID}_initial"))
                 {
-                    if (Input.Trigger((odl.SDL2.SDL.SDL_Keycode) k.MainKey))
+                    if (Input.Trigger(k.MainKey))
                     {
                         SetTimer($"key_{s.Key.ID}_initial", 300);
                         Valid = true;
@@ -227,12 +227,7 @@ public class UIManager : IContainer
             foreach (Keycode mod in k.Modifiers)
             {
                 bool onefound = false;
-                List<odl.SDL2.SDL.SDL_Keycode> codes = new List<odl.SDL2.SDL.SDL_Keycode>();
-                if (mod == Keycode.CTRL) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LCTRL); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RCTRL); }
-                else if (mod == Keycode.SHIFT) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LSHIFT); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RSHIFT); }
-                else if (mod == Keycode.ALT) { codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_LALT); codes.Add(odl.SDL2.SDL.SDL_Keycode.SDLK_RALT); }
-                else codes.Add((odl.SDL2.SDL.SDL_Keycode)mod);
-
+                List<Keycode> codes = new List<Keycode>();
                 for (int i = 0; i < codes.Count; i++)
                 {
                     if (Input.Press(codes[i]))

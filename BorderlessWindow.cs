@@ -64,7 +64,7 @@ public class BorderlessWindow : UIWindow
         };
         this.NormalRect = new Rect(this.X, this.Y, this.Width, this.Height);
         SizeChanged(new BaseEventArgs());
-        SDL_SetWindowResizable(this.SDL_Window, SDL_bool.SDL_FALSE);
+        SetResizable(false);
 
         Widget w = new Widget(UI.Container);
         w.SetPosition(1, 33);
@@ -83,19 +83,14 @@ public class BorderlessWindow : UIWindow
 
     public void UpdateInput(BaseEventArgs e)
     {
-        if (Input.Press(SDL_Keycode.SDLK_DOWN))
+        if (Input.Press(Keycode.DOWN))
         {
             s.Y -= 1;
         }
-        else if (Input.Press(SDL_Keycode.SDLK_UP))
+        else if (Input.Press(Keycode.UP))
         {
             s.Y += 1;
         }
-    }
-
-    public override void SetResizable(bool Resizable)
-    {
-        this.Resizable = Resizable;
     }
 
     public override void SizeChanged(BaseEventArgs e)
@@ -114,10 +109,9 @@ public class BorderlessWindow : UIWindow
         if (!Resizable) return;
         this.Maximized = true;
         NormalRect = new Rect(this.X, this.Y, this.Width, this.Height);
-        SDL_Rect rect;
-        SDL_GetDisplayUsableBounds(this.Screen, out rect);
-        this.SetPosition(rect.x - 1, rect.y - 1);
-        this.SetSize(rect.w + 2, rect.h + 2);
+        Rect UsableBounds = Graphics.GetUsableBounds(this.Screen);
+        this.SetPosition(UsableBounds.X - 1, UsableBounds.Y - 1);
+        this.SetSize(UsableBounds.Width + 2, UsableBounds.Height + 2);
         AnchorPoint = null;
         MovingWindow = false;
         MovedWindow = false;

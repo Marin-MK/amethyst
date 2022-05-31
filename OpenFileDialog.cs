@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using NativeLibraryLoader;
 
 namespace amethyst;
 
 public class OpenFileDialog
 {
-    odl.NativeLibrary tfd;
+    NativeLibrary tfd;
 
     internal delegate IntPtr OFDDelegate(string Title, string DefaultPath, int NumFilePatterns, string[] FilterPatterns, string SingleFilterDescription, int AllowMultiple);
     internal delegate IntPtr SFDDelegate(string Title, string DefaultPath);
@@ -25,11 +25,11 @@ public class OpenFileDialog
         {
             if (odl.Graphics.Platform == odl.Platform.Windows)
             {
-                tfd = new odl.NativeLibrary("./lib/windows/tinyfiledialogs64.dll");
+                tfd = NativeLibrary.Load("./lib/windows/tinyfiledialogs64.dll");
             }
             else if (odl.Graphics.Platform == odl.Platform.Linux)
             {
-                tfd = new odl.NativeLibrary("./lib/linux/tinyfiledialogs64.so");
+                tfd = NativeLibrary.Load("./lib/linux/tinyfiledialogs64.so");
             }
             else if (odl.Graphics.Platform == odl.Platform.MacOS)
             {
@@ -75,7 +75,7 @@ public class OpenFileDialog
         );
         if (ptr != IntPtr.Zero)
         {
-            string File = Marshal.PtrToStringAnsi(ptr);
+            string File = System.Runtime.InteropServices.Marshal.PtrToStringAnsi(ptr);
             if (!string.IsNullOrEmpty(File))
             {
                 while (File.Contains('\\')) File = File.Replace('\\', '/');
@@ -97,7 +97,7 @@ public class OpenFileDialog
         );
         if (ptr != IntPtr.Zero)
         {
-            string Files = Marshal.PtrToStringAnsi(ptr);
+            string Files = System.Runtime.InteropServices.Marshal.PtrToStringAnsi(ptr);
             if (!string.IsNullOrEmpty(Files))
             {
                 while (Files.Contains("\\")) Files = Files.Replace('\\', '/');
@@ -115,7 +115,7 @@ public class OpenFileDialog
         IntPtr ptr = FUNC_SelectFolderDialog(this.Title, this.DefaultFolder);
         if (ptr != IntPtr.Zero)
         {
-            string Folder = Marshal.PtrToStringAnsi(ptr);
+            string Folder = System.Runtime.InteropServices.Marshal.PtrToStringAnsi(ptr);
             if (!string.IsNullOrEmpty(Folder))
             {
                 while (Folder.Contains('\\')) Folder = Folder.Replace('\\', '/');

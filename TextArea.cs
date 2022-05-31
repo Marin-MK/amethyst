@@ -248,7 +248,7 @@ public class TextArea : Widget
                     if (CaretIndex < this.Text.Length)
                     {
                         int Count = 1;
-                        if (Input.Press(SDL_Keycode.SDLK_LCTRL) || Input.Press(SDL_Keycode.SDLK_RCTRL))
+                        if (Input.Press(Keycode.CTRL))
                             Count = FindNextCtrlIndex(false) - CaretIndex;
                         MoveCaretRight(Count);
                         RemoveText(this.CaretIndex - Count, Count);
@@ -257,7 +257,7 @@ public class TextArea : Widget
                 else
                 {
                     int Count = 1;
-                    if (Input.Press(SDL_Keycode.SDLK_LCTRL) || Input.Press(SDL_Keycode.SDLK_RCTRL))
+                    if (Input.Press(Keycode.CTRL))
                         Count = CaretIndex - FindNextCtrlIndex(true);
                     RemoveText(this.CaretIndex - Count, Count);
                 }
@@ -371,18 +371,18 @@ public class TextArea : Widget
             return;
         }
 
-        if (Input.Trigger(SDL_Keycode.SDLK_LEFT) || TimerPassed("left"))
+        if (Input.Trigger(Keycode.LEFT) || TimerPassed("left"))
         {
             if (TimerPassed("left")) ResetTimer("left");
             if (CaretIndex > 0)
             {
                 int Count = 1;
-                if (Input.Press(SDL_Keycode.SDLK_LCTRL) || Input.Press(SDL_Keycode.SDLK_RCTRL))
+                if (Input.Press(Keycode.CTRL))
                 {
                     Count = CaretIndex - FindNextCtrlIndex(true);
                 }
 
-                if (Input.Press(SDL_Keycode.SDLK_LSHIFT) || Input.Press(SDL_Keycode.SDLK_RSHIFT))
+                if (Input.Press(Keycode.SHIFT))
                 {
                     if (SelectionStartIndex == -1)
                     {
@@ -406,23 +406,23 @@ public class TextArea : Widget
                     }
                 }
             }
-            else if (SelectionStartIndex != -1 && !(Input.Press(SDL_Keycode.SDLK_LSHIFT) || Input.Press(SDL_Keycode.SDLK_RSHIFT)))
+            else if (SelectionStartIndex != -1 && !Input.Press(Keycode.SHIFT))
             {
                 CancelSelectionLeft();
             }
         }
-        if (Input.Trigger(SDL_Keycode.SDLK_RIGHT) || TimerPassed("right"))
+        if (Input.Trigger(Keycode.RIGHT) || TimerPassed("right"))
         {
             if (TimerPassed("right")) ResetTimer("right");
             if (CaretIndex < this.Text.Length)
             {
                 int Count = 1;
-                if (Input.Press(SDL_Keycode.SDLK_LCTRL) || Input.Press(SDL_Keycode.SDLK_RCTRL))
+                if (Input.Press(Keycode.CTRL))
                 {
                     Count = FindNextCtrlIndex(false) - CaretIndex;
                 }
 
-                if (Input.Press(SDL_Keycode.SDLK_LSHIFT) || Input.Press(SDL_Keycode.SDLK_RSHIFT))
+                if (Input.Press(Keycode.SHIFT))
                 {
                     if (SelectionStartIndex == -1)
                     {
@@ -446,14 +446,14 @@ public class TextArea : Widget
                     }
                 }
             }
-            else if (SelectionStartIndex != -1 && !(Input.Press(SDL_Keycode.SDLK_LSHIFT) || Input.Press(SDL_Keycode.SDLK_RSHIFT)))
+            else if (SelectionStartIndex != -1 && !(Input.Press(Keycode.SHIFT)))
             {
                 CancelSelectionRight();
             }
         }
-        if (Input.Trigger(SDL_Keycode.SDLK_HOME))
+        if (Input.Trigger(Keycode.HOME))
         {
-            if (Input.Press(SDL_Keycode.SDLK_LSHIFT) || Input.Press(SDL_Keycode.SDLK_RSHIFT))
+            if (Input.Press(Keycode.SHIFT))
             {
                 if (SelectionStartIndex != -1) SelectionEndIndex = 0;
                 else
@@ -467,9 +467,9 @@ public class TextArea : Widget
             MoveCaretLeft(CaretIndex);
             RepositionSprites();
         }
-        if (Input.Trigger(SDL_Keycode.SDLK_END))
+        if (Input.Trigger(Keycode.END))
         {
-            if (Input.Press(SDL_Keycode.SDLK_LSHIFT) || Input.Press(SDL_Keycode.SDLK_RSHIFT))
+            if (Input.Press(Keycode.SHIFT))
             {
                 if (SelectionStartIndex != -1) SelectionEndIndex = this.Text.Length;
                 else
@@ -483,36 +483,36 @@ public class TextArea : Widget
             MoveCaretRight(this.Text.Length - CaretIndex);
             RepositionSprites();
         }
-        if (Input.Press(SDL_Keycode.SDLK_LCTRL) || Input.Press(SDL_Keycode.SDLK_RCTRL))
+        if (Input.Press(Keycode.CTRL))
         {
-            if (Input.Trigger(SDL_Keycode.SDLK_a))
+            if (Input.Trigger(Keycode.A))
             {
                 SelectAll();
             }
-            if (Input.Trigger(SDL_Keycode.SDLK_x))
+            if (Input.Trigger(Keycode.X))
             {
                 CutSelection();
             }
-            if (Input.Trigger(SDL_Keycode.SDLK_c))
+            if (Input.Trigger(Keycode.C))
             {
                 CopySelection();
             }
-            if (Input.Trigger(SDL_Keycode.SDLK_v) || TimerPassed("paste"))
+            if (Input.Trigger(Keycode.V) || TimerPassed("paste"))
             {
                 PasteText();
             }
-            if (Input.Trigger(SDL_Keycode.SDLK_z) || TimerPassed("undo"))
+            if (Input.Trigger(Keycode.Z) || TimerPassed("undo"))
             {
                 UndoText();
             }
-            if (!Input.Press(SDL_Keycode.SDLK_z) && (Input.Trigger(SDL_Keycode.SDLK_y) || TimerPassed("redo")))
+            if (!Input.Press(Keycode.Z) && (Input.Trigger(Keycode.Y) || TimerPassed("redo")))
             {
                 RedoText();
             }
         }
 
         // Timers for repeated input
-        if (Input.Press(SDL_Keycode.SDLK_LEFT))
+        if (Input.Press(Keycode.LEFT))
         {
             if (!TimerExists("left_initial") && !TimerExists("left"))
             {
@@ -529,7 +529,7 @@ public class TextArea : Widget
             if (TimerExists("left")) DestroyTimer("left");
             if (TimerExists("left_initial")) DestroyTimer("left_initial");
         }
-        if (Input.Press(SDL_Keycode.SDLK_RIGHT))
+        if (Input.Press(Keycode.RIGHT))
         {
             if (!TimerExists("right_initial") && !TimerExists("right"))
             {
@@ -546,9 +546,9 @@ public class TextArea : Widget
             if (TimerExists("right")) DestroyTimer("right");
             if (TimerExists("right_initial")) DestroyTimer("right_initial");
         }
-        if (Input.Press(SDL_Keycode.SDLK_LCTRL) || Input.Press(SDL_Keycode.SDLK_RCTRL))
+        if (Input.Press(Keycode.CTRL))
         {
-            if (Input.Press(SDL_Keycode.SDLK_v))
+            if (Input.Press(Keycode.V))
             {
                 if (!TimerExists("paste_initial") && !TimerExists("paste"))
                 {
@@ -565,7 +565,7 @@ public class TextArea : Widget
                 if (TimerExists("paste")) DestroyTimer("paste");
                 if (TimerExists("paste_initial")) DestroyTimer("paste_initial");
             }
-            if (Input.Press(SDL_Keycode.SDLK_z))
+            if (Input.Press(Keycode.Z))
             {
                 if (!TimerExists("undo_initial") && !TimerExists("undo"))
                 {
@@ -582,7 +582,7 @@ public class TextArea : Widget
                 if (TimerExists("undo")) DestroyTimer("undo");
                 if (TimerExists("undo_initial")) DestroyTimer("undo_initial");
             }
-            if (Input.Press(SDL_Keycode.SDLK_y) && !Input.Press(SDL_Keycode.SDLK_z))
+            if (Input.Press(Keycode.Y) && !Input.Press(Keycode.Z))
             {
                 if (!TimerExists("redo_initial") && !TimerExists("redo"))
                 {
