@@ -226,20 +226,9 @@ public class UIManager : IContainer
             // Modifiers
             foreach (Keycode mod in k.Modifiers)
             {
-                bool onefound = false;
-                List<Keycode> codes = new List<Keycode>();
-                for (int i = 0; i < codes.Count; i++)
+                if (Input.Press(mod))
                 {
-                    if (Input.Press(codes[i]))
-                    {
-                        onefound = true;
-                        break;
-                    }
-                }
-
-                if (!onefound)
-                {
-                    Valid = false;
+                    Valid = true;
                     break;
                 }
             }
