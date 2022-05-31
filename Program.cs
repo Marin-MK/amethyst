@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using odl;
 using amethyst.Windows;
+using NativeLibraryLoader;
+using System.IO;
 
 namespace amethyst;
 
@@ -9,8 +11,8 @@ public class Program
 {
     public static void Main(params string[] Args)
     {
-        Graphics.Start();
-        Audio.Start();
+        InitializeGraphics();
+        InitializeAudio();
         //BorderlessWindow Window = new BorderlessWindow();
         //Window.Show();
 
@@ -107,5 +109,43 @@ public class Program
             Graphics.Update();
         }
         Graphics.Stop();
+    }
+
+    private static void InitializeGraphics()
+    {
+        PathPlatformInfo windows = new PathPlatformInfo(NativeLibraryLoader.Platform.Windows);
+        windows.AddPath("libsdl2", "./lib/windows/SDL2.dll");
+        windows.AddPath("libz", "./lib/windows/zlib1.dll");
+        windows.AddPath("libsdl2_image", "./lib/windows/SDL2_image.dll");
+        windows.AddPath("libpng", "./lib/windows/libpng16-16.dll");
+        if (File.Exists("lib/windows/libjpeg-9.dll")) windows.AddPath("libjpeg", "./lib/windows/libjpeg-9.dll");
+        windows.AddPath("libsdl2_ttf", "./lib/windows/SDL2_ttf.dll");
+        windows.AddPath("libfreetype", "./lib/windows/libfreetype-6.dll");
+
+        PathPlatformInfo linux = new PathPlatformInfo(NativeLibraryLoader.Platform.Linux);
+        linux.AddPath("libsdl2", "./lib/linux/SDL2.so");
+        linux.AddPath("libz", "./lib/linux/libz.so");
+        linux.AddPath("libsdl2_image", "./lib/linux/SDL2_image.so");
+        linux.AddPath("libpng", "./lib/linux/libpng16-16.so");
+        if (File.Exists("lib/linux/libjpeg-9.so")) linux.AddPath("libjpeg", "./lib/linux/libjpeg-9.so");
+        linux.AddPath("libsdl2_ttf", "./lib/linux/SDL2_ttf.so");
+        linux.AddPath("libfreetype", "./lib/linux/libfreetype-6.so");
+
+        Graphics.Start(PathInfo.Create(windows, linux));
+    }
+
+    private static void InitializeAudio()
+    {
+        PathPlatformInfo windows = new PathPlatformInfo(NativeLibraryLoader.Platform.Windows);
+        windows.AddPath("bass", "./lib/windows/bass.dll");
+        windows.AddPath("bass_fx", "./lib/windows/bass_fx.dll");
+        windows.AddPath("bass_midi", "./lib/windows/bassmidi.dll");
+
+        PathPlatformInfo linux = new PathPlatformInfo(NativeLibraryLoader.Platform.Linux);
+        linux.AddPath("bass", "./lib/linux/libbass.so");
+        linux.AddPath("bass_fx", "./lib/linux/libbass_fx.so");
+        linux.AddPath("bass_midi", "./lib/linux/libbassmidi.so");
+
+        Audio.Start(PathInfo.Create(windows, linux));
     }
 }
