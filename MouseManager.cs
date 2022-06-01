@@ -150,17 +150,14 @@ public class MouseManager
         if (LeftMouseReleased)
         {
             Widget.OnLeftMouseUp?.Invoke(Args);
-            this.LeftStartedInside = false;
         }
         if (RightMouseReleased)
         {
             Widget.OnRightMouseUp?.Invoke(Args);
-            this.RightStartedInside = false;
         }
         if (MiddleMouseReleased)
         {
             Widget.OnMiddleMouseUp?.Invoke(Args);
-            this.MiddleStartedInside = false;
         }
         RecursivelyPerform(m => m.ProcessMouseUp(Args, false));
         if (Root) ResetEventStates();
