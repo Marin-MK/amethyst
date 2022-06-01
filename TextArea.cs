@@ -113,6 +113,7 @@ public class TextArea : Widget
             RX = 0;
             CaretIndex = 0;
             DrawText();
+            // Puts caret at the end of the text
             //int width = Sprites["text"].Bitmap?.Width ?? 0;
             //int inviswidth = width - Size.Width;
             //if (inviswidth > 0) X = inviswidth;
@@ -125,7 +126,7 @@ public class TextArea : Widget
     public void SetFont(Font f)
     {
         this.Font = f;
-        SetCaretHeight(this.Font.Size + 1);
+        SetCaretHeight(this.Font.Size + 5);
         DrawText();
     }
 
