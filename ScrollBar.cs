@@ -94,9 +94,8 @@ public abstract class ScrollBar : Widget
     public override void MouseWheel(MouseEventArgs e)
     {
         if (!IsVisible()) return;
-        bool inside = false;
-        if (this.MouseInputRect != null) inside = this.MouseInputRect.Contains(e.X, e.Y);
-        else inside = this.Viewport.Contains(e.X, e.Y);
+        bool inside = Viewport.Contains(e.X, e.Y);
+        if (this.MouseInputRect != null && !inside) inside = this.MouseInputRect.Contains(e.X, e.Y);
         if (inside)
         {
             if (Input.Press(Keycode.CTRL))
