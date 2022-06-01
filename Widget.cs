@@ -1391,14 +1391,7 @@ public class Widget : IDisposable, IContainer
                 if (!Valid) continue;
 
                 // Modifiers
-                foreach (Keycode mod in k.Modifiers)
-                {
-                    if (Input.Press(mod))
-                    {
-                        Valid = true;
-                        break;
-                    }
-                }
+                Valid = k.Modifiers.TrueForAll(m => Input.Press(m));
 
                 if (!Valid) continue;
 

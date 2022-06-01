@@ -28,6 +28,8 @@ public class UIManager : IContainer
     public Container Container;
     public bool EvaluatedLastMouseEvent { get; set; }
 
+    List<Shortcut> ShortcutsPendingAddition = new List<Shortcut>();
+
     /// <summary>
     /// This object aids in fetching mouse input.
     /// </summary>
@@ -186,10 +188,11 @@ public class UIManager : IContainer
     public void Update()
     {
         this.Shortcuts.RemoveAll(s => s.PendingRemoval);
+        Shortcuts.AddRange(ShortcutsPendingAddition);
+        ShortcutsPendingAddition.Clear();
         foreach (Shortcut s in this.Shortcuts)
         {
-            if (!s.GlobalShortcut) continue; // Handled by the Widget it's bound to
-
+            // UIManager only has global shortcuts, and all global shortcuts are in UIManager.
             if (s.Widget != null && (s.Widget.WindowLayer < Window.ActiveWidget.WindowLayer || !s.Widget.IsVisible() || s.Widget.Disposed)) continue;
 
             Key k = s.Key;
@@ -224,14 +227,7 @@ public class UIManager : IContainer
             if (!Valid) continue;
 
             // Modifiers
-            foreach (Keycode mod in k.Modifiers)
-            {
-                if (Input.Press(mod))
-                {
-                    Valid = true;
-                    break;
-                }
-            }
+            Valid = k.Modifiers.TrueForAll(m => Input.Press(m));
 
             if (!Valid) continue;
 
@@ -358,11 +354,12 @@ public class UIManager : IContainer
 
     public void RegisterShortcut(Shortcut s)
     {
-        this.Shortcuts.Add(s);
+        ShortcutsPendingAddition.Add(s);
     }
 
     public void DeregisterShortcut(Shortcut s)
     {
+        if (this.ShortcutsPendingAddition.Contains(s)) this.ShortcutsPendingAddition.Remove(s);
         this.Shortcuts.Remove(s);
         if (TimerExists($"key_{s.Key.ID}")) DestroyTimer($"key_{s.Key.ID}");
         if (TimerExists($"key_{s.Key.ID}_initial")) DestroyTimer($"key_{s.Key.ID}_initial");
