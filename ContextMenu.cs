@@ -94,7 +94,7 @@ public class ContextMenu : Widget
     {
         Sprites["items"].Bitmap?.Dispose();
         Sprites["items"].Bitmap = new Bitmap(192, CalcHeight() + 10);
-        Font f = Font.Get("assets/fonts/ProductSans-M", 12);
+        Font f = Font.Get("assets/fonts/ProductSans-M", 9);
         Sprites["items"].Bitmap.Font = f;
         Sprites["items"].Bitmap.Unlock();
 
