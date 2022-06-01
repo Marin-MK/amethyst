@@ -5,6 +5,8 @@ namespace amethyst;
 
 public class UIWindow : Window
 {
+    public static List<UIWindow> Windows = new List<UIWindow>();
+
     /// <summary>
     /// The main UI manager object.
     /// When used as widget parent, will force widget to be the size of the UI Manager.
@@ -24,6 +26,8 @@ public class UIWindow : Window
     {
         Initialize(true, false, Borderless);
         InitializeUI();
+        Windows.Add(this);
+        OnClosed += _ => Windows.Remove(this);
     }
 
     public void InitializeUI()

@@ -7,6 +7,31 @@ namespace amethyst;
 
 public class Widget : IDisposable, IContainer
 {
+    private static bool _ShowWidgetOutlines;
+    public static bool ShowWidgetOutlines
+    {
+        get
+        {
+            return _ShowWidgetOutlines;
+        }
+        set
+        {
+            _ShowWidgetOutlines = value;
+            void updaterecursive(Widget w)
+            {
+                w.UpdateOutlines();
+                w.Widgets.ForEach(wdgt => updaterecursive(wdgt));
+            }
+            UIWindow.Windows.ForEach(win =>
+            {
+                win.UI.Widgets.ForEach(w =>
+                {
+                    updaterecursive(w);
+                });
+            });
+        }
+    }
+
     /// <summary>
     /// The viewport of this widget. Influenced by position, size, parent position and size, scroll values, etc.
     /// </summary>
@@ -789,10 +814,7 @@ public class Widget : IDisposable, IContainer
     public void UpdateBounds()
     {
         AssertUndisposed();
-        foreach (Sprite sprite in this.Sprites.Values)
-        {
-            sprite.OX = sprite.OY = 0;
-        }
+        foreach (Sprite sprite in this.Sprites.Values) sprite.OX = sprite.OY = 0;
 
         int xoffset = ConsiderInAutoScrollPositioning ? Parent.ScrolledX : 0;
         int yoffset = ConsiderInAutoScrollPositioning ? Parent.ScrolledY : 0;
@@ -814,10 +836,7 @@ public class Widget : IDisposable, IContainer
             int Diff = this.Parent.Viewport.X - this.Viewport.X;
             this.Viewport.X += Diff;
             this.Viewport.Width -= Diff;
-            foreach (Sprite sprite in this.Sprites.Values)
-            {
-                sprite.OX += Diff / sprite.ZoomX;
-            }
+            foreach (Sprite sprite in this.Sprites.Values) sprite.OX += Diff / sprite.ZoomX;
             LeftCutOff = Diff;
         }
         else LeftCutOff = 0;
@@ -833,10 +852,7 @@ public class Widget : IDisposable, IContainer
             int Diff = this.Parent.Viewport.Y - this.Viewport.Y;
             this.Viewport.Y += Diff;
             this.Viewport.Height -= Diff;
-            foreach (Sprite sprite in this.Sprites.Values)
-            {
-                sprite.OY += Diff / sprite.ZoomY;
-            }
+            foreach (Sprite sprite in this.Sprites.Values) sprite.OY += Diff / sprite.ZoomY;
             TopCutOff = Diff;
         }
         else TopCutOff = 0;
@@ -1444,6 +1460,41 @@ public class Widget : IDisposable, IContainer
         }
     }
 
+    private void UpdateOutlines()
+    {
+        if (ShowWidgetOutlines)
+        {
+            if (!Sprites.ContainsKey("_a_"))
+            {
+                Sprites["_a_"] = new Sprite(this.Viewport);
+                Sprites["_b_"] = new Sprite(this.Viewport);
+                Sprites["_c_"] = new Sprite(this.Viewport);
+                Sprites["_d_"] = new Sprite(this.Viewport);
+            }
+            Sprites["_a_"].Bitmap?.Dispose();
+            Sprites["_a_"].Bitmap = new SolidBitmap(Size.Width, 1, Color.BLACK);
+            Sprites["_b_"].Bitmap?.Dispose();
+            Sprites["_b_"].Bitmap = new SolidBitmap(Size.Width, 1, Color.BLACK);
+            Sprites["_b_"].Y = Size.Height - 1;
+            Sprites["_c_"].Bitmap?.Dispose();
+            Sprites["_c_"].Bitmap = new SolidBitmap(1, Size.Height, Color.BLACK);
+            Sprites["_d_"].Bitmap?.Dispose();
+            Sprites["_d_"].Bitmap = new SolidBitmap(1, Size.Height, Color.BLACK);
+            Sprites["_d_"].X = Size.Width - 1;
+        }
+        else if (Sprites.ContainsKey("_a_")) 
+        {
+            Sprites["_a_"].Dispose();
+            Sprites["_b_"].Dispose();
+            Sprites["_c_"].Dispose();
+            Sprites["_d_"].Dispose();
+            Sprites.Remove("_a_");
+            Sprites.Remove("_b_");
+            Sprites.Remove("_c_");
+            Sprites.Remove("_d_");
+        }
+    }
+
     public virtual void MouseDown(MouseEventArgs e) { }
 
     public virtual void MouseMoving(MouseEventArgs e)
@@ -1541,6 +1592,7 @@ public class Widget : IDisposable, IContainer
     public virtual void SizeChanged(BaseEventArgs e)
     {
         UpdateAutoScroll();
+        UpdateOutlines();
     }
 
     public virtual void ChildBoundsChanged(BaseEventArgs e)
