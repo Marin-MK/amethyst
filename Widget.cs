@@ -269,9 +269,14 @@ public class Widget : IDisposable, IContainer
     public ScrollBar VScrollBar { get; protected set; }
 
     /// <summary>
-    /// The margin to use for grids and stackpanels.
+    /// The margin to use as a position offset.
     /// </summary>
     public Margins Margins { get; protected set; } = new Margins();
+
+    /// <summary>
+    /// The padding with which to offset and shrink the widget.
+    /// </summary>
+    public Padding Padding { get; protected set; } = new Padding();
 
     /// <summary>
     /// Which grid row this widget starts in.
@@ -819,8 +824,8 @@ public class Widget : IDisposable, IContainer
         int xoffset = ConsiderInAutoScrollPositioning ? Parent.ScrolledX : 0;
         int yoffset = ConsiderInAutoScrollPositioning ? Parent.ScrolledY : 0;
 
-        this.Viewport.X = this.Parent.Viewport.X + this.Position.X + this.Margins.Left - this.Parent.LeftCutOff - xoffset;
-        this.Viewport.Y = this.Parent.Viewport.Y + this.Position.Y + this.Margins.Up - this.Parent.TopCutOff - yoffset;
+        this.Viewport.X = this.Parent.Viewport.X + this.Position.X + this.Padding.Left - this.Parent.LeftCutOff - xoffset;
+        this.Viewport.Y = this.Parent.Viewport.Y + this.Position.Y + this.Padding.Up - this.Parent.TopCutOff - yoffset;
         this.Viewport.Width = this.Size.Width;
         this.Viewport.Height = this.Size.Height;
 
@@ -963,12 +968,54 @@ public class Widget : IDisposable, IContainer
     /// <summary>
     /// Sets the widget margins.
     /// </summary>
-    /// <param name="Margins">The widget's margins.</param>
+    /// <param name="Padding">The widget's margins.</param>
     public virtual void SetMargins(Margins Margins)
     {
         this.Margins = Margins;
+        UpdateLayout();
+    }
+
+    /// <summary>
+    /// Sets the widget padding.
+    /// </summary>
+    /// <param name="All">Padding in all directions.</param>
+    public virtual void SetPadding(int All)
+    {
+        this.SetPadding(new Padding(All));
+    }
+
+    /// <summary>
+    /// Sets the widget padding.
+    /// </summary>
+    /// <param name="Horizontal">Horizontal padding.</param>
+    /// <param name="Vertical">Vertical padding.</param>
+    public virtual void SetPadding(int Horizontal, int Vertical)
+    {
+        this.SetPadding(new Padding(Horizontal, Vertical));
+    }
+
+    /// <summary>
+    /// Sets the widget padding.
+    /// </summary>
+    /// <param name="Left">Left padding.</param>
+    /// <param name="Up">Top padding.</param>
+    /// <param name="Right">Right padding.</param>
+    /// <param name="Down">Bottom padding.</param>
+    public virtual void SetPadding(int Left, int Up, int Right, int Down)
+    {
+        this.SetPadding(new Padding(Left, Up, Right, Down));
+    }
+
+    /// <summary>
+    /// Sets the widget padding.
+    /// </summary>
+    /// <param name="Padding">The widget's padding.</param>
+    public virtual void SetPadding(Padding Padding)
+    {
+        this.Padding = Padding;
         UpdatePositionAndSizeIfDocked();
         UpdateLayout();
+        UpdateBounds();
     }
 
     /// <summary>
@@ -980,8 +1027,8 @@ public class Widget : IDisposable, IContainer
         {
             int neww = this.Size.Width;
             int newh = this.Size.Height;
-            if (this.HDocked) neww = Parent.Size.Width - this.Position.X - this.Margins.Left - this.Margins.Right;
-            if (this.VDocked) newh = Parent.Size.Height - this.Position.Y - this.Margins.Up - this.Margins.Down;
+            if (this.HDocked) neww = Parent.Size.Width - this.Position.X - this.Padding.Left - this.Padding.Right;
+            if (this.VDocked) newh = Parent.Size.Height - this.Position.Y - this.Padding.Up - this.Padding.Down;
             this.SetSize(neww, newh);
         }
         if (this.RightDocked || this.BottomDocked)
@@ -989,8 +1036,8 @@ public class Widget : IDisposable, IContainer
             if (this is PictureBox) this.Update();
             int newx = this.Position.X;
             int newy = this.Position.Y;
-            if (this.RightDocked) newx = Parent.Size.Width - Size.Width - this.Margins.Right;
-            if (this.BottomDocked) newy = Parent.Size.Height - Size.Height - this.Margins.Down;
+            if (this.RightDocked) newx = Parent.Size.Width - Size.Width - this.Padding.Right;
+            if (this.BottomDocked) newy = Parent.Size.Height - Size.Height - this.Padding.Down;
             this.SetPosition(newx, newy);
         }
     }
@@ -1046,8 +1093,8 @@ public class Widget : IDisposable, IContainer
         AssertUndisposed();
         Size oldsize = this.Size;
         // Ensures the set size matches the parent size if the widget is docked
-        size.Width = HDocked ? Parent.Size.Width - this.Position.X - this.Margins.Left - this.Margins.Right : size.Width;
-        size.Height = VDocked ? Parent.Size.Height - this.Position.Y - this.Margins.Up - this.Margins.Down : size.Height;
+        size.Width = HDocked ? Parent.Size.Width - this.Position.X - this.Padding.Left - this.Padding.Right : size.Width;
+        size.Height = VDocked ? Parent.Size.Height - this.Position.Y - this.Padding.Up - this.Padding.Down : size.Height;
         // Ensures the new size doesn't exceed the set minimum and maximum values.
         if (size.Width < MinimumSize.Width) size.Width = MinimumSize.Width;
         else if (size.Width > MaximumSize.Width && MaximumSize.Width != -1) size.Width = MaximumSize.Width;

@@ -18,7 +18,7 @@ public class HelpText : Widget
         Sprites["text"].X = Sprites["text"].Y = 14;
     }
 
-    public void SetText(string Text)
+    public virtual void SetText(string Text)
     {
         List<string> Lines = new List<string>();
         string lastline = "";
