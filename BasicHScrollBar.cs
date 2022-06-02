@@ -38,6 +38,12 @@ public abstract class BasicHScrollBar : ScrollBar
     public override void MouseMoving(MouseEventArgs e)
     {
         base.MouseMoving(e);
+        bool OldSliderHovering = SliderHovering;
+        bool OldSliderDragging = SliderDragging;
+        bool OldArrow1Hovering = Arrow1Hovering;
+        bool OldArrow1Pressing = Arrow1Pressing;
+        bool OldArrow2Hovering = Arrow2Hovering;
+        bool OldArrow2Pressing = Arrow2Pressing;
         SliderHovering = false;
         SliderDragging = false;
         Arrow1Hovering = false;
@@ -70,6 +76,15 @@ public abstract class BasicHScrollBar : ScrollBar
             }
             if (!Arrow1Pressing && Arrow1StartedPressing) Arrow1Hovering = true;
             if (!Arrow2Pressing && Arrow2StartedPressing) Arrow2Hovering = true;
+            if (SliderHovering != OldSliderHovering ||
+                SliderDragging != OldSliderDragging ||
+                Arrow1Hovering != OldArrow1Hovering ||
+                Arrow1Pressing != OldArrow1Pressing ||
+                Arrow2Hovering != OldArrow2Hovering ||
+                Arrow2Pressing != OldArrow2Pressing)
+            {
+                this.Redraw();
+            }
         }
         else
         {
@@ -80,7 +95,6 @@ public abstract class BasicHScrollBar : ScrollBar
             int available = Size.Width - Arrow1Size - Arrow2Size - RealSliderWidth;
             this.SetValue((double)rx / available);
         }
-        this.Redraw();
     }
 
     public override void MouseDown(MouseEventArgs e)
