@@ -198,21 +198,10 @@ public class Widget : IDisposable, IContainer
     /// </summary>
     public bool BottomDocked { get; protected set; } = false;
 
-    private int _WindowLayer = 0;
     /// <summary>
     /// Which pseudo-window or layer this widget is on.
     /// </summary>
-    public int WindowLayer
-    {
-        get
-        {
-            return Parent.WindowLayer > _WindowLayer ? Parent.WindowLayer : _WindowLayer;
-        }
-        set
-        {
-            _WindowLayer = value;
-        }
-    }
+    public int WindowLayer { get; set; }
 
     /// <summary>
     /// Whether or not this widget should scroll horizontally if its children exceeds this widget's boundaries.
@@ -640,6 +629,7 @@ public class Widget : IDisposable, IContainer
             this.Viewport.Z = this.ZIndex;
             this.Viewport.Visible = (this.Parent as Widget).IsVisible() ? this.Visible : false;
         }
+        this.WindowLayer = Parent.WindowLayer;
         if (!New) UpdateBounds(); // Update position for the new parent
     }
 
@@ -1407,7 +1397,7 @@ public class Widget : IDisposable, IContainer
         }
 
         // If this widget is not active/accessible
-        if (this.WindowLayer < this.Window.ActiveWidget.WindowLayer || !this.IsVisible())
+        if (HelpTextWidget != null || TimerExists("helptext") && (this.WindowLayer < this.Window.ActiveWidget.WindowLayer || !this.IsVisible()))
         {
             if (TimerExists("helptext")) ResetTimer("helptext");
             if (HelpTextWidget != null) HelpTextWidget.Dispose();
