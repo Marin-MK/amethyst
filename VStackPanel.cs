@@ -27,6 +27,7 @@ public class VStackPanel : Widget, ILayout
         for (int i = 0; i < this.Widgets.Count; i++)
         {
             Widget w = this.Widgets[i];
+            if (!w.Visible) continue;
             y += w.Margins.Up;
             int x = w.Margins.Left;
             int width = this.Size.Width - x - w.Margins.Right;

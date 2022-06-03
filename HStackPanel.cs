@@ -27,6 +27,7 @@ public class HStackPanel : Widget, ILayout
         for (int i = 0; i < this.Widgets.Count; i++)
         {
             Widget w = this.Widgets[i];
+            if (!w.Visible) continue;
             x += w.Margins.Left;
             int y = w.Margins.Up;
             int height = this.Size.Height - y - w.Margins.Down;
