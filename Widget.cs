@@ -537,6 +537,14 @@ public class Widget : IDisposable, IContainer
         this.SetVisible(true);
     }
 
+    ~Widget()
+    {
+        if (!Disposed)
+        {
+            Console.WriteLine($"GC is collecting an undisposed widget: {GetType()}");
+        }
+    }
+
     /// <summary>
     /// Initializes the list of right-click menu options.
     /// </summary>

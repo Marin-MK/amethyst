@@ -149,7 +149,11 @@ public class UIManager : IContainer
             Mouse.ProcessMouseMoving(e, true);
         };
         this.Window.OnMousePress += e => Mouse.ProcessMousePress(e, true);
-        this.Window.OnMouseWheel += e => Mouse.ProcessMouseWheel(e, true);
+        this.Window.OnMouseWheel += e =>
+        {
+            Mouse.ProcessMouseWheel(e, true);
+            Mouse.ProcessMouseMoving(e, true);
+        };
         this.Window.OnTick += _ => Update();
         this.Window.OnSizeChanged += e => SizeChanged(e);
         this.Window.OnTextInput += e => TextInput(e);
