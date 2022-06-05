@@ -8,16 +8,18 @@ namespace amethyst;
 
 public class NewMultilineTextArea : Widget
 {
+    static Dictionary<Font, Dictionary<string, int>> FontStringWidths = new Dictionary<Font, Dictionary<string, int>>();
+
     public string Text { get; protected set; } = "";
     public Font Font { get; protected set; }
     public Color TextColor { get; protected set; } = Color.WHITE;
     public Color TextColorSelected { get; protected set; } = Color.BLACK;
     public Color SelectionBackgroundColor { get; protected set; } = new Color(128, 128, 255);
-    private int _FontLineHeight = -1;
-    private int _UserSetLineHeight = -1;
-    public int LineHeight => _UserSetLineHeight == -1 ? _FontLineHeight : _UserSetLineHeight;
     public DrawOptions DrawOptions { get; protected set; } = DrawOptions.None;
+    public int LineHeight => _UserSetLineHeight == -1 ? _FontLineHeight : _UserSetLineHeight;
+    public int LineMargins { get; protected set; } = 2;
     public bool OverlaySelectedText { get; protected set; } = true;
+    public bool LineWrapping { get; protected set; } = true;
 
     public BaseEvent OnTextChanged;
     public BoolEvent OnCopy;
@@ -26,38 +28,38 @@ public class NewMultilineTextArea : Widget
     List<Line> Lines;
     List<Sprite> LineSprites = new List<Sprite>();
     List<Sprite> SelBoxSprites = new List<Sprite>();
+    List<TextAreaState> UndoableStates = new List<TextAreaState>();
+    List<TextAreaState> RedoableStates = new List<TextAreaState>();
     CaretIndex Caret;
     CaretIndex? SelectionStart;
     CaretIndex? SelectionEnd;
     CaretIndex? SelectionLeft => SelectionStart.Index > SelectionEnd.Index ? SelectionEnd : SelectionStart;
     CaretIndex? SelectionRight => SelectionStart.Index > SelectionEnd.Index ? SelectionStart : SelectionEnd;
-    int LineWidthLimit;
     bool RequireRecalculation = false;
     bool RequireRedrawText = false;
     bool RequireCaretRepositioning = false;
     bool EnteringText = false;
     bool HasSelection => SelectionStart != null;
+    bool SnapToWords = false;
+    bool SnapToLines = false;
+    int? MinSelIndex;
+    int? MaxSelIndex;
+    int? LineSnapIndex;
+    int LineWidthLimit => Size.Width;
     int OldTopLineIndex = 0;
     int OldBottomLineIndex = 0;
-    int TopLineIndex => Parent.ScrolledY / LineHeight;
-    int BottomLineIndex => TopLineIndex + Parent.Size.Height / LineHeight;
+    int TopLineIndex => Parent.ScrolledY / (LineHeight + LineMargins);
+    int BottomLineIndex => TopLineIndex + Parent.Size.Height / (LineHeight + LineMargins);
+    int _FontLineHeight = -1;
+    int _UserSetLineHeight = -1;
 
     public NewMultilineTextArea(IContainer Parent) : base(Parent)
     {
         Lines = new List<Line>() { new Line(null) { LineIndex = 0, StartIndex = 0 } };
-        Caret = new CaretIndex(this);
-        Caret.Index = 0;
+        Caret = new CaretIndex(this) { Index = 0 };
         Sprites["caret"] = new Sprite(this.Viewport, new SolidBitmap(1, 1, Color.WHITE));
         Sprites["caret"].Z = 2;
         Sprites["caret"].Visible = false;
-        OnSizeChanged += _ =>
-        {
-            if (LineWidthLimit != Size.Width)
-            {
-                LineWidthLimit = Size.Width;
-                RecalculateLines();
-            }
-        };
         OnWidgetSelected += WidgetSelected;
         OnDisposed += _ =>
         {
@@ -68,8 +70,8 @@ public class NewMultilineTextArea : Widget
         {
             new Shortcut(this, new Key(Keycode.RIGHT), _ => MoveRight(Input.Press(Keycode.SHIFT), Input.Press(Keycode.CTRL))),
             new Shortcut(this, new Key(Keycode.LEFT), _ => MoveLeft(Input.Press(Keycode.SHIFT), Input.Press(Keycode.CTRL))),
-            new Shortcut(this, new Key(Keycode.UP), _ => MoveUp(Input.Press(Keycode.SHIFT))),
-            new Shortcut(this, new Key(Keycode.DOWN), _ => MoveDown(Input.Press(Keycode.SHIFT))),
+            new Shortcut(this, new Key(Keycode.UP), _ => MoveUp(Input.Press(Keycode.SHIFT), Input.Press(Keycode.CTRL))),
+            new Shortcut(this, new Key(Keycode.DOWN), _ => MoveDown(Input.Press(Keycode.SHIFT), Input.Press(Keycode.CTRL))),
             new Shortcut(this, new Key(Keycode.HOME), _ => MoveHome(Input.Press(Keycode.SHIFT))),
             new Shortcut(this, new Key(Keycode.END), _ => MoveEnd(Input.Press(Keycode.SHIFT))),
             new Shortcut(this, new Key(Keycode.PAGEUP), _ => MovePageUp(Input.Press(Keycode.SHIFT))),
@@ -78,16 +80,27 @@ public class NewMultilineTextArea : Widget
             new Shortcut(this, new Key(Keycode.X, Keycode.CTRL), _ => CutSelection()),
             new Shortcut(this, new Key(Keycode.C, Keycode.CTRL), _ => CopySelection()),
             new Shortcut(this, new Key(Keycode.V, Keycode.CTRL), _ => Paste()),
+            new Shortcut(this, new Key(Keycode.Z, Keycode.CTRL), _ => Undo()),
+            new Shortcut(this, new Key(Keycode.Y, Keycode.CTRL), _ => Redo()),
             new Shortcut(this, new Key(Keycode.ESCAPE), _ => CancelSelection())
         });
+        this.UndoableStates.Add(new TextAreaState(this));
     }
 
-    public void SetText(string Text)
+    public void SetText(string Text, bool SetCaretToEnd = false, bool ClearUndoStates = true)
     {
         if (this.Text != Text)
         {
             Text = Text.Replace("\r", "");
             this.Text = Text;
+            if (HasSelection) CancelSelection();
+            if (ClearUndoStates)
+            {
+                this.UndoableStates.Clear();
+                this.RedoableStates.Clear();
+                this.UndoableStates.Add(new TextAreaState(this));
+            }
+            if (SetCaretToEnd) Caret.Index = Text.Length;
             RecalculateLines();
         }
     }
@@ -100,6 +113,15 @@ public class NewMultilineTextArea : Widget
             _FontLineHeight = Font.Size + 5;
             ((SolidBitmap) Sprites["caret"].Bitmap).SetSize(1, this.LineHeight);
             RecalculateLines();
+        }
+    }
+
+    public void SetDrawOptions(DrawOptions DrawOptions)
+    {
+        if (this.DrawOptions != DrawOptions)
+        {
+            this.DrawOptions = DrawOptions;
+            RedrawText();
         }
     }
 
@@ -150,6 +172,24 @@ public class NewMultilineTextArea : Widget
         }
     }
 
+    public void SetLineWrapping(bool LineWrapping)
+    {
+        if (this.LineWrapping != LineWrapping)
+        {
+            this.LineWrapping = LineWrapping;
+            RecalculateLines();
+        }
+    }
+
+    public void SetLineMargins(int LineMargins)
+    {
+        if (this.LineMargins != LineMargins)
+        {
+            this.LineMargins = LineMargins;
+            RecalculateLines();
+        }
+    }
+
     public override void Update()
     {
         base.Update();
@@ -158,9 +198,9 @@ public class NewMultilineTextArea : Widget
             if (EnteringText) WidgetDeselected(new BaseEventArgs());
             if (Sprites["caret"].Visible) Sprites["caret"].Visible = false;
         }
-        if (Parent.ScrolledY % LineHeight != 0)
+        if (Parent.ScrolledY % (LineHeight + LineMargins) != 0)
         {
-            Parent.ScrolledY -= Parent.ScrolledY % LineHeight;
+            Parent.ScrolledY -= Parent.ScrolledY % (LineHeight + LineMargins);
             ((Widget) Parent).UpdateAutoScroll();
         }
         if (OldTopLineIndex != TopLineIndex || OldBottomLineIndex != BottomLineIndex)
@@ -173,6 +213,16 @@ public class NewMultilineTextArea : Widget
         OldBottomLineIndex = BottomLineIndex;
         if (RequireCaretRepositioning)
         {
+            if (Sprites["caret"].X - Parent.ScrolledX >= Parent.Size.Width)
+            {
+                Parent.ScrolledX += (Sprites["caret"].X - Parent.ScrolledX) - Parent.Size.Width + 1;
+                ((Widget) Parent).UpdateAutoScroll();
+            }
+            else if (Sprites["caret"].X - Parent.ScrolledX < 0)
+            {
+                Parent.ScrolledX += Sprites["caret"].X - Parent.ScrolledX - 1;
+                ((Widget) Parent).UpdateAutoScroll();
+            }
             if (Caret.Line.LineIndex < TopLineIndex) ScrollUp(TopLineIndex - Caret.Line.LineIndex);
             if (Caret.Line.LineIndex >= BottomLineIndex) ScrollDown(Caret.Line.LineIndex - BottomLineIndex + 1);
             RequireCaretRepositioning = false;
@@ -182,18 +232,25 @@ public class NewMultilineTextArea : Widget
             Sprites["caret"].Visible = !Sprites["caret"].Visible;
             ResetTimer("idle");
         }
+        if (TimerPassed("state"))
+        {
+            ResetTimer("state");
+            // Text changes since last timer passage of "state",
+            // so we add the current state
+            if (this.Text != UndoableStates.Last().Text) AddUndoState();
+        }
     }
 
     private void ScrollUp(int Count)
     {
-        int px = Count * LineHeight;
+        int px = Count * (LineHeight + LineMargins);
         Parent.ScrolledY = Math.Max(Parent.ScrolledY - px, 0);
         ((Widget) Parent).UpdateAutoScroll();
     }
 
     private void ScrollDown(int Count)
     {
-        int px = Count * LineHeight;
+        int px = Count * (LineHeight + LineMargins);
         Parent.ScrolledY += px;
         ((Widget) Parent).UpdateAutoScroll();
     }
@@ -204,6 +261,7 @@ public class NewMultilineTextArea : Widget
         EnteringText = true;
         Input.StartTextInput();
         SetTimer("idle", 400);
+        if (!TimerExists("state")) SetTimer("state", 500);
     }
 
     public override void WidgetDeselected(BaseEventArgs e)
@@ -211,6 +269,16 @@ public class NewMultilineTextArea : Widget
         base.WidgetDeselected(e);
         EnteringText = false;
         Input.StopTextInput();
+        if (TimerExists("state")) DestroyTimer("state");
+    }
+
+    private static int GetTextWidth(Font Font, string Text)
+    {
+        if (!FontStringWidths.ContainsKey(Font)) FontStringWidths.Add(Font, new Dictionary<string, int>());
+        if (FontStringWidths[Font].ContainsKey(Text)) return FontStringWidths[Font][Text];
+        Size s = Font.TextSize(Text);
+        FontStringWidths[Font].Add(Text, s.Width);
+        return s.Width;
     }
 
     private void RecalculateLines(bool Now = false)
@@ -230,7 +298,6 @@ public class NewMultilineTextArea : Widget
         {
             char c = this.Text[i];
             string txt = this.Text.Substring(startidx, i - startidx + 1);
-            Size s = this.Font.TextSize(txt);
             if (c == '\n')
             {
                 Line l = new Line(this.Font);
@@ -248,7 +315,7 @@ public class NewMultilineTextArea : Widget
                     });
                 }
             }
-            else if (s.Width >= LineWidthLimit)
+            else if (LineWrapping && GetTextWidth(this.Font, txt) >= LineWidthLimit)
             {
                 int endidx = lastsplittableindex == -1 ? i : lastsplittableindex + 1;
                 Line l = new Line(this.Font);
@@ -294,14 +361,18 @@ public class NewMultilineTextArea : Widget
         LineSprites.Clear();
         SelBoxSprites.ForEach(s => s.Dispose());
         SelBoxSprites.Clear();
-        int h = Lines.Count * LineHeight + 2;
-        if (h >= Parent.Size.Height) h += ((h - Parent.Size.Height) % LineHeight);
-        SetHeight(h);
+        if (this.Font == null) return;
+        int mc = (Lines.Count - 1) * LineMargins;
+        int h = Lines.Count * LineHeight + mc + 3;
+        if (h >= Parent.Size.Height) h += (h - Parent.Size.Height) % LineHeight;
+        if (h % LineHeight != 0) h += (LineHeight + LineMargins) - (h % (LineHeight + LineMargins));
+        if (LineWrapping) SetHeight(h);
+        else SetSize(Lines.Max(l => l.LineWidth) + 3, h);
         Lines.ForEach(line =>
         {
             if (line.LineIndex < TopLineIndex || line.LineIndex > BottomLineIndex) return;
             Sprite sprite = new Sprite(this.Viewport);
-            sprite.Y = line.LineIndex * LineHeight;
+            sprite.Y = line.LineIndex * LineHeight + line.LineIndex * LineMargins;
             sprite.Bitmap = new Bitmap(line.LineWidth, LineHeight + 2);
             sprite.Bitmap.Font = Font;
             sprite.Bitmap.Unlock();
@@ -437,7 +508,7 @@ public class NewMultilineTextArea : Widget
     private void UpdateCaretPosition(bool ResetScroll)
     {
         Sprites["caret"].X = Caret.Line.WidthUpTo(Caret.IndexInLine);
-        Sprites["caret"].Y = Caret.Line.LineIndex * LineHeight;
+        Sprites["caret"].Y = Caret.Line.LineIndex * LineHeight + Caret.Line.LineIndex * LineMargins;
         if (ResetScroll) RequireCaretRepositioning = true;
     }
 
@@ -567,8 +638,13 @@ public class NewMultilineTextArea : Widget
         }
     }
 
-    private void MoveUp(bool Shift)
+    private void MoveUp(bool Shift, bool Ctrl)
     {
+        if (Ctrl)
+        {
+            ScrollUp(1);
+            return;
+        }
         if (!Shift && HasSelection) CancelSelection();
         int OldIndex = Caret.Index;
         if (Caret.Line.LineIndex > 0)
@@ -614,8 +690,13 @@ public class NewMultilineTextArea : Widget
         }
     }
 
-    private void MoveDown(bool Shift)
+    private void MoveDown(bool Shift, bool Ctrl)
     {
+        if (Ctrl)
+        {
+            ScrollDown(1);
+            return;
+        }
         if (!Shift && HasSelection) CancelSelection();
         int OldIndex = Caret.Index;
         if (Caret.Line.LineIndex < Lines.Count - 1)
@@ -840,10 +921,42 @@ public class NewMultilineTextArea : Widget
         }
     }
 
+    private void SetPreviousViewState()
+    {
+        this.UndoableStates.Last().ParentScrolledX = Parent.ScrolledX;
+        this.UndoableStates.Last().ParentScrolledY = Parent.ScrolledY;
+        this.UndoableStates.Last().Caret = (CaretIndex) Caret.Clone();
+    }
+
+    private void AddUndoState()
+    {
+        this.UndoableStates.Add(new TextAreaState(this));
+        this.RedoableStates.Clear();
+    }
+
+    private void Undo()
+    {
+        if (UndoableStates.Count < 2) return;
+        TextAreaState PreviousState = UndoableStates[UndoableStates.Count - 2];
+        PreviousState.Apply();
+        RedoableStates.Add(UndoableStates[UndoableStates.Count - 1]);
+        UndoableStates.RemoveAt(UndoableStates.Count - 1);
+    }
+
+    private void Redo()
+    {
+        if (RedoableStates.Count < 1) return;
+        TextAreaState PreviousState = RedoableStates[RedoableStates.Count - 1];
+        PreviousState.Apply();
+        UndoableStates.Add(PreviousState);
+        RedoableStates.RemoveAt(RedoableStates.Count - 1);
+    }
+
     private void InsertText(int Index, string Text)
     {
         Text = Text.Replace("\r", "");
         if (Text.Length == 0) return;
+        SetPreviousViewState();
         if (HasSelection)
         {
             int count = SelectionRight.Index - SelectionLeft.Index;
@@ -853,6 +966,7 @@ public class NewMultilineTextArea : Widget
         this.Text = this.Text.Insert(Index, Text);
         if (Index <= Caret.Index) Caret.Index += Text.Length;
         if (Text == "\n") Caret.AtEndOfLine = false;
+        AddUndoState();
         ResetIdle();
         RecalculateLines();
     }
@@ -862,9 +976,11 @@ public class NewMultilineTextArea : Widget
         if (Index < 0) return;
         Count = Math.Min(Text.Length - Index, Count);
         if (Count < 1) return;
+        SetPreviousViewState();
         Text = Text.Remove(Index, Count);
         if (Index <= Caret.Index) Caret.Index = Math.Max(Index, Caret.Index - Count);
         Caret.AtEndOfLine = !Caret.Line.EndsInNewline && Caret.Index == Caret.Line.EndIndex + 1;
+        AddUndoState();
         ResetIdle();
         RecalculateLines();
     }
@@ -933,6 +1049,158 @@ public class NewMultilineTextArea : Widget
         RecalculateLines();
     }
 
+    private CaretIndex GetHoveredIndex(MouseEventArgs e)
+    {
+        int rx = e.X - Viewport.X + LeftCutOff;
+        int ry = e.Y - Viewport.Y + TopCutOff;
+        int LineIndex = ry / (LineHeight + LineMargins);
+        if (LineIndex < 0) LineIndex = 0;
+        if (LineIndex >= Lines.Count) LineIndex = Lines.Count - 1;
+        Line Line = Lines[LineIndex];
+        if (Line.Length == 0) return new CaretIndex(this) { Index = Line.StartIndex };
+        if (rx >= Line.LineWidth)
+        {
+            return new CaretIndex(this) { Index = Line.EndIndex + (Line.EndsInNewline ? 0 : 1), AtEndOfLine = !Line.EndsInNewline };
+        }
+        else if (rx < 0)
+        {
+            return new CaretIndex(this) { Index = Line.StartIndex, AtEndOfLine = false };
+        }
+        int idx = Line.StartIndex + Line.GetIndexAroundWidth(rx);
+        return new CaretIndex(this) { Index = idx, AtEndOfLine = !Line.EndsInNewline && idx == Line.EndIndex + 1 };
+    }
+
+    public override void LeftMouseDown(MouseEventArgs e)
+    {
+        base.LeftMouseDown(e);
+        if (Parent.Mouse.Inside)
+        {
+            if (TimerExists("triple"))
+            {
+                if (!TimerPassed("triple"))
+                {
+                    TripleLeftMouseDownInside(e);
+                    DestroyTimer("triple");
+                    CancelDoubleClick();
+                    return;
+                }
+                else DestroyTimer("triple");
+            }
+            if (HasSelection) CancelSelection();
+            CaretIndex Index = GetHoveredIndex(e);
+            Caret = Index;
+            UpdateCaretPosition(true);
+            ResetIdle();
+        }
+    }
+
+    public override void DoubleLeftMouseDownInside(MouseEventArgs e)
+    {
+        base.DoubleLeftMouseDownInside(e);
+        if (TimerExists("triple")) DestroyTimer("triple");
+        SetTimer("triple", 300);
+        SnapToWords = true;
+        CaretIndex Index = GetHoveredIndex(e);
+        MinSelIndex = TextArea.FindNextCtrlIndex(this.Text, Index.Index, true);
+        MaxSelIndex = TextArea.FindNextCtrlIndex(this.Text, Index.Index, false);
+        if (!HasSelection) StartSelection();
+        SelectionStart.AtEndOfLine = false;
+        SelectionStart.Index = (int) MinSelIndex;
+        SelectionEnd.Index = (int) MaxSelIndex;
+        SelectionEnd.AtEndOfLine = !SelectionEnd.Line.EndsInNewline && SelectionEnd.Index == SelectionEnd.Line.EndIndex + 1;
+        Caret.AtEndOfLine = SelectionEnd.AtEndOfLine;
+        Caret.Index = SelectionEnd.Index;
+        ResetIdle();
+        RedrawText();
+        UpdateCaretPosition(true);
+    }
+
+    private void TripleLeftMouseDownInside(MouseEventArgs e)
+    {
+        if (!HasSelection) StartSelection();
+        CaretIndex Index = GetHoveredIndex(e);
+        Line Line = Index.Line;
+        SelectionStart.AtEndOfLine = false;
+        SelectionStart.Index = Line.StartIndex;
+        SelectionEnd.AtEndOfLine = !Line.EndsInNewline;
+        SelectionEnd.Index = Line.EndIndex + (Line.EndsInNewline ? 0 : 1);
+        Caret.AtEndOfLine = SelectionEnd.AtEndOfLine;
+        Caret.Index = SelectionEnd.Index;
+        ResetIdle();
+        RedrawText();
+        UpdateCaretPosition(true);
+        SnapToLines = true;
+        LineSnapIndex = Line.LineIndex;
+    }
+
+    public override void MouseMoving(MouseEventArgs e)
+    {
+        base.MouseMoving(e);
+        if (Mouse.LeftMousePressed && Parent.Mouse.LeftStartedInside)
+        {
+            CaretIndex Index = GetHoveredIndex(e);
+            if (SnapToWords)
+            {
+                int Left = TextArea.FindNextCtrlIndex(this.Text, Index.Index, true);
+                int Right = TextArea.FindNextCtrlIndex(this.Text, Index.Index, false);
+                if (Left > MinSelIndex) Left = (int) MinSelIndex;
+                if (Right < MaxSelIndex) Right = (int) MaxSelIndex;
+                SelectionStart.AtEndOfLine = false;
+                SelectionStart.Index = Left;
+                SelectionEnd.Index = Right;
+                SelectionEnd.AtEndOfLine = !SelectionEnd.Line.EndsInNewline && SelectionEnd.Index == SelectionEnd.Line.EndIndex + 1;
+                if (Left < MinSelIndex)
+                {
+                    Caret.AtEndOfLine = SelectionStart.AtEndOfLine;
+                    Caret.Index = SelectionStart.Index;
+                }
+                else
+                {
+                    Caret.AtEndOfLine = SelectionEnd.AtEndOfLine;
+                    Caret.Index = SelectionEnd.Index;
+                }
+            }
+            else if (SnapToLines)
+            {
+                Line LineStart = Lines[Index.Line.LineIndex <= (int) LineSnapIndex ? Index.Line.LineIndex : (int) LineSnapIndex];
+                Line LineEnd = Lines[Index.Line.LineIndex <= (int) LineSnapIndex ? (int) LineSnapIndex : Index.Line.LineIndex];
+                SelectionStart.AtEndOfLine = false;
+                SelectionStart.Index = LineStart.StartIndex;
+                SelectionEnd.AtEndOfLine = !LineEnd.EndsInNewline;
+                SelectionEnd.Index = LineEnd.EndIndex + (LineEnd.EndsInNewline ? 0 : 1);
+                Caret.AtEndOfLine = SelectionEnd.AtEndOfLine;
+                Caret.Index = SelectionEnd.Index;
+            }
+            else
+            {
+                if (Caret.Index != Index.Index)
+                {
+                    if (!HasSelection) StartSelection();
+                    SelectionEnd.AtEndOfLine = Index.AtEndOfLine;
+                    SelectionEnd.Index = Index.Index;
+                    Caret.AtEndOfLine = Index.AtEndOfLine;
+                    Caret.Index = Index.Index;
+                }
+            }
+            ResetIdle();
+            RedrawText();
+            UpdateCaretPosition(true);
+        }
+    }
+
+    public override void MouseUp(MouseEventArgs e)
+    {
+        base.MouseUp(e);
+        if (Mouse.LeftMouseReleased)
+        {
+            SnapToWords = false;
+            SnapToLines = false;
+            MinSelIndex = null;
+            MaxSelIndex = null;
+            LineSnapIndex = null;
+        }
+    }
+
     private class Line
     {
         public Font Font;
@@ -950,11 +1218,11 @@ public class NewMultilineTextArea : Widget
             this.Font = Font;
         }
 
-        public void AddCharacter(char c, Size s)
+        public void AddCharacter(char c, int w)
         {
             EndsInNewline = c == '\n';
             Text += c;
-            CharacterWidths.Add(s.Width);
+            CharacterWidths.Add(w);
             Length++;
         }
 
@@ -963,9 +1231,7 @@ public class NewMultilineTextArea : Widget
             for (int i = 0; i < Text.Length; i++)
             {
                 if (Text[i] == '\r') continue;
-                char c = Text[i];
-                Size s = Font.TextSize(c);
-                AddCharacter(Text[i], s);
+                AddCharacter(Text[i], GetTextWidth(Font, Text[i].ToString()));
             }
         }
 
@@ -981,14 +1247,14 @@ public class NewMultilineTextArea : Widget
             if (Width == 0) return 0;
             for (int i = 0; i < Text.Length - (EndsInNewline ? 1 : 0); i++)
             {
-                int w = Font.TextSize(Text.Substring(0, i)).Width;
+                int w = GetTextWidth(Font, Text.Substring(0, i));
                 if (w >= Width) return i;
             }
             return Text.Length - (EndsInNewline ? 1 : 0);
         }
     }
 
-    private class CaretIndex
+    private class CaretIndex : ICloneable
     {
         private NewMultilineTextArea TextArea;
 
@@ -1000,6 +1266,75 @@ public class NewMultilineTextArea : Widget
         public CaretIndex(NewMultilineTextArea TextArea) 
         {
             this.TextArea = TextArea;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == this) return true;
+            if (obj is CaretIndex)
+            {
+                CaretIndex c = (CaretIndex) obj;
+                return this.Index == c.Index && this.AtEndOfLine == c.AtEndOfLine;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public object Clone()
+        {
+            return new CaretIndex(this.TextArea) { AtEndOfLine = this.AtEndOfLine, Index = this.Index };
+        }
+    }
+
+    private class TextAreaState
+    {
+        // If this field differs
+        public string Text;
+
+        // Then use these properties to revert state
+        private NewMultilineTextArea TextArea;
+        public CaretIndex Caret;
+        public int ParentScrolledX;
+        public int ParentScrolledY;
+
+        public TextAreaState(NewMultilineTextArea TextArea)
+        {
+            this.TextArea = TextArea;
+            this.Text = TextArea.Text;
+            this.Caret = (CaretIndex) TextArea.Caret?.Clone();
+            this.ParentScrolledX = TextArea.Parent.ScrolledX;
+            this.ParentScrolledY = TextArea.Parent.ScrolledY;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == this) return false;
+            if (obj is TextAreaState)
+            {
+                TextAreaState s = (TextAreaState) obj;
+                return this.Caret.Equals(s.Caret) &&
+                       this.ParentScrolledX == s.ParentScrolledX &&
+                       this.ParentScrolledY == s.ParentScrolledY;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public void Apply()
+        {
+            this.TextArea.SetText(this.Text, false, false);
+            this.TextArea.Caret = (CaretIndex) this.Caret.Clone();
+            this.TextArea.Parent.ScrolledX = this.ParentScrolledX;
+            this.TextArea.Parent.ScrolledY = this.ParentScrolledY;
+            ((Widget) this.TextArea.Parent).UpdateAutoScroll();
         }
     }
 }
