@@ -191,6 +191,19 @@ public class UIManager : IContainer
 
     public void Update()
     {
+        // Update children before self, that way widget-local shortcuts will trigger
+        // before any global shortcuts will.
+        for (int i = 0; i < this.Widgets.Count; i++)
+        {
+            if (this.Widgets[i].Disposed)
+            {
+                this.Widgets.RemoveAt(i);
+                i--;
+                continue;
+            }
+            this.Widgets[i].Update();
+        }
+
         this.Shortcuts.RemoveAll(s => s.PendingRemoval);
         Shortcuts.AddRange(ShortcutsPendingAddition);
         ShortcutsPendingAddition.Clear();
@@ -248,17 +261,6 @@ public class UIManager : IContainer
                 // Remove any other key triggers for this iteration
                 ResetShortcutTimers(this);
             }
-        }
-
-        for (int i = 0; i < this.Widgets.Count; i++)
-        {
-            if (this.Widgets[i].Disposed)
-            {
-                this.Widgets.RemoveAt(i);
-                i--;
-                continue;
-            }
-            this.Widgets[i].Update();
         }
     }
 
