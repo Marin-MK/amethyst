@@ -1540,6 +1540,11 @@ public class Widget : IDisposable, IContainer
         }
     }
 
+    public virtual void CancelDoubleClick()
+    {
+        if (TimerExists("double_left_inside")) DestroyTimer("double_left_inside");
+    }
+
     public virtual void MouseDown(MouseEventArgs e) { }
 
     public virtual void MouseMoving(MouseEventArgs e)
