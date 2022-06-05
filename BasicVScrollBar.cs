@@ -192,15 +192,19 @@ public abstract class BasicVScrollBar : ScrollBar
     public override void ScrollUp(int Count = 1)
     {
         if (!IsVisible()) return;
-        if (LinkedWidget != null) this.SetValue(((double)LinkedWidget.ScrolledY - ScrollStep * Count) / (LinkedWidget.MaxChildHeight - LinkedWidget.Viewport.Height));
-        else this.SetValue(this.Value - (double)ScrollStep * Count / Size.Height);
+        double px = ScrollStep * Count;
+        if (MinScrollStep != null && px < (int) MinScrollStep) px = (int) MinScrollStep;
+        if (LinkedWidget != null) this.SetValue((LinkedWidget.ScrolledY - px) / (LinkedWidget.MaxChildHeight - LinkedWidget.Viewport.Height));
+        else this.SetValue(this.Value - px / Size.Height);
     }
 
     public override void ScrollDown(int Count = 1)
     {
         if (!IsVisible()) return;
-        if (LinkedWidget != null) this.SetValue(((double)LinkedWidget.ScrolledY + ScrollStep * Count) / (LinkedWidget.MaxChildHeight - LinkedWidget.Viewport.Height));
-        else this.SetValue(this.Value + (double)ScrollStep * Count / Size.Height);
+        double px = ScrollStep * Count;
+        if (MinScrollStep != null && px < (int) MinScrollStep) px = (int) MinScrollStep;
+        if (LinkedWidget != null) this.SetValue((LinkedWidget.ScrolledY + px) / (LinkedWidget.MaxChildHeight - LinkedWidget.Viewport.Height));
+        else this.SetValue(this.Value + px / Size.Height);
     }
 
     public override void SetValue(double value, bool CallEvent = true)

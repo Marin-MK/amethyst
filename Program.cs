@@ -20,7 +20,7 @@ public class Program
 
         Window.SetBackgroundColor(SystemColors.WindowBackground);
 
-        GroupBox GroupBox1 = new GroupBox(Window.UI.Container);
+        /*GroupBox GroupBox1 = new GroupBox(Window.UI.Container);
         GroupBox1.SetPosition(64, 64);
         GroupBox1.SetSize(400, 400);
 
@@ -100,7 +100,7 @@ public class Program
         RadioBox2.OnCheckChanged += delegate (BaseEventArgs e)
         {
             if (RadioBox2.Checked) System.Console.WriteLine("Checked RadioBox 2");
-        };
+        };*/
 
         Window.Show();
 
