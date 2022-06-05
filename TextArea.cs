@@ -250,7 +250,7 @@ public class TextArea : Widget
                     {
                         int Count = 1;
                         if (Input.Press(Keycode.CTRL))
-                            Count = FindNextCtrlIndex(false) - CaretIndex;
+                            Count = FindNextCtrlIndex(this.Text, this.CaretIndex, false) - CaretIndex;
                         MoveCaretRight(Count);
                         RemoveText(this.CaretIndex - Count, Count);
                     }
@@ -259,7 +259,7 @@ public class TextArea : Widget
                 {
                     int Count = 1;
                     if (Input.Press(Keycode.CTRL))
-                        Count = CaretIndex - FindNextCtrlIndex(true);
+                        Count = CaretIndex - FindNextCtrlIndex(this.Text, this.CaretIndex, true);
                     RemoveText(this.CaretIndex - Count, Count);
                 }
             }
@@ -380,7 +380,7 @@ public class TextArea : Widget
                 int Count = 1;
                 if (Input.Press(Keycode.CTRL))
                 {
-                    Count = CaretIndex - FindNextCtrlIndex(true);
+                    Count = CaretIndex - FindNextCtrlIndex(this.Text, this.CaretIndex, true);
                 }
 
                 if (Input.Press(Keycode.SHIFT))
@@ -420,7 +420,7 @@ public class TextArea : Widget
                 int Count = 1;
                 if (Input.Press(Keycode.CTRL))
                 {
-                    Count = FindNextCtrlIndex(false) - CaretIndex;
+                    Count = FindNextCtrlIndex(this.Text, this.CaretIndex, false) - CaretIndex;
                 }
 
                 if (Input.Press(Keycode.SHIFT))
@@ -632,7 +632,7 @@ public class TextArea : Widget
     /// </summary>
     /// <param name="Left">Whether to search to the left or right of the caret.</param>
     /// <returns>The next index to jump to when holding control.</returns>
-    public int FindNextCtrlIndex(bool Left) // or false for Right
+    internal static int FindNextCtrlIndex(string Text, int CaretIndex, bool Left) // or false for Right
     {
         int idx = 0;
         string splitters = " `~!@#$%^&*()-=+[]{}\\|;:'\",.<>/?\n";
@@ -641,7 +641,7 @@ public class TextArea : Widget
         {
             for (int i = CaretIndex - 1; i >= 0; i--)
             {
-                if (splitters.Contains(this.Text[i]) && i != CaretIndex - 1)
+                if (splitters.Contains(Text[i]) && i != CaretIndex - 1)
                 {
                     idx = i + 1;
                     found = true;
@@ -652,16 +652,16 @@ public class TextArea : Widget
         }
         else
         {
-            for (int i = CaretIndex + 1; i < this.Text.Length; i++)
+            for (int i = CaretIndex + 1; i < Text.Length; i++)
             {
-                if (splitters.Contains(this.Text[i]))
+                if (splitters.Contains(Text[i]))
                 {
                     idx = i;
                     found = true;
                     break;
                 }
             }
-            if (!found) idx = this.Text.Length;
+            if (!found) idx = Text.Length;
         }
         return idx;
     }
@@ -977,8 +977,8 @@ public class TextArea : Widget
 
     public void DoubleClick()
     {
-        int startindex = FindNextCtrlIndex(true);
-        int endindex = FindNextCtrlIndex(false);
+        int startindex = FindNextCtrlIndex(this.Text, this.CaretIndex, true);
+        int endindex = FindNextCtrlIndex(this.Text, this.CaretIndex, false);
         if (endindex - startindex > 0)
         {
             SelectionStartIndex = startindex;
