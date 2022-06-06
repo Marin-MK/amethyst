@@ -67,9 +67,9 @@ public class VStackPanel : Widget, ILayout
         this.SetHeight(maxheight);
     }
 
-    public override void Add(Widget w)
+    public override void Add(Widget w, int Index = -1)
     {
-        base.Add(w);
+        base.Add(w, Index);
         this.NeedUpdate = true;
     }
 }

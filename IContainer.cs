@@ -48,6 +48,6 @@ public interface IContainer
 
     bool EvaluatedLastMouseEvent { get; set; }
 
-    void Add(Widget w);
+    void Add(Widget w, int index);
     Widget Remove(Widget w);
 }

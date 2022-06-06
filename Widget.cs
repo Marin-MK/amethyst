@@ -491,9 +491,9 @@ public class Widget : IDisposable, IContainer
     /// <param name="Parent">The Parent widget.</param>
     /// <param name="Name">The unique name to give this widget by which to store it.</param>
     /// <param name="Index">Optional index parameter. Used internally for stackpanels.</param>
-    public Widget(IContainer Parent)
+    public Widget(IContainer Parent, int ParentWidgetIndex = -1)
     {
-        this.SetParent(Parent);
+        this.SetParent(Parent, ParentWidgetIndex);
         // Create new viewport directly on the window's renderer.
         this.Viewport = new Viewport(this.Window, 0, 0, this.Size);
         // Z index by default copies parent viewport's z. If changed later, SetZIndex will modify the value.
@@ -610,7 +610,7 @@ public class Widget : IDisposable, IContainer
     /// </summary>
     /// <param name="Parent">The Parent widget.</param>
     /// <param name="Index">Optional index for stackpanel parents.</param>
-    public virtual void SetParent(IContainer Parent)
+    public virtual void SetParent(IContainer Parent, int ParentWidgetIndex = -1)
     {
         AssertUndisposed();
         bool New = true;
@@ -631,7 +631,7 @@ public class Widget : IDisposable, IContainer
             this.Window = (Parent as Widget).Window;
             this.Parent = Parent;
         }
-        this.Parent.Add(this);
+        this.Parent.Add(this, ParentWidgetIndex);
         if (this.Viewport != null)
         {
             this.Viewport.Z = this.ZIndex;
@@ -1193,9 +1193,10 @@ public class Widget : IDisposable, IContainer
     /// <summary>
     /// Adds a Widget object to this widget.
     /// </summary>
-    public virtual void Add(Widget w)
+    public virtual void Add(Widget w, int Index = -1)
     {
-        this.Widgets.Add(w);
+        if (Index == -1) this.Widgets.Add(w);
+        else this.Widgets.Insert(Index, w);
     }
 
     /// <summary>
@@ -1575,7 +1576,7 @@ public class Widget : IDisposable, IContainer
             {
                 BoolEventArgs args = new BoolEventArgs();
                 this.OnContextMenuOpening(args);
-                if (args.Value) cont = false;
+                if (!args.Value) cont = false;
             }
             if (cont) OpenContextMenuOnNextUpdate = true;
         }

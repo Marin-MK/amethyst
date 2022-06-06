@@ -6,7 +6,7 @@ using System.Text;
 
 namespace amethyst;
 
-public class NewMultilineTextArea : Widget
+public class MultilineTextArea : Widget
 {
     static Dictionary<Font, Dictionary<string, int>> FontStringWidths = new Dictionary<Font, Dictionary<string, int>>();
 
@@ -53,7 +53,7 @@ public class NewMultilineTextArea : Widget
     int _FontLineHeight = -1;
     int _UserSetLineHeight = -1;
 
-    public NewMultilineTextArea(IContainer Parent) : base(Parent)
+    public MultilineTextArea(IContainer Parent) : base(Parent)
     {
         Lines = new List<Line>() { new Line(null) { LineIndex = 0, StartIndex = 0 } };
         Caret = new CaretIndex(this) { Index = 0 };
@@ -314,6 +314,7 @@ public class NewMultilineTextArea : Widget
                         StartIndex = startidx
                     });
                 }
+                lastsplittableindex = -1;
             }
             else if (LineWrapping && GetTextWidth(this.Font, txt) >= LineWidthLimit)
             {
@@ -1256,14 +1257,14 @@ public class NewMultilineTextArea : Widget
 
     private class CaretIndex : ICloneable
     {
-        private NewMultilineTextArea TextArea;
+        private MultilineTextArea TextArea;
 
         public Line Line => TextArea.Lines.Find(l => Index - (AtEndOfLine ? 1 : 0) >= l.StartIndex && Index - (AtEndOfLine ? 1 : 0) <= l.EndIndex) ?? TextArea.Lines.Last();
         public int Index;
         public int IndexInLine => Index - Line.StartIndex;
         public bool AtEndOfLine = false;
 
-        public CaretIndex(NewMultilineTextArea TextArea) 
+        public CaretIndex(MultilineTextArea TextArea) 
         {
             this.TextArea = TextArea;
         }
@@ -1296,12 +1297,12 @@ public class NewMultilineTextArea : Widget
         public string Text;
 
         // Then use these properties to revert state
-        private NewMultilineTextArea TextArea;
+        private MultilineTextArea TextArea;
         public CaretIndex Caret;
         public int ParentScrolledX;
         public int ParentScrolledY;
 
-        public TextAreaState(NewMultilineTextArea TextArea)
+        public TextAreaState(MultilineTextArea TextArea)
         {
             this.TextArea = TextArea;
             this.Text = TextArea.Text;

@@ -86,6 +86,7 @@ public class TextWidget : Widget
                 Lines.Add(Text.Substring(startidx, i - startidx));
                 startidx = i + 1;
                 if (i == Text.Length - 1) Lines.Add("");
+                lastsplittableindex = -1;
             }
             else if (s.Width >= Width)
             {

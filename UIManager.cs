@@ -159,9 +159,10 @@ public class UIManager : IContainer
         this.Window.OnTextInput += e => TextInput(e);
     }
 
-    public void Add(Widget w)
+    public void Add(Widget w, int Index = -1)
     {
-        this.Widgets.Add(w);
+        if (Index == -1) this.Widgets.Add(w);
+        else this.Widgets.Insert(Index, w);
     }
 
     public Widget Remove(Widget w)
