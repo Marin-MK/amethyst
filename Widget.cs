@@ -1469,9 +1469,9 @@ public class Widget : IDisposable, IContainer
                 // Execute this shortcut's event.
                 if (Valid)
                 {
-                    s.Event(new BaseEventArgs());
                     // Remove any other key triggers for this iteration
                     Window.UI.ResetShortcutTimers(this);
+                    s.Event(new BaseEventArgs());
                 }
             }
         }

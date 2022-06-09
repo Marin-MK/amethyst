@@ -261,9 +261,9 @@ public class UIManager : IContainer
 
             if (Valid)
             {
-                s.Event(new BaseEventArgs());
                 // Remove any other key triggers for this iteration
                 ResetShortcutTimers(this);
+                s.Event(new BaseEventArgs());
             }
         }
     }

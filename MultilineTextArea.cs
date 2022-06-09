@@ -1038,6 +1038,7 @@ public class MultilineTextArea : Widget
         string text = this.Text;
         if (!string.IsNullOrEmpty(e.Text))
         {
+            if (e.Text == "\n" && Input.Press(Keycode.CTRL)) return;
             InsertText(Caret.Index, e.Text);
         }
         else if (e.Backspace || e.Delete)
