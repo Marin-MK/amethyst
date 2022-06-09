@@ -64,7 +64,7 @@ public class MultilineTextArea : Widget
         OnDisposed += _ =>
         {
             this.Window.UI.SetSelectedWidget(null);
-            Input.SetCursor(odl.SDL2.SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
+            Input.SetCursor(CursorType.Arrow);
         };
         RegisterShortcuts(new List<Shortcut>()
         {

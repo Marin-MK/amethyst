@@ -1,6 +1,5 @@
 ﻿using System;
 using odl;
-using static odl.SDL2.SDL;
 
 namespace amethyst;
 
@@ -225,15 +224,15 @@ public class BorderlessWindow : UIWindow
                         {
                             bool bottom = e.Y >= this.Height - ResizeMargin;
                             bool right = e.X >= this.Width - ResizeMargin;
-                            if (right && !bottom) Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEWE);
-                            else if (bottom && !right) Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENS);
-                            else if (right && bottom) Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENWSE);
-                            else Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
+                            if (right && !bottom) Input.SetCursor(CursorType.SizeWE);
+                            else if (bottom && !right) Input.SetCursor(CursorType.SizeNS);
+                            else if (right && bottom) Input.SetCursor(CursorType.SizeNWSE);
+                            else Input.SetCursor(CursorType.Arrow);
                         }
                     }
                     else
                     {
-                        Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
+                        Input.SetCursor(CursorType.Arrow);
                     }
                 }
             }
@@ -275,7 +274,7 @@ public class BorderlessWindow : UIWindow
         // to properly display all sprites/bitmaps/etc.
         // Otherwise nothing except some generic window header
         // will pop up.
-        Graphics.UpdateGraphics(true);
+        Graphics.Update(false, true);
     }
 
     public override void FocusLost(BaseEventArgs e)
@@ -284,7 +283,7 @@ public class BorderlessWindow : UIWindow
         // Out-of-reach mouse moving event to make sure the minimize button
         // doesn't stay in the hovered state.
         OnMouseMoving?.Invoke(new MouseEventArgs(-1, -1, false, false, false, false, false, false, 0, 0));
-        Graphics.UpdateGraphics(true);
+        Graphics.Update(false, true);
     }
 }
 

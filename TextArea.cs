@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using odl;
-using static odl.SDL2.SDL;
 
 namespace amethyst;
 
@@ -54,7 +53,7 @@ public class TextArea : Widget
         OnDisposed += delegate (BaseEventArgs e)
         {
             this.Window.UI.SetSelectedWidget(null);
-            Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
+            Input.SetCursor(CursorType.Arrow);
         };
         OnTextChanged += delegate (TextEventArgs e)
         {
@@ -1043,11 +1042,11 @@ public class TextArea : Widget
         base.HoverChanged(e);
         if (Mouse.Inside && Enabled)
         {
-            Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_IBEAM);
+            Input.SetCursor(CursorType.IBeam);
         }
         else
         {
-            Input.SetCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
+            Input.SetCursor(CursorType.Arrow);
         }
     }
 
