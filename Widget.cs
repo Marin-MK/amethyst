@@ -1424,30 +1424,30 @@ public class Widget : IDisposable, IContainer
                 bool Valid = false;
                 if (Input.Press(k.MainKey))
                 {
-                    if (TimerPassed($"key_{s.Key.ID}"))
+                    if (TimerPassed($"key_{k.ID}"))
                     {
-                        ResetTimer($"key_{s.Key.ID}");
+                        ResetTimer($"key_{k.ID}");
                         Valid = true;
                     }
-                    else if (TimerPassed($"key_{s.Key.ID}_initial"))
+                    else if (TimerPassed($"key_{k.ID}_initial"))
                     {
-                        SetTimer($"key_{s.Key.ID}", 50);
-                        DestroyTimer($"key_{s.Key.ID}_initial");
+                        SetTimer($"key_{k.ID}", 50);
+                        DestroyTimer($"key_{k.ID}_initial");
                         Valid = true;
                     }
-                    else if (!TimerExists($"key_{s.Key.ID}") && !TimerExists($"key_{s.Key.ID}_initial"))
+                    else if (!TimerExists($"key_{k.ID}") && !TimerExists($"key_{k.ID}_initial"))
                     {
                         if (Input.Trigger(k.MainKey))
                         {
-                            SetTimer($"key_{s.Key.ID}_initial", 300);
+                            SetTimer($"key_{k.ID}_initial", 300);
                             Valid = true;
                         }
                     }
                 }
                 else
                 {
-                    if (TimerExists($"key_{s.Key.ID}")) DestroyTimer($"key_{s.Key.ID}");
-                    if (TimerExists($"key_{s.Key.ID}_initial")) DestroyTimer($"key_{s.Key.ID}_initial");
+                    if (TimerExists($"key_{k.ID}")) DestroyTimer($"key_{k.ID}");
+                    if (TimerExists($"key_{k.ID}_initial")) DestroyTimer($"key_{k.ID}_initial");
                 }
                 if (!Valid) continue;
 
@@ -1455,6 +1455,7 @@ public class Widget : IDisposable, IContainer
                 if (Input.Press(Keycode.SHIFT) && !k.Modifiers.Contains(Keycode.SHIFT)) Valid = false;
                 else if (Input.Press(Keycode.CTRL) && !k.Modifiers.Contains(Keycode.CTRL)) Valid = false;
                 else if (Input.Press(Keycode.ALT) && !k.Modifiers.Contains(Keycode.ALT)) Valid = false;
+                else if (!k.Modifiers.TrueForAll(m => Input.Press(m))) Valid = false;
 
                 if (!Valid) continue;
 
