@@ -1452,7 +1452,9 @@ public class Widget : IDisposable, IContainer
                 if (!Valid) continue;
 
                 // Modifiers
-                Valid = k.Modifiers.TrueForAll(m => Input.Press(m));
+                if (Input.Press(Keycode.SHIFT) && !k.Modifiers.Contains(Keycode.SHIFT)) Valid = false;
+                else if (Input.Press(Keycode.CTRL) && !k.Modifiers.Contains(Keycode.CTRL)) Valid = false;
+                else if (Input.Press(Keycode.ALT) && !k.Modifiers.Contains(Keycode.ALT)) Valid = false;
 
                 if (!Valid) continue;
 
