@@ -839,7 +839,7 @@ public class Widget : IDisposable, IContainer
             int Diff = this.Parent.Viewport.X - this.Viewport.X;
             this.Viewport.X += Diff;
             this.Viewport.Width -= Diff;
-            foreach (Sprite sprite in this.Sprites.Values) sprite.OX += Diff / sprite.ZoomX;
+            foreach (Sprite sprite in this.Sprites.Values) sprite.OX += (int) Math.Round(Diff / sprite.ZoomX);
             LeftCutOff = Diff;
         }
         else LeftCutOff = 0;
@@ -855,7 +855,7 @@ public class Widget : IDisposable, IContainer
             int Diff = this.Parent.Viewport.Y - this.Viewport.Y;
             this.Viewport.Y += Diff;
             this.Viewport.Height -= Diff;
-            foreach (Sprite sprite in this.Sprites.Values) sprite.OY += Diff / sprite.ZoomY;
+            foreach (Sprite sprite in this.Sprites.Values) sprite.OY += (int) Math.Round(Diff / sprite.ZoomY);
             TopCutOff = Diff;
         }
         else TopCutOff = 0;
@@ -1031,7 +1031,6 @@ public class Widget : IDisposable, IContainer
         }
         if (this.RightDocked || this.BottomDocked)
         {
-            if (this is PictureBox) this.Update();
             int newx = this.Position.X;
             int newy = this.Position.Y;
             if (this.RightDocked) newx = Parent.Size.Width - Size.Width - this.Padding.Right;
