@@ -68,14 +68,30 @@ public class MultilineTextArea : Widget
         };
         RegisterShortcuts(new List<Shortcut>()
         {
-            new Shortcut(this, new Key(Keycode.RIGHT), _ => MoveRight(Input.Press(Keycode.SHIFT), Input.Press(Keycode.CTRL))),
-            new Shortcut(this, new Key(Keycode.LEFT), _ => MoveLeft(Input.Press(Keycode.SHIFT), Input.Press(Keycode.CTRL))),
-            new Shortcut(this, new Key(Keycode.UP), _ => MoveUp(Input.Press(Keycode.SHIFT), Input.Press(Keycode.CTRL))),
-            new Shortcut(this, new Key(Keycode.DOWN), _ => MoveDown(Input.Press(Keycode.SHIFT), Input.Press(Keycode.CTRL))),
-            new Shortcut(this, new Key(Keycode.HOME), _ => MoveHome(Input.Press(Keycode.SHIFT))),
-            new Shortcut(this, new Key(Keycode.END), _ => MoveEnd(Input.Press(Keycode.SHIFT))),
-            new Shortcut(this, new Key(Keycode.PAGEUP), _ => MovePageUp(Input.Press(Keycode.SHIFT))),
-            new Shortcut(this, new Key(Keycode.PAGEDOWN), _ => MovePageDown(Input.Press(Keycode.SHIFT))),
+            new Shortcut(this, new Key(Keycode.RIGHT), _ => MoveRight(false, false)),
+            new Shortcut(this, new Key(Keycode.RIGHT, Keycode.SHIFT), _ => MoveRight(true, false)),
+            new Shortcut(this, new Key(Keycode.RIGHT, Keycode.CTRL), _ => MoveRight(false, true)),
+            new Shortcut(this, new Key(Keycode.RIGHT, Keycode.SHIFT, Keycode.CTRL), _ => MoveRight(true, true)),
+            new Shortcut(this, new Key(Keycode.LEFT), _ => MoveLeft(false, false)),
+            new Shortcut(this, new Key(Keycode.LEFT, Keycode.SHIFT), _ => MoveLeft(true, false)),
+            new Shortcut(this, new Key(Keycode.LEFT, Keycode.CTRL), _ => MoveLeft(false, true)),
+            new Shortcut(this, new Key(Keycode.LEFT, Keycode.SHIFT, Keycode.CTRL), _ => MoveLeft(true, true)),
+            new Shortcut(this, new Key(Keycode.UP), _ => MoveUp(false, false)),
+            new Shortcut(this, new Key(Keycode.UP, Keycode.SHIFT), _ => MoveUp(true, false)),
+            new Shortcut(this, new Key(Keycode.UP, Keycode.CTRL), _ => MoveUp(false, true)),
+            new Shortcut(this, new Key(Keycode.UP, Keycode.SHIFT, Keycode.CTRL), _ => MoveUp(true, true)),
+            new Shortcut(this, new Key(Keycode.DOWN), _ => MoveDown(false, false)),
+            new Shortcut(this, new Key(Keycode.DOWN, Keycode.SHIFT), _ => MoveDown(true, false)),
+            new Shortcut(this, new Key(Keycode.DOWN, Keycode.CTRL), _ => MoveDown(false, true)),
+            new Shortcut(this, new Key(Keycode.DOWN, Keycode.SHIFT, Keycode.CTRL), _ => MoveDown(true, true)),
+            new Shortcut(this, new Key(Keycode.HOME), _ => MoveHome(false)),
+            new Shortcut(this, new Key(Keycode.HOME, Keycode.SHIFT), _ => MoveHome(true)),
+            new Shortcut(this, new Key(Keycode.END), _ => MoveEnd(false)),
+            new Shortcut(this, new Key(Keycode.END, Keycode.SHIFT), _ => MoveEnd(true)),
+            new Shortcut(this, new Key(Keycode.PAGEUP), _ => MovePageUp(false)),
+            new Shortcut(this, new Key(Keycode.PAGEUP, Keycode.SHIFT), _ => MovePageUp(true)),
+            new Shortcut(this, new Key(Keycode.PAGEDOWN), _ => MovePageDown(false)),
+            new Shortcut(this, new Key(Keycode.PAGEDOWN, Keycode.SHIFT), _ => MovePageDown(true)),
             new Shortcut(this, new Key(Keycode.A, Keycode.CTRL), _ => SelectAll()),
             new Shortcut(this, new Key(Keycode.X, Keycode.CTRL), _ => CutSelection()),
             new Shortcut(this, new Key(Keycode.C, Keycode.CTRL), _ => CopySelection()),
@@ -562,7 +578,7 @@ public class MultilineTextArea : Widget
         Caret.Index = Text.Length;
         Caret.AtEndOfLine = false;
         ResetIdle();
-        RedrawText();
+        RedrawText(true);
         UpdateCaretPosition(true);
     }
 
@@ -1087,11 +1103,18 @@ public class MultilineTextArea : Widget
                 }
                 else DestroyTimer("triple");
             }
-            if (HasSelection) CancelSelection();
             CaretIndex Index = GetHoveredIndex(e);
-            Caret = Index;
-            UpdateCaretPosition(true);
-            ResetIdle();
+            if (Input.Press(Keycode.SHIFT))
+            {
+                if (Caret.Index != Index.Index) MouseMoving(e);
+            }
+            else
+            {
+                if (HasSelection) CancelSelection();
+                Caret = Index;
+                UpdateCaretPosition(true);
+                ResetIdle();
+            }
         }
     }
 
@@ -1183,6 +1206,7 @@ public class MultilineTextArea : Widget
                     Caret.Index = Index.Index;
                 }
             }
+            if (HasSelection && SelectionStart.Index == SelectionEnd.Index) CancelSelection();
             ResetIdle();
             RedrawText();
             UpdateCaretPosition(true);
