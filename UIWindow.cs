@@ -22,12 +22,15 @@ public class UIWindow : Window
     /// </summary>
     public List<IContainer> Widgets = new List<IContainer>();
 
-    public UIWindow(bool Borderless = false) : base()
+    public UIWindow(bool Borderless = false, bool ShouldInitialize = true) : base()
     {
-        Initialize(true, false, Borderless);
-        InitializeUI();
-        Windows.Add(this);
-        OnClosed += _ => Windows.Remove(this);
+        if (ShouldInitialize)
+        {
+            Initialize(true, false, Borderless);
+            InitializeUI();
+            Windows.Add(this);
+            OnClosed += _ => Windows.Remove(this);
+        }
     }
 
     public void InitializeUI()
