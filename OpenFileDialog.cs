@@ -12,8 +12,8 @@ public class OpenFileDialog
 
     internal delegate IntPtr OFDDelegate(string Title, string DefaultPath, int NumFilePatterns, string[] FilterPatterns, string SingleFilterDescription, int AllowMultiple);
     internal delegate IntPtr SFDDelegate(string Title, string DefaultPath);
-    internal OFDDelegate FUNC_OpenFileDialog;
-    internal SFDDelegate FUNC_SelectFolderDialog;
+    internal static OFDDelegate FUNC_OpenFileDialog;
+    internal static SFDDelegate FUNC_SelectFolderDialog;
 
     public string Title;
     public string DefaultFolder;
@@ -21,27 +21,7 @@ public class OpenFileDialog
 
     public OpenFileDialog()
     {
-        if (tfd == null)
-        {
-            if (odl.Graphics.Platform == odl.Platform.Windows)
-            {
-                tfd = NativeLibrary.Load("./lib/windows/tinyfiledialogs64.dll");
-            }
-            else if (odl.Graphics.Platform == odl.Platform.Linux)
-            {
-                tfd = NativeLibrary.Load("./lib/linux/tinyfiledialogs64.so");
-            }
-            else if (odl.Graphics.Platform == odl.Platform.MacOS)
-            {
-                throw new Exception("MacOS support has not yet been implemented.");
-            }
-            else
-            {
-                throw new Exception("Failed to detect platform.");
-            }
-            FUNC_OpenFileDialog = tfd.GetFunction<OFDDelegate>("tinyfd_openFileDialog");
-            FUNC_SelectFolderDialog = tfd.GetFunction<SFDDelegate>("tinyfd_selectFolderDialog");
-        }
+        if (Amethyst.tfd == null) throw new Exception("Amethyst was not initialized with tinyfiledialogs enabled.");
         this.Title = "Open File";
         this.DefaultFolder = Directory.GetCurrentDirectory();
     }
@@ -108,7 +88,6 @@ public class OpenFileDialog
         }
         return null;
     }
-
 
     public string ChooseFolder()
     {

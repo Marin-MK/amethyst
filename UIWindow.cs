@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using odl;
 
 namespace amethyst;
@@ -24,6 +25,7 @@ public class UIWindow : Window
 
     public UIWindow(bool Borderless = false, bool ShouldInitialize = true) : base()
     {
+        if (!Amethyst.Initialized) throw new Exception("Amethyst was not initialized. Could not create window.");
         if (ShouldInitialize)
         {
             Initialize(true, false, Borderless);
