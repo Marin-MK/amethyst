@@ -32,7 +32,7 @@ public abstract class ScrollBar : Widget
 
     public ScrollBar(IContainer Parent) : base(Parent)
     {
-        this.ConsiderInAutoScrollPositioning = this.ConsiderInAutoScrollCalculation = false;
+        this.ConsiderInAutoScrollPositioningX = this.ConsiderInAutoScrollPositioningY = this.ConsiderInAutoScrollCalculation = false;
         this.Sprites["slider"] = new Sprite(this.Viewport);
         this.Sprites["arrow1"] = new Sprite(this.Viewport);
         this.Sprites["arrow2"] = new Sprite(this.Viewport);

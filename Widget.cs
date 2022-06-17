@@ -154,9 +154,14 @@ public class Widget : IDisposable, IContainer
     public bool ConsiderInAutoScrollCalculation = true;
 
     /// <summary>
-    /// Whether or not this widget should be affected by the autoscroll of the parent widget.
+    /// Whether or not this widget should be affected by the x autoscroll of the parent widget.
     /// </summary>
-    public bool ConsiderInAutoScrollPositioning = true;
+    public bool ConsiderInAutoScrollPositioningX = true;
+
+    /// <summary>
+    /// Whether or not this widget should be affected by the y autoscroll of the parent widget.
+    /// </summary>
+    public bool ConsiderInAutoScrollPositioningY = true;
 
     /// <summary>
     /// The number of pixels the widget and all its parents have been clipped off on the left side.
@@ -819,8 +824,8 @@ public class Widget : IDisposable, IContainer
         AssertUndisposed();
         foreach (Sprite sprite in this.Sprites.Values) sprite.OX = sprite.OY = 0;
 
-        int xoffset = ConsiderInAutoScrollPositioning ? Parent.ScrolledX : 0;
-        int yoffset = ConsiderInAutoScrollPositioning ? Parent.ScrolledY : 0;
+        int xoffset = ConsiderInAutoScrollPositioningX ? Parent.ScrolledX : 0;
+        int yoffset = ConsiderInAutoScrollPositioningY ? Parent.ScrolledY : 0;
 
         this.Viewport.X = this.Parent.Viewport.X + this.Position.X + this.Padding.Left - this.Parent.LeftCutOff - xoffset;
         this.Viewport.Y = this.Parent.Viewport.Y + this.Position.Y + this.Padding.Up - this.Parent.TopCutOff - yoffset;
