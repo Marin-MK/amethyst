@@ -30,7 +30,7 @@ public class MultilineTextArea : Widget
     protected List<Sprite> SelBoxSprites = new List<Sprite>();
     protected List<TextAreaState> UndoableStates = new List<TextAreaState>();
     protected List<TextAreaState> RedoableStates = new List<TextAreaState>();
-    protected CaretIndex Caret;
+    public CaretIndex Caret;
     protected CaretIndex? SelectionStart;
     protected CaretIndex? SelectionEnd;
     protected CaretIndex? SelectionLeft => SelectionStart.Index > SelectionEnd.Index ? SelectionEnd : SelectionStart;
@@ -100,7 +100,7 @@ public class MultilineTextArea : Widget
             new Shortcut(this, new Key(Keycode.Y, Keycode.CTRL), _ => Redo()),
             new Shortcut(this, new Key(Keycode.ESCAPE), _ => CancelSelection())
         });
-        this.UndoableStates.Add(new TextAreaState(this));
+        AddUndoState();
     }
 
     public virtual void SetText(string Text, bool SetCaretToEnd = false, bool ClearUndoStates = true)
@@ -116,8 +116,7 @@ public class MultilineTextArea : Widget
             if (ClearUndoStates)
             {
                 this.UndoableStates.Clear();
-                this.RedoableStates.Clear();
-                this.UndoableStates.Add(new TextAreaState(this));
+                AddUndoState();
             }
             if (SetCaretToEnd) Caret.Index = Text.Length;
             RecalculateLines();
@@ -383,6 +382,16 @@ public class MultilineTextArea : Widget
         RequireRecalculation = false;
     }
 
+    protected virtual void UpdateHeight()
+    {
+        int mc = (Lines.Count - 1) * LineMargins;
+        int h = Lines.Count * LineHeight + mc + 3;
+        if (h >= Parent.Size.Height) h += (h - Parent.Size.Height) % LineHeight;
+        if (h % LineHeight != 0) h += (LineHeight + LineMargins) - (h % (LineHeight + LineMargins));
+        if (LineWrapping) SetHeight(h);
+        else SetSize(Lines.Max(l => l.LineWidth) + 3, h);
+    }
+
     protected virtual void RedrawText(bool Now = false)
     {
         if (!Now)
@@ -395,12 +404,7 @@ public class MultilineTextArea : Widget
         SelBoxSprites.ForEach(s => s.Dispose());
         SelBoxSprites.Clear();
         if (this.Font == null) return;
-        int mc = (Lines.Count - 1) * LineMargins;
-        int h = Lines.Count * LineHeight + mc + 3;
-        if (h >= Parent.Size.Height) h += (h - Parent.Size.Height) % LineHeight;
-        if (h % LineHeight != 0) h += (LineHeight + LineMargins) - (h % (LineHeight + LineMargins));
-        if (LineWrapping) SetHeight(h);
-        else SetSize(Lines.Max(l => l.LineWidth) + 3, h);
+        UpdateHeight();
         Lines.ForEach(line =>
         {
             if (line.LineIndex < TopLineIndex || line.LineIndex > BottomLineIndex) return;
@@ -966,13 +970,13 @@ public class MultilineTextArea : Widget
         this.UndoableStates.Last().Caret = (CaretIndex) Caret.Clone();
     }
 
-    protected void AddUndoState()
+    protected virtual void AddUndoState()
     {
         this.UndoableStates.Add(new TextAreaState(this));
         this.RedoableStates.Clear();
     }
 
-    private void Undo()
+    protected virtual void Undo()
     {
         if (UndoableStates.Count < 2) return;
         TextAreaState PreviousState = UndoableStates[UndoableStates.Count - 2];
@@ -981,7 +985,7 @@ public class MultilineTextArea : Widget
         UndoableStates.RemoveAt(UndoableStates.Count - 1);
     }
 
-    private void Redo()
+    protected virtual void Redo()
     {
         if (RedoableStates.Count < 1) return;
         TextAreaState PreviousState = RedoableStates[RedoableStates.Count - 1];
@@ -1091,7 +1095,7 @@ public class MultilineTextArea : Widget
     {
         int rx = e.X - Viewport.X + LeftCutOff;
         int ry = e.Y - Viewport.Y + TopCutOff;
-        int LineIndex = ry / (LineHeight + LineMargins);
+        int LineIndex = (int) Math.Round((double) ry / (LineHeight + LineMargins));
         if (LineIndex < 0) LineIndex = 0;
         if (LineIndex >= Lines.Count) LineIndex = Lines.Count - 1;
         Line Line = Lines[LineIndex];
@@ -1247,7 +1251,7 @@ public class MultilineTextArea : Widget
         }
     }
 
-    protected class Line
+    public class Line : ICloneable
     {
         public Font Font;
         public int LineIndex;
@@ -1307,9 +1311,21 @@ public class MultilineTextArea : Widget
             }
             return Text.Length - (EndsInNewline ? 1 : 0);
         }
+
+        public object Clone()
+        {
+            Line line = new Line(this.Font);
+            line.EndsInNewline = this.EndsInNewline;
+            line.StartIndex = this.StartIndex;
+            line.LineIndex = this.LineIndex;
+            line.Length = this.Length;
+            line.Text = this.Text;
+            line.CharacterWidths = new List<int>(this.CharacterWidths);
+            return line;
+        }
     }
 
-    protected class CaretIndex : ICloneable
+    public class CaretIndex : ICloneable
     {
         private MultilineTextArea TextArea;
 
@@ -1351,7 +1367,7 @@ public class MultilineTextArea : Widget
         public string Text;
 
         // Then use these properties to revert state
-        private MultilineTextArea TextArea;
+        protected MultilineTextArea TextArea;
         public CaretIndex Caret;
         public int ParentScrolledX;
         public int ParentScrolledY;
@@ -1383,7 +1399,7 @@ public class MultilineTextArea : Widget
             return base.GetHashCode();
         }
 
-        public void Apply()
+        public virtual void Apply()
         {
             this.TextArea.SetText(this.Text, false, false);
             this.TextArea.Caret = (CaretIndex) this.Caret.Clone();
