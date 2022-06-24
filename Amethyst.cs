@@ -24,6 +24,18 @@ public static class Amethyst
         }
         Graphics.Start(Info);
         if (InitializeAudio) Audio.Start(Info);
+        Font.AddFontPath("assets/fonts");
+        if (Graphics.Platform == odl.Platform.Windows) Font.AddFontPath("C:/Windows/Fonts");
+        else if (Graphics.Platform == odl.Platform.Linux)
+        {
+            Font.AddFontPath("/usr/share/fonts");
+            Font.AddFontPath("/usr/local/share/fonts");
+            Font.AddFontPath("~/.fonts");
+        }
+        else if (Graphics.Platform == odl.Platform.MacOS)
+        {
+            throw new PlatformNotSupportedException();
+        }
     }
 
     public static void Run(Action TickDelegate = null)
