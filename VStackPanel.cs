@@ -5,6 +5,7 @@ namespace amethyst;
 public class VStackPanel : Widget, ILayout
 {
     public bool NeedUpdate { get; set; } = true;
+    public bool HDockWidgets = true;
 
     public VStackPanel(IContainer Parent) : base(Parent)
     {
@@ -23,6 +24,7 @@ public class VStackPanel : Widget, ILayout
 
     public override void UpdateLayout()
     {
+        int maxw = 0;
         int y = 0;
         for (int i = 0; i < this.Widgets.Count; i++)
         {
@@ -31,21 +33,26 @@ public class VStackPanel : Widget, ILayout
             y += w.Margins.Up;
             int x = w.Margins.Left;
             int width = this.Size.Width - x - w.Margins.Right;
-            w.SetWidth(width);
+            if (HDockWidgets) w.SetWidth(width);
             w.SetPosition(x, y);
             y += w.Size.Height;
             y += w.Margins.Down;
+            if (!HDockWidgets && w.ConsiderInAutoScrollCalculation && w.Position.X + w.Margins.Left + w.Size.Width > maxw) maxw = w.Position.X + w.Margins.Left + w.Size.Width;
         }
-        SetHeight(y);
+        if (HDockWidgets) SetHeight(y);
+        else SetSize(maxw, y);
     }
 
     public override Widget SetSize(Size size)
     {
         base.SetSize(size);
-        for (int i = 0; i < this.Widgets.Count; i++)
+        if (HDockWidgets)
         {
-            Widget w = this.Widgets[i];
-            w.SetWidth(size.Width);
+            for (int i = 0; i < this.Widgets.Count; i++)
+            {
+                Widget w = this.Widgets[i];
+                w.SetWidth(size.Width);
+            }
         }
         return this;
     }

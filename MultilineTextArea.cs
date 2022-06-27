@@ -42,6 +42,7 @@ public class MultilineTextArea : Widget
     protected bool HasSelection => SelectionStart != null;
     protected bool SnapToWords = false;
     protected bool SnapToLines = false;
+    protected bool StartedInParent = false;
     protected int? MinSelIndex;
     protected int? MaxSelIndex;
     protected int? LineSnapIndex;
@@ -101,6 +102,9 @@ public class MultilineTextArea : Widget
             new Shortcut(this, new Key(Keycode.ESCAPE), _ => CancelSelection())
         });
         AddUndoState();
+
+        Parent.OnLeftMouseDown += e => StartedInParent = MouseInsideTextArea(e);
+        Parent.OnLeftMouseUp += _ => StartedInParent = false;
     }
 
     public virtual void SetText(string Text, bool SetCaretToEnd = false, bool ClearUndoStates = true)
@@ -1112,10 +1116,15 @@ public class MultilineTextArea : Widget
         return new CaretIndex(this) { Index = idx, AtEndOfLine = !Line.EndsInNewline && idx == Line.EndIndex + 1 };
     }
 
+    protected virtual bool MouseInsideTextArea(MouseEventArgs e)
+    {
+        return Parent.Mouse.Inside;
+    }
+
     public override void LeftMouseDown(MouseEventArgs e)
     {
         base.LeftMouseDown(e);
-        if (Parent.Mouse.Inside)
+        if (MouseInsideTextArea(e))
         {
             if (TimerExists("triple"))
             {
@@ -1141,6 +1150,7 @@ public class MultilineTextArea : Widget
                 ResetIdle();
             }
         }
+        else if (Mouse.Inside) CancelDoubleClick();
     }
 
     public override void DoubleLeftMouseDownInside(MouseEventArgs e)
@@ -1185,7 +1195,7 @@ public class MultilineTextArea : Widget
     public override void MouseMoving(MouseEventArgs e)
     {
         base.MouseMoving(e);
-        if (Mouse.LeftMousePressed && Parent.Mouse.LeftStartedInside)
+        if (Mouse.LeftMousePressed && StartedInParent)
         {
             CaretIndex Index = GetHoveredIndex(e);
             if (SnapToWords)
