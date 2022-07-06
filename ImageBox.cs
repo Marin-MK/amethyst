@@ -20,7 +20,6 @@ public class ImageBox : Widget
     public double ZoomX => Sprite.ZoomX;
     public double ZoomY => Sprite.ZoomY;
     public Color Color => Sprite.Color;
-    public Tone Tone => Sprite.Tone;
     public Rect SrcRect => Sprite.SrcRect;
     public FillMode FillMode { get; protected set; }
 
@@ -230,11 +229,6 @@ public class ImageBox : Widget
     public void SetColor(Color Color)
     {
         Sprite.Color = Color;
-    }
-
-    public void SetTone(Tone Tone)
-    {
-        Sprite.Tone = Tone;
     }
 
     public void SetSrcRect(Rect SrcRect)

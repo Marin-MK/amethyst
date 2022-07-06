@@ -64,17 +64,6 @@ public class BorderlessWindow : UIWindow
         this.NormalRect = new Rect(this.X, this.Y, this.Width, this.Height);
         SizeChanged(new BaseEventArgs());
         SetResizable(false);
-
-        Widget w = new Widget(UI.Container);
-        w.SetPosition(1, 33);
-        w.Sprites["sprite"] = s = new Sprite(w.Viewport);
-
-        DateTime t1 = DateTime.Now;
-        Bitmap bmp = new Bitmap("D:/Desktop/Main Essentials/Graphics/Tilesets/Outside.png");
-        DateTime t2 = DateTime.Now;
-        Console.WriteLine($"Time: {(t2 - t1).TotalMilliseconds}ms");
-        s.Bitmap = bmp;
-        w.SetSize(bmp.Width, bmp.Height);
         OnTick += UpdateInput;
     }
 
