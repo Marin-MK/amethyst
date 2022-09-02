@@ -1523,6 +1523,7 @@ public class Widget : IDisposable, IContainer
                 Sprites["_b_"] = new Sprite(this.Viewport);
                 Sprites["_c_"] = new Sprite(this.Viewport);
                 Sprites["_d_"] = new Sprite(this.Viewport);
+                Sprites["_e_"] = new Sprite(this.Viewport);
             }
             Sprites["_a_"].Bitmap?.Dispose();
             Sprites["_a_"].Bitmap = new SolidBitmap(Size.Width, 1, Color.BLACK);
@@ -1534,6 +1535,17 @@ public class Widget : IDisposable, IContainer
             Sprites["_d_"].Bitmap?.Dispose();
             Sprites["_d_"].Bitmap = new SolidBitmap(1, Size.Height, Color.BLACK);
             Sprites["_d_"].X = Size.Width - 1;
+            Sprites["_e_"].Bitmap?.Dispose();
+            string txt = GetType().ToString().Split('.').Last();
+            Font f = Font.Get("Arial", 10);
+            Size s = f.TextSize(txt);
+            Sprites["_e_"].Bitmap = new Bitmap(s);
+            Sprites["_e_"].Bitmap.Font = Font.Get("Arial", 10);
+            Sprites["_e_"].X = Viewport.Width / 2 - s.Width / 2;
+            Sprites["_e_"].Y = Viewport.Height / 2 - s.Height / 2;
+            Sprites["_e_"].Bitmap.Unlock();
+            Sprites["_e_"].Bitmap.DrawText(txt, Color.BLACK);
+            Sprites["_e_"].Bitmap.Lock();
         }
         else if (Sprites.ContainsKey("_a_")) 
         {
@@ -1541,10 +1553,12 @@ public class Widget : IDisposable, IContainer
             Sprites["_b_"].Dispose();
             Sprites["_c_"].Dispose();
             Sprites["_d_"].Dispose();
+            Sprites["_e_"].Dispose();
             Sprites.Remove("_a_");
             Sprites.Remove("_b_");
             Sprites.Remove("_c_");
             Sprites.Remove("_d_");
+            Sprites.Remove("_e_");
         }
     }
 
