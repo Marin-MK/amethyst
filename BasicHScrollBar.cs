@@ -201,7 +201,7 @@ public abstract class BasicHScrollBar : ScrollBar
 
     public override void ScrollUp(int Count = 1)
     {
-        if (!IsVisible()) return;
+        if (!IsVisible() && !KeepInvisible) return;
         double px = ScrollStep * Count;
         if (MinScrollStep != null && px < (int) MinScrollStep) px = (int) MinScrollStep;
         if (LinkedWidget != null) this.SetValue((LinkedWidget.ScrolledX - px) / (LinkedWidget.MaxChildWidth - LinkedWidget.Viewport.Width));
@@ -210,7 +210,7 @@ public abstract class BasicHScrollBar : ScrollBar
 
     public override void ScrollDown(int Count = 1)
     {
-        if (!IsVisible()) return;
+        if (!IsVisible() && !KeepInvisible) return;
         double px = ScrollStep * Count;
         if (MinScrollStep != null && px < (int)MinScrollStep) px = (int)MinScrollStep;
         if (LinkedWidget != null) this.SetValue((LinkedWidget.ScrolledX + px) / (LinkedWidget.MaxChildWidth - LinkedWidget.Viewport.Width));

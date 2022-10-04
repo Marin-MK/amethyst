@@ -35,12 +35,12 @@ public class MouseManager
     /// <summary>
     /// For this property to be true, there must be a valid mouse event.
     /// Furthermore, the linked container must be a UIManager,
-    /// or if it's a widget, then that widget must not be disposed and visible,
+    /// or if it's a widget, then that widget must not be disposed and visible (excluding invisible scroll bars),
     /// and either be an always-active-mouse widget or not have a window overlaying it.
     /// </summary>
     public bool Accessible => CurrentArgs is not null && (
                                 Widget is not amethyst.Widget || (
-                                    !((Widget) Widget).Disposed && Widget.Viewport.Visible && (
+                                    !((Widget) Widget).Disposed && (Widget.Viewport.Visible || Widget is ScrollBar && ((ScrollBar) Widget).KeepInvisible) && (
                                         ((Widget) Widget).MouseAlwaysActive ||
                                         Widget.WindowLayer >= ((Widget) Widget).Window.ActiveWidget.WindowLayer
                                     )

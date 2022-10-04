@@ -755,7 +755,7 @@ public class Widget : IDisposable, IContainer
                     HScrollBar.SetValue((double)this.ScrolledX / (MaxChildWidth - this.Viewport.Width), false);
                     HScrollBar.SetSliderSize((double)this.Viewport.Width / MaxChildWidth);
                     HScrollBar.MouseInputRect = this.Viewport.Rect;
-                    HScrollBar.SetVisible(true);
+                    HScrollBar.SetVisible(!HScrollBar.KeepInvisible);
                 }
                 else if (HScrollBar != null)
                 {
@@ -783,7 +783,7 @@ public class Widget : IDisposable, IContainer
                     VScrollBar.SetValue((double)this.ScrolledY / (MaxChildHeight - this.Viewport.Height), false);
                     VScrollBar.SetSliderSize((double)this.Viewport.Height / MaxChildHeight);
                     VScrollBar.MouseInputRect = this.Viewport.Rect;
-                    VScrollBar.SetVisible(true);
+                    VScrollBar.SetVisible(!VScrollBar.KeepInvisible);
                 }
                 else if (VScrollBar != null)
                 {
