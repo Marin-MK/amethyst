@@ -40,6 +40,10 @@ public class ImageBox : Widget
                 case FillMode.None:
                     SetSize(X + (int) Math.Round(SrcRect.Width * ZoomX), Y + (int) Math.Round(SrcRect.Height * ZoomY));
                     break;
+                case FillMode.Center:
+                    SetSize((int) Math.Round(SrcRect.Width * ZoomX), (int) Math.Round(SrcRect.Height * ZoomY));
+                    SetPosition((int) Math.Round((double) Parent.Size.Width / 2 - Size.Width / 2), (int) Math.Round((double) Parent.Size.Height / 2 - Size.Height / 2));
+                    break;
                 case FillMode.Fill:
                     Sprite.ZoomX = (double) Parent.Size.Width / SrcRect.Width;
                     Sprite.ZoomY = (double) Parent.Size.Height / SrcRect.Height;
@@ -246,6 +250,7 @@ public class ImageBox : Widget
 public enum FillMode
 {
     None,
+    Center,
     Fill,
     FillMaintainAspect,
     FillMaintainAspectAndCenter,
