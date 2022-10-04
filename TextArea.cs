@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using odl;
 
 namespace amethyst;
@@ -13,12 +14,14 @@ public class TextArea : Widget
     public int CaretHeight { get; protected set; } = 13;
     public Font Font { get; protected set; }
     public Color TextColor { get; protected set; } = Color.WHITE;
-    public Color DisabledTextColor { get; protected set; } = new Color(120, 120, 120);
+    public Color DisabledTextColor { get; protected set; } = new Color(141, 151, 163);
     public Color CaretColor { get; protected set; } = Color.WHITE;
     public Color FillerColor { get; protected set; } = new Color(0, 120, 215);
     public bool ReadOnly { get; protected set; } = false;
     public bool Enabled { get; protected set; } = true;
     public bool NumericOnly { get; protected set; } = false;
+    public int DefaultNumericValue { get; protected set; } = 0;
+    public bool AllowMinusSigns { get; protected set; } = true;
 
     public bool EnteringText = false;
 
@@ -34,6 +37,8 @@ public class TextArea : Widget
     public int SelectionStartX = -1;
 
     public TextEvent OnTextChanged;
+    public BaseEvent OnPressingUp;
+    public BaseEvent OnPressingDown;
 
     List<TextAreaState> UndoList = new List<TextAreaState>();
     List<TextAreaState> RedoList = new List<TextAreaState>();
@@ -196,6 +201,22 @@ public class TextArea : Widget
         }
     }
 
+    public void SetDefaultNumericValue(int DefaultNumericValue)
+    {
+        if (this.DefaultNumericValue != DefaultNumericValue)
+        {
+            this.DefaultNumericValue = DefaultNumericValue;
+        }
+    }
+
+    public void SetAllowMinusSigns(bool AllowMinusSigns)
+    {
+        if (this.AllowMinusSigns != AllowMinusSigns)
+        {
+            this.AllowMinusSigns = AllowMinusSigns;
+        }
+    }
+
     public override void SizeChanged(BaseEventArgs e)
     {
         base.SizeChanged(e);
@@ -213,6 +234,7 @@ public class TextArea : Widget
     public override void WidgetDeselected(BaseEventArgs e)
     {
         base.WidgetDeselected(e);
+        if (NumericOnly && (this.Text == "-" || string.IsNullOrEmpty(this.Text))) SetText(DefaultNumericValue.ToString());
         EnteringText = false;
         Input.StopTextInput();
         if (SelectionStartIndex != -1) CancelSelectionHidden();
@@ -230,8 +252,24 @@ public class TextArea : Widget
         }
         else if (!string.IsNullOrEmpty(e.Text))
         {
-            if (NumericOnly && !IsNumeric(e.Text)) return;
             if (SelectionStartIndex != -1 && SelectionStartIndex != SelectionEndIndex) DeleteSelection();
+            if (NumericOnly)
+            {
+                if (!IsNumeric(e.Text)) return;
+                if (e.Text == "-" && !AllowMinusSigns) return;
+                if (this.Text.Length > 0 && this.Text[0] == '-')
+                {
+                    if (e.Text == "-") return;
+                    if (CaretIndex == 0)
+                    {
+                        // e.g. [5]- turns into 5, and [2]-11 turns into 211
+                        MoveCaretRight(1);
+                        RemoveText(0, 1);
+                    }
+                }
+                // Disallow e.g. 2-3 and 23-
+                else if (e.Text == "-" && CaretIndex != 0) return;
+            }
             InsertText(CaretIndex, e.Text);
         }
         else if (e.Backspace || e.Delete)
@@ -250,6 +288,8 @@ public class TextArea : Widget
                         int Count = 1;
                         if (Input.Press(Keycode.CTRL))
                             Count = FindNextCtrlIndex(this.Text, this.CaretIndex, false) - CaretIndex;
+                        // Disallow empty text
+                        //if (CaretIndex == 0 && Count >= this.Text.Length && NumericOnly) return;
                         MoveCaretRight(Count);
                         RemoveText(this.CaretIndex - Count, Count);
                     }
@@ -259,6 +299,8 @@ public class TextArea : Widget
                     int Count = 1;
                     if (Input.Press(Keycode.CTRL))
                         Count = CaretIndex - FindNextCtrlIndex(this.Text, this.CaretIndex, true);
+                    // Disallow empty text
+                    //if (CaretIndex - Count == 0 && Count >= this.Text.Length && NumericOnly) return;
                     RemoveText(this.CaretIndex - Count, Count);
                 }
             }
@@ -360,6 +402,10 @@ public class TextArea : Widget
             if (TimerExists("left_initial")) DestroyTimer("left_initial");
             if (TimerExists("right")) DestroyTimer("right");
             if (TimerExists("right_initial")) DestroyTimer("right_initial");
+            if (TimerExists("up")) DestroyTimer("up");
+            if (TimerExists("up_initial")) DestroyTimer("up_initial");
+            if (TimerExists("down")) DestroyTimer("down");
+            if (TimerExists("down_initial")) DestroyTimer("down_initial");
             if (TimerExists("paste")) DestroyTimer("paste");
             if (TimerExists("paste_initial")) DestroyTimer("paste_initial");
             if (TimerExists("undo")) DestroyTimer("undo");
@@ -510,6 +556,16 @@ public class TextArea : Widget
                 RedoText();
             }
         }
+        if (Input.Trigger(Keycode.UP) || TimerPassed("up"))
+        {
+            if (TimerPassed("up")) ResetTimer("up");
+            OnPressingUp?.Invoke(new BaseEventArgs());
+        }
+        if (Input.Trigger(Keycode.DOWN) || TimerPassed("down"))
+        {
+            if (TimerPassed("down")) ResetTimer("down");
+            OnPressingDown?.Invoke(new BaseEventArgs());
+        }
 
         // Timers for repeated input
         if (Input.Press(Keycode.LEFT))
@@ -545,6 +601,40 @@ public class TextArea : Widget
         {
             if (TimerExists("right")) DestroyTimer("right");
             if (TimerExists("right_initial")) DestroyTimer("right_initial");
+        }
+        if (Input.Press(Keycode.UP))
+        {
+            if (!TimerExists("up_initial") && !TimerExists("up"))
+            {
+                SetTimer("up_initial", 300);
+            }
+            else if (TimerPassed("up_initial"))
+            {
+                DestroyTimer("up_initial");
+                SetTimer("up", 50);
+            }
+        }
+        else
+        {
+            if (TimerExists("up")) DestroyTimer("up");
+            if (TimerExists("up_initial")) DestroyTimer("up_initial");
+        }
+        if (Input.Press(Keycode.DOWN))
+        {
+            if (!TimerExists("down_initial") && !TimerExists("down"))
+            {
+                SetTimer("down_initial", 300);
+            }
+            else if (TimerPassed("down_initial"))
+            {
+                DestroyTimer("down_initial");
+                SetTimer("down", 50);
+            }
+        }
+        else
+        {
+            if (TimerExists("down")) DestroyTimer("down");
+            if (TimerExists("down_initial")) DestroyTimer("down_initial");
         }
         if (Input.Press(Keycode.CTRL))
         {
@@ -777,13 +867,14 @@ public class TextArea : Widget
     /// Determines key values based on the given mouse position.
     /// </summary>
     /// <returns>List<int>() { RX, X, found }</int></returns>
-    public List<int> GetMousePosition(MouseEventArgs e)
+    public (int RX, int CaretIndex, bool Found)? GetMousePosition(MouseEventArgs e)
     {
         int RetRX = RX;
         int RetCaretIndex = CaretIndex;
-        int Found = 0;
-        int rmx = e.X - Viewport.X;
-        if (rmx < 0 || rmx >= Width) return null;
+        bool Found = false;
+        int rmx = e.X - Viewport.X - TextX;
+        if (rmx < 0) return (0, 0, true);
+        if (rmx >= Width) return null;
         for (int i = 0; i < this.Text.Length; i++)
         {
             int fullwidth = Font.TextSize(this.Text.Substring(0, i)).Width;
@@ -804,12 +895,12 @@ public class TextArea : Widget
                         RetRX = rx + charw;
                         RetCaretIndex = i + 1;
                     }
-                    Found = 1;
+                    Found = true;
                     break;
                 }
             }
         }
-        return new List<int>() { RetRX, RetCaretIndex, Found };
+        return (RetRX, RetCaretIndex, Found);
     }
 
     /// <summary>
@@ -826,7 +917,7 @@ public class TextArea : Widget
         Sprites["text"].Bitmap = new Bitmap(s);
         Sprites["text"].Bitmap.Unlock();
         Sprites["text"].Bitmap.Font = this.Font;
-        if (this.Enabled) Sprites["text"].Bitmap.DrawText(this.Text, this.Enabled ? this.TextColor : DisabledTextColor);
+        Sprites["text"].Bitmap.DrawText(this.Text, this.Enabled ? this.TextColor : DisabledTextColor);
         Sprites["text"].Bitmap.Lock();
     }
 
@@ -930,11 +1021,17 @@ public class TextArea : Widget
     /// </summary>
     public void PasteText()
     {
-        if (this.ReadOnly) return;
+        // To make things easier, pasting is not allowed in numeric-only text areas. This out of laziness;
+        // I would prefer not duplicating the code found in TextInput.
+        if (this.ReadOnly || this.NumericOnly) return;
         if (TimerPassed("paste")) ResetTimer("paste");
         string text = Input.GetClipboard();
         if (string.IsNullOrEmpty(text)) return;
-        if (NumericOnly && !IsNumeric(text)) return;
+        if (NumericOnly && !IsNumeric(text))
+        {
+            if (IsNumeric(text.Trim())) text = text.Trim();
+            else return;
+        }
         string OldText = this.Text;
         if (SelectionStartIndex != -1 && SelectionStartIndex != SelectionEndIndex) DeleteSelection();
         InsertText(CaretIndex, text);
@@ -949,11 +1046,11 @@ public class TextArea : Widget
         if (SelectionStartIndex != -1 && SelectionStartIndex != SelectionEndIndex) CancelSelectionHidden();
         int OldRX = RX;
         int OldCaretIndex = CaretIndex;
-        List<int> newvals = GetMousePosition(e);
-        RX = newvals[0];
-        CaretIndex = newvals[1];
-        bool found = newvals[2] == 1;
-        if (!found)
+        (int RX, int CaretIndex, bool Found)? ret = GetMousePosition(e);
+        if (ret == null) throw new Exception("Invalid return value");
+        RX = ret.Value.RX;
+        CaretIndex = ret.Value.CaretIndex;
+        if (!ret.Value.Found)
         {
             if (Sprites["text"].Bitmap.Width - X < Width) // No extra space to the right that could be scrolled to
             {
@@ -1011,8 +1108,8 @@ public class TextArea : Widget
             RepositionSprites();
             return;
         }
-        List<int> newvals = GetMousePosition(e);
-        if (newvals == null)
+        (int RX, int CaretIndex, bool Found)? ret = GetMousePosition(e);
+        if (ret == null)
         {
             if (rmx < 0)
             {
@@ -1022,10 +1119,9 @@ public class TextArea : Widget
             }
             return;
         }
-        RX = newvals[0];
-        CaretIndex = newvals[1];
-        bool found = newvals[2] == 1;
-        if (found && CaretIndex != OldCaretIndex)
+        RX = ret.Value.RX;
+        CaretIndex = ret.Value.CaretIndex;
+        if (ret.Value.Found && CaretIndex != OldCaretIndex)
         {
             if (SelectionStartIndex == -1)
             {
