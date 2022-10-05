@@ -1481,6 +1481,9 @@ public class Widget : IDisposable, IContainer
             }
         }
 
+        // A shortcut may have disposed this widget, quit if so
+        if (this.Disposed) return;
+
         // If this widget needs a redraw, perform the redraw
         if (!this.Drawn) this.Draw();
         // Update child widgets
