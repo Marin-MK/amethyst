@@ -911,7 +911,7 @@ public class TextArea : Widget
         RepositionSprites();
         Sprites["text"].Bitmap?.Dispose();
         Sprites["text"].Bitmap = null;
-        if (string.IsNullOrEmpty(this.Text)) return;
+        if (!this.Enabled || string.IsNullOrEmpty(this.Text)) return;
         Size s = Font.TextSize(this.Text);
         if (s.Width < 1 || s.Height < 1) return;
         Sprites["text"].Bitmap = new Bitmap(s);
