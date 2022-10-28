@@ -1099,7 +1099,7 @@ public class MultilineTextArea : Widget
     {
         int rx = e.X - Viewport.X + LeftCutOff;
         int ry = e.Y - Viewport.Y + TopCutOff;
-        int LineIndex = (int) Math.Round((double) ry / (LineHeight + LineMargins));
+        int LineIndex = (int) Math.Round((double) (ry - Font.Size / 2) / (LineHeight + LineMargins));
         if (LineIndex < 0) LineIndex = 0;
         if (LineIndex >= Lines.Count) LineIndex = Lines.Count - 1;
         Line Line = Lines[LineIndex];
@@ -1317,7 +1317,7 @@ public class MultilineTextArea : Widget
             for (int i = 0; i < Text.Length - (EndsInNewline ? 1 : 0); i++)
             {
                 int w = GetTextWidth(Font, Text.Substring(0, i));
-                if (w >= Width) return i;
+                if (w + GetTextWidth(Font, Text[i].ToString()) / 2 >= Width) return i;
             }
             return Text.Length - (EndsInNewline ? 1 : 0);
         }
