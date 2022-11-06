@@ -57,7 +57,7 @@ public class TextArea : Widget
         OnWidgetSelected += WidgetSelected;
         OnDisposed += delegate (BaseEventArgs e)
         {
-            this.Window.UI.SetSelectedWidget(null);
+            if (SelectedWidget) this.Window.UI.SetSelectedWidget(null);
             Input.SetCursor(CursorType.Arrow);
         };
         OnTextChanged += delegate (TextEventArgs e)

@@ -9,6 +9,7 @@ public class ContextMenu : Widget
     public List<IMenuItem> Items { get; protected set; } = new List<IMenuItem>();
     public Color InnerColor { get; protected set; } = new Color(45, 69, 107);
     public Color OuterColor { get; protected set; } = Color.BLACK;
+    public Font Font { get; protected set; }
 
     public MenuItem HoveringItem;
     public ContextMenu ChildMenu;
@@ -19,6 +20,7 @@ public class ContextMenu : Widget
 
     public ContextMenu(IContainer Parent, ContextMenu ParentMenu = null, MenuItem ParentItem = null) : base(Parent)
     {
+        Input.SetCursor(CursorType.Arrow);
         this.ParentMenu = ParentMenu;
         this.ParentItem = ParentItem;
         if (ParentMenu != null) SetZIndex(ParentMenu.ZIndex);
@@ -39,6 +41,15 @@ public class ContextMenu : Widget
             Window.SetActiveWidget(this);
         }
         SetWidth(192);
+    }
+
+    public void SetFont(Font Font)
+    {
+        if (this.Font != Font)
+        {
+            this.Font = Font;
+            Redraw();
+        }
     }
 
     public override void SizeChanged(BaseEventArgs e)
@@ -94,8 +105,7 @@ public class ContextMenu : Widget
     {
         Sprites["items"].Bitmap?.Dispose();
         Sprites["items"].Bitmap = new Bitmap(192, CalcHeight() + 10);
-        Font f = Font.Get("ProductSans-M", 9);
-        Sprites["items"].Bitmap.Font = f;
+        Sprites["items"].Bitmap.Font = this.Font;
         Sprites["items"].Bitmap.Unlock();
 
         Sprites["ext"].Bitmap?.Dispose();
@@ -277,6 +287,7 @@ public class ContextMenu : Widget
         ChildMenu = null;
         if (!CanOpenHoveredItem()) return;
         ChildMenu = new ContextMenu(Parent, this, HoveringItem);
+        ChildMenu.SetFont(this.Font);
         ChildMenu.SetInnerColor(InnerColor);
         ChildMenu.SetOuterColor(OuterColor);
         ChildMenu.SetItems(HoveringItem.Items);

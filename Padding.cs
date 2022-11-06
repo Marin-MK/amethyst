@@ -17,4 +17,18 @@ public class Padding
         this.Right = right;
         this.Down = down;
     }
+
+    public override bool Equals(object obj)
+    {
+        if (this == obj) return true;
+        if (obj is Padding)
+        {
+            Padding p = (Padding) obj;
+            return this.Left == p.Left &&
+                   this.Up == p.Up &&
+                   this.Right == p.Right &&
+                   this.Down == p.Down;
+        }
+        return false;
+    }
 }

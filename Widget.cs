@@ -32,6 +32,8 @@ public class Widget : IDisposable, IContainer
         }
     }
 
+    public static Font DefaultContextMenuFont;
+
     /// <summary>
     /// The viewport of this widget. Influenced by position, size, parent position and size, scroll values, etc.
     /// </summary>
@@ -130,6 +132,11 @@ public class Widget : IDisposable, IContainer
     /// The list of right-click menu options to show when this widget is right-clicked.
     /// </summary>
     public List<IMenuItem> ContextMenuList { get; protected set; }
+
+    /// <summary>
+    /// The font to be used in the context menu.
+    /// </summary>
+    public Font ContextMenuFont { get; protected set; }
 
     /// <summary>
     /// Whether or not to show the context menu if this widget is right-clicked.
@@ -485,9 +492,19 @@ public class Widget : IDisposable, IContainer
     public BaseEvent OnZIndexChanged;
 
     /// <summary>
+    /// Called whenever the padding is changed.
+    /// </summary>
+    public BaseEvent OnPaddingChanged;
+
+    /// <summary>
     /// Indicates whether the context menu is set to be opened on next update.
     /// </summary>
     public bool OpenContextMenuOnNextUpdate = false;
+
+    /// <summary>
+    /// The global mouse coordinates of the point at which the context menu was opened.
+    /// </summary>
+    public Point ContextMenuMouseOrigin;
 
 
     /// <summary>
@@ -559,6 +576,15 @@ public class Widget : IDisposable, IContainer
         AssertUndisposed();
         this.ContextMenuList = Items;
         this.ShowContextMenu = Items.Count > 0;
+    }
+
+    /// <summary>
+    /// Sets the font of the context menu.
+    /// </summary>
+    /// <param name="Font">The font to use in the context menu.</param>
+    public virtual void SetContextMenuFont(Font Font)
+    {
+        this.ContextMenuFont = Font;
     }
 
     /// <summary>
@@ -1015,10 +1041,14 @@ public class Widget : IDisposable, IContainer
     /// <param name="Padding">The widget's padding.</param>
     public virtual void SetPadding(Padding Padding)
     {
-        this.Padding = Padding;
-        UpdatePositionAndSizeIfDocked();
-        UpdateLayout();
-        UpdateBounds();
+        if (!this.Padding.Equals(Padding))
+        {
+            this.Padding = Padding;
+            UpdatePositionAndSizeIfDocked();
+            UpdateLayout();
+            UpdateBounds();
+            OnPaddingChanged?.Invoke(new BaseEventArgs());
+        }
     }
 
     /// <summary>
@@ -1373,10 +1403,11 @@ public class Widget : IDisposable, IContainer
         {
             OpenContextMenuOnNextUpdate = false;
             ContextMenu cm = new ContextMenu(Window.UI);
+            cm.SetFont(ContextMenuFont ?? DefaultContextMenuFont);
             cm.SetItems(ContextMenuList);
             Size s = cm.Size;
-            int x = Graphics.LastMouseEvent.X;
-            int y = Graphics.LastMouseEvent.Y;
+            int x = ContextMenuMouseOrigin.X;
+            int y = ContextMenuMouseOrigin.Y;
             if (x + s.Width >= Window.Width) x -= s.Width;
             if (y + s.Height >= Window.Height) y -= s.Height;
             x = Math.Max(0, x);
@@ -1602,7 +1633,11 @@ public class Widget : IDisposable, IContainer
                 this.OnContextMenuOpening(args);
                 if (!args.Value) cont = false;
             }
-            if (cont) OpenContextMenuOnNextUpdate = true;
+            if (cont)
+            {
+                OpenContextMenuOnNextUpdate = true;
+                ContextMenuMouseOrigin = new Point(e.X, e.Y);
+            }
         }
     }
 
