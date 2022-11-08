@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using odl;
 
@@ -324,177 +325,212 @@ public class Widget : IDisposable, IContainer
     /// <summary>
     /// Called whenever the mouse moves across the window.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnMouseMoving { get; set; }
 
     /// <summary>
     /// Called whenever the mouse moves in or out of the widget.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnHoverChanged { get; set; }
 
     /// <summary>
     /// Called whenever a mouse button is pressed down.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnMouseDown { get; set; }
 
     /// <summary>
     /// Called whenever a mouse button is released.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnMouseUp { get; set; }
 
     /// <summary>
     /// Called while a mouse button is being held down.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnMousePress { get; set; }
 
     /// <summary>
     /// Called whenever the left mouse button is pressed down.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnLeftMouseDown { get; set; }
 
     /// <summary>
     /// Called whenever the left mouse button is pressed down inside the widget.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnLeftMouseDownInside { get; set; }
 
     /// <summary>
     /// Called whenever the left mouse button is released.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnLeftMouseUp { get; set; }
 
     /// <summary>
     /// Called while the left mouse button is being held down.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnLeftMousePress { get; set; }
 
     /// <summary>
     /// Called whenever the right mouse button is pressed down.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnRightMouseDown { get; set; }
 
     /// <summary>
     /// Called whenever the right mouse button is pressed down inside the widget.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnRightMouseDownInside { get; set; }
 
     /// <summary>
     /// Called whenever the right mouse button is released.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnRightMouseUp { get; set; }
 
     /// <summary>
     /// Called while the right mouse button is being held down.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnRightMousePress { get; set; }
 
     /// <summary>
     /// Called whenever the middle mouse button is pressed down.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnMiddleMouseDown { get; set; }
 
     /// <summary>
     /// Called whenever the middle mouse button is pressed down inside the widget.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnMiddleMouseDownInside { get; set; }
 
     /// <summary>
     /// Called whenever the middle mouse button is released.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnMiddleMouseUp { get; set; }
 
     /// <summary>
     /// Called while the middle mouse button is being held down.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnMiddleMousePress { get; set; }
 
     /// <summary>
     /// Called whenever the mouse wheel is scrolled.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnMouseWheel { get; set; }
 
     /// <summary>
     /// Called whenever the left mouse button is pressed down twice inside the widget in short succession.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public MouseEvent OnDoubleLeftMouseDownInside { get; set; }
 
     /// <summary>
     /// Called when this widget becomes the active widget.
     /// </summary>
-    public BaseEvent OnWidgetSelected;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public BaseEvent OnWidgetSelected { get; set; }
 
     /// <summary>
     /// Called when this widget is no longer the active widget.
     /// </summary>
-    public BaseEvent OnWidgetDeselected;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public BaseEvent OnWidgetDeselected { get; set; }
 
     /// <summary>
     /// Called when a button is being is pressed.
     /// </summary>
-    public TextEvent OnTextInput;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public TextEvent OnTextInput { get; set; }
 
     /// <summary>
     /// Called when this widget's relative position changes.
     /// </summary>
-    public ObjectEvent OnPositionChanged;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public ObjectEvent OnPositionChanged { get; set; }
 
     /// <summary>
     /// Called when this widget's relative size changes.
     /// </summary>
-    public ObjectEvent OnSizeChanged;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public ObjectEvent OnSizeChanged { get; set; }
 
     /// <summary>
     /// Called when this widget's parent relative size changes.
     /// </summary>
-    public ObjectEvent OnParentSizeChanged;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public ObjectEvent OnParentSizeChanged { get; set; }
 
     /// <summary>
     /// Called when a child's relative size changes.
     /// </summary>
-    public ObjectEvent OnChildBoundsChanged;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public ObjectEvent OnChildBoundsChanged { get; set; }
 
     /// <summary>
     /// Called before this widget is disposed.
     /// </summary>
-    public BoolEvent OnDisposing;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public BoolEvent OnDisposing { get; set; }
 
     /// <summary>
     /// Called after this widget is disposed.
     /// </summary>
-    public BaseEvent OnDisposed;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public BaseEvent OnDisposed { get; set; }
 
     /// <summary>
     /// Called when the autoscroll scrollbars are being scrolled.
     /// </summary>
-    public BaseEvent OnScrolling;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public BaseEvent OnScrolling { get; set; }
 
     /// <summary>
     /// Called before the right-click menu would open. Is cancellable.
     /// </summary>
-    public BoolEvent OnContextMenuOpening;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public BoolEvent OnContextMenuOpening { get; set; }
 
     /// <summary>
     /// Called upon creation of the help text widget.
     /// </summary>
-    public BaseEvent OnHelpTextWidgetCreated;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public BaseEvent OnHelpTextWidgetCreated { get; set; }
 
     /// <summary>
     /// Called whenever the help text is to be retrieved.
     /// </summary>
-    public StringEvent OnFetchHelpText;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public StringEvent OnFetchHelpText { get; set; }
 
     /// <summary>
     /// Called whenever SetVisibility() is called.
     /// </summary>
-    public BoolEvent OnVisibilityChanged;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public BoolEvent OnVisibilityChanged { get; set; }
 
     /// <summary>
     /// Called whenever SetZIndex is called.
     /// </summary>
-    public BaseEvent OnZIndexChanged;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public BaseEvent OnZIndexChanged { get; set; }
 
     /// <summary>
     /// Called whenever the padding is changed.
     /// </summary>
-    public ObjectEvent OnPaddingChanged;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public ObjectEvent OnPaddingChanged { get; set; }
 
     /// <summary>
     /// Indicates whether the context menu is set to be opened on next update.
