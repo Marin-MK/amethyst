@@ -4,13 +4,14 @@ namespace amethyst;
 
 public class TextBox : ActivatableWidget
 {
-    public string Text { get { return TextArea.Text; } }
-    public int CaretIndex { get { return TextArea.CaretIndex; } }
-    public int SelectionStartIndex { get { return TextArea.SelectionStartIndex; } }
-    public int SelectionEndIndex { get { return TextArea.SelectionEndIndex; } }
-    public Color TextColor { get { return TextArea.TextColor; } }
-    public int TextY { get { return TextArea.TextY; } }
-    public int CaretHeight { get { return TextArea.CaretHeight; } }
+    public string Text => TextArea.Text;
+    public int CaretIndex => TextArea.CaretIndex;
+    public int SelectionStartIndex => TextArea.SelectionStartIndex;
+    public int SelectionEndIndex => TextArea.SelectionEndIndex;
+    public Color TextColor => TextArea.TextColor;
+    public int TextY => TextArea.TextY;
+    public int CaretHeight => TextArea.CaretHeight;
+    public bool ShowDisabledText => TextArea.ShowDisabledText;
 
     public TextArea TextArea;
 
@@ -54,6 +55,11 @@ public class TextBox : ActivatableWidget
     {
         TextArea.CaretIndex = Index;
         TextArea.RepositionSprites();
+    }
+
+    public void SetShowDisabledText(bool ShowDisabledText)
+    {
+        TextArea.SetShowDisabledText(ShowDisabledText);
     }
 
     public override void SizeChanged(BaseEventArgs e)

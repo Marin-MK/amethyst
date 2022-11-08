@@ -22,6 +22,7 @@ public class TextArea : Widget
     public bool NumericOnly { get; protected set; } = false;
     public int DefaultNumericValue { get; protected set; } = 0;
     public bool AllowMinusSigns { get; protected set; } = true;
+    public bool ShowDisabledText { get; protected set; } = false;
 
     public bool EnteringText = false;
 
@@ -214,6 +215,15 @@ public class TextArea : Widget
         if (this.AllowMinusSigns != AllowMinusSigns)
         {
             this.AllowMinusSigns = AllowMinusSigns;
+        }
+    }
+
+    public void SetShowDisabledText(bool ShowDisabledText)
+    {
+        if (this.ShowDisabledText != ShowDisabledText)
+        {
+            this.ShowDisabledText = ShowDisabledText;
+            if (!this.Enabled) DrawText();
         }
     }
 
@@ -911,7 +921,7 @@ public class TextArea : Widget
         RepositionSprites();
         Sprites["text"].Bitmap?.Dispose();
         Sprites["text"].Bitmap = null;
-        if (!this.Enabled || string.IsNullOrEmpty(this.Text)) return;
+        if (!this.Enabled && !this.ShowDisabledText || string.IsNullOrEmpty(this.Text)) return;
         Size s = Font.TextSize(this.Text);
         if (s.Width < 1 || s.Height < 1) return;
         Sprites["text"].Bitmap = new Bitmap(s);

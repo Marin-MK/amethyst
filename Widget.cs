@@ -434,17 +434,17 @@ public class Widget : IDisposable, IContainer
     /// <summary>
     /// Called when this widget's relative position changes.
     /// </summary>
-    public BaseEvent OnPositionChanged;
+    public ObjectEvent OnPositionChanged;
 
     /// <summary>
     /// Called when this widget's relative size changes.
     /// </summary>
-    public BaseEvent OnSizeChanged;
+    public ObjectEvent OnSizeChanged;
 
     /// <summary>
     /// Called when this widget's parent relative size changes.
     /// </summary>
-    public BaseEvent OnParentSizeChanged;
+    public ObjectEvent OnParentSizeChanged;
 
     /// <summary>
     /// Called when a child's relative size changes.
@@ -484,7 +484,7 @@ public class Widget : IDisposable, IContainer
     /// <summary>
     /// Called whenever SetVisibility() is called.
     /// </summary>
-    public BaseEvent OnVisibilityChanged;
+    public BoolEvent OnVisibilityChanged;
 
     /// <summary>
     /// Called whenever SetZIndex is called.
@@ -494,7 +494,7 @@ public class Widget : IDisposable, IContainer
     /// <summary>
     /// Called whenever the padding is changed.
     /// </summary>
-    public BaseEvent OnPaddingChanged;
+    public ObjectEvent OnPaddingChanged;
 
     /// <summary>
     /// Indicates whether the context menu is set to be opened on next update.
@@ -701,7 +701,7 @@ public class Widget : IDisposable, IContainer
             Viewport.Visible = false;
         }
         SetViewportVisible(Visible);
-        this.OnVisibilityChanged?.Invoke(new BaseEventArgs());
+        this.OnVisibilityChanged?.Invoke(new BoolEventArgs(this.Visible));
     }
 
     /// <summary>
@@ -1043,11 +1043,12 @@ public class Widget : IDisposable, IContainer
     {
         if (!this.Padding.Equals(Padding))
         {
+            Padding OldPadding = this.Padding;
             this.Padding = Padding;
             UpdatePositionAndSizeIfDocked();
             UpdateLayout();
             UpdateBounds();
-            OnPaddingChanged?.Invoke(new BaseEventArgs());
+            OnPaddingChanged?.Invoke(new ObjectEventArgs(this.Padding, OldPadding));
         }
     }
 
@@ -1089,10 +1090,11 @@ public class Widget : IDisposable, IContainer
         AssertUndisposed();
         if (this.Position.X != p.X || this.Position.Y != p.Y)
         {
+            Point OldPosition = this.Position;
             this.Position = p;
             this.UpdatePositionAndSizeIfDocked();
             this.UpdateBounds();
-            this.OnPositionChanged(new BaseEventArgs());
+            this.OnPositionChanged(new ObjectEventArgs(this.Position, OldPosition));
         }
     }
 
@@ -1123,7 +1125,7 @@ public class Widget : IDisposable, IContainer
     public virtual Widget SetSize(Size size)
     {
         AssertUndisposed();
-        Size oldsize = this.Size;
+        Size OldSize = this.Size;
         // Ensures the set size matches the parent size if the widget is docked
         size.Width = HDocked ? Parent.Size.Width - this.Position.X - this.Padding.Left - this.Padding.Right : size.Width;
         size.Height = VDocked ? Parent.Size.Height - this.Position.Y - this.Padding.Up - this.Padding.Down : size.Height;
@@ -1132,7 +1134,7 @@ public class Widget : IDisposable, IContainer
         else if (size.Width > MaximumSize.Width && MaximumSize.Width != -1) size.Width = MaximumSize.Width;
         if (size.Height < MinimumSize.Height) size.Height = MinimumSize.Height;
         else if (size.Height > MaximumSize.Height && MaximumSize.Height != -1) size.Height = MaximumSize.Height;
-        if (oldsize.Width != size.Width || oldsize.Height != size.Height)
+        if (OldSize.Width != size.Width || OldSize.Height != size.Height)
         {
             this.Size = size;
             // Update the background sprite's size
@@ -1144,10 +1146,10 @@ public class Widget : IDisposable, IContainer
             // Executes all events associated with resizing a widget.
             this.Widgets.ForEach(w =>
             {
-                w.OnParentSizeChanged(new BaseEventArgs());
-                w.OnSizeChanged(new BaseEventArgs());
+                w.OnParentSizeChanged(new ObjectEventArgs(this.Size, OldSize));
+                w.OnSizeChanged(new ObjectEventArgs(w.Size, w.Size));
             });
-            this.OnSizeChanged(new BaseEventArgs());
+            this.OnSizeChanged(new ObjectEventArgs(this.Size, OldSize));
             this.Widgets.ForEach(child => child.UpdatePositionAndSizeIfDocked());
             Redraw();
             if (this.Parent is Widget && !(this is ScrollBar))

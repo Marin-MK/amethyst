@@ -180,12 +180,13 @@ public class UIManager : IContainer
 
     public void SizeChanged(BaseEventArgs e)
     {
+        Size OldSize = this.Size;
         this.Viewport.Width = Size.Width;
         this.Viewport.Height = Size.Height;
         this.Widgets.ForEach(w =>
         {
             w.SetSize(this.Size);
-            w.OnParentSizeChanged(new BaseEventArgs());
+            w.OnParentSizeChanged(new ObjectEventArgs(Size, OldSize));
             w.Redraw();
         });
     }

@@ -17,4 +17,18 @@ public class Margins
         this.Right = right;
         this.Down = down;
     }
+
+    public override bool Equals(object obj)
+    {
+        if (this == obj) return true;
+        if (obj is Margins)
+        {
+            Margins m = (Margins) obj;
+            return this.Left == m.Left &&
+                   this.Up == m.Up &&
+                   this.Right == m.Right &&
+                   this.Down == m.Down;
+        }
+        return false;
+    }
 }
