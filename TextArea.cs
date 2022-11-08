@@ -58,8 +58,11 @@ public class TextArea : Widget
         OnWidgetSelected += WidgetSelected;
         OnDisposed += delegate (BaseEventArgs e)
         {
-            if (SelectedWidget) this.Window.UI.SetSelectedWidget(null);
-            Input.SetCursor(CursorType.Arrow);
+            if (SelectedWidget)
+            {
+                this.Window.UI.SetSelectedWidget(null);
+                Input.SetCursor(CursorType.Arrow);
+            }
         };
         OnTextChanged += delegate (TextEventArgs e)
         {
@@ -1146,11 +1149,30 @@ public class TextArea : Widget
     public override void HoverChanged(MouseEventArgs e)
     {
         base.HoverChanged(e);
+        if (e.CursorHandled) return;
+        if (Mouse.LeftMousePressed || Mouse.RightMousePressed || Mouse.MiddleMousePressed) return;
         if (Mouse.Inside && Enabled)
         {
             Input.SetCursor(CursorType.IBeam);
+            e.CursorHandled = true;
         }
         else
+        {
+            Input.SetCursor(CursorType.Arrow);
+        }
+    }
+
+    public override void MouseUp(MouseEventArgs e)
+    {
+        base.MouseUp(e);
+        if (e.CursorHandled) return;
+        if (Mouse.LeftMousePressed || Mouse.RightMousePressed || Mouse.MiddleMousePressed) return;
+        if (Mouse.Inside && Enabled)
+        {
+            Input.SetCursor(CursorType.IBeam);
+            e.CursorHandled = true;
+        }
+        else if (!Mouse.Inside && Input.SystemCursor == CursorType.IBeam)
         {
             Input.SetCursor(CursorType.Arrow);
         }
