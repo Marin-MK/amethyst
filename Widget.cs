@@ -883,56 +883,94 @@ public class Widget : IDisposable, IContainer
         vsb.LinkedWidget = this;
     }
 
+    protected bool PretendToBeAtOrigin = false;
+
     /// <summary>
     /// Updates this viewport's boundaries if it exceeds the parent viewport's boundaries and applies scrolling.
     /// </summary>
-    public void UpdateBounds()
+    public void UpdateBounds(bool PretendToBeAtOrigin = false)
     {
+        this.PretendToBeAtOrigin = PretendToBeAtOrigin;
         AssertUndisposed();
         foreach (Sprite sprite in this.Sprites.Values) sprite.OX = sprite.OY = 0;
 
         int xoffset = ConsiderInAutoScrollPositioningX ? Parent.ScrolledX : 0;
         int yoffset = ConsiderInAutoScrollPositioningY ? Parent.ScrolledY : 0;
 
-        this.Viewport.X = this.Parent.Viewport.X + this.Position.X + this.Padding.Left - this.Parent.LeftCutOff - xoffset;
-        this.Viewport.Y = this.Parent.Viewport.Y + this.Position.Y + this.Padding.Up - this.Parent.TopCutOff - yoffset;
+        if (PretendToBeAtOrigin)
+        {
+            this.Viewport.X = 0;
+            this.Viewport.Y = 0;
+        }
+        else
+        {
+            bool ParentAtOrigin = Parent is Widget && ((Widget) Parent).PretendToBeAtOrigin;
+            this.Viewport.X = this.Parent.Viewport.X + this.Position.X + this.Padding.Left - (ParentAtOrigin ? 0 : this.Parent.LeftCutOff) - xoffset;
+            this.Viewport.Y = this.Parent.Viewport.Y + this.Position.Y + this.Padding.Up - (ParentAtOrigin ? 0 : this.Parent.TopCutOff) - yoffset;
+        }
         this.Viewport.Width = this.Size.Width;
         this.Viewport.Height = this.Size.Height;
 
-        // Handles width exceeding parent viewport
-        if (this.Viewport.X + this.Size.Width > this.Parent.Viewport.X + this.Parent.Viewport.Width)
+        if (!PretendToBeAtOrigin)
         {
-            int Diff = this.Viewport.X + this.Size.Width - (this.Parent.Viewport.X + this.Parent.Viewport.Width);
-            this.Viewport.Width -= Diff;
+            // Handles width exceeding parent viewport
+            if (this.Viewport.X + this.Size.Width > this.Parent.Viewport.X + this.Parent.Viewport.Width)
+            {
+                int Diff = this.Viewport.X + this.Size.Width - (this.Parent.Viewport.X + this.Parent.Viewport.Width);
+                this.Viewport.Width -= Diff;
+            }
+            // Handles X being negative
+            if (this.Viewport.X < this.Parent.Viewport.X)
+            {
+                int Diff = this.Parent.Viewport.X - this.Viewport.X;
+                this.Viewport.X += Diff;
+                this.Viewport.Width -= Diff;
+                foreach (Sprite sprite in this.Sprites.Values) sprite.OX += (int) Math.Round(Diff / sprite.ZoomX);
+                LeftCutOff = Diff;
+            }
+            else LeftCutOff = 0;
+            // Handles height exceeding parent viewport
+            if (this.Viewport.Y + this.Size.Height > this.Parent.Viewport.Y + this.Parent.Viewport.Height)
+            {
+                int Diff = this.Viewport.Y + this.Size.Height - (this.Parent.Viewport.Y + this.Parent.Viewport.Height);
+                this.Viewport.Height -= Diff;
+            }
+            // Handles Y being negative
+            if (this.Viewport.Y < this.Parent.Viewport.Y)
+            {
+                int Diff = this.Parent.Viewport.Y - this.Viewport.Y;
+                this.Viewport.Y += Diff;
+                this.Viewport.Height -= Diff;
+                foreach (Sprite sprite in this.Sprites.Values) sprite.OY += (int) Math.Round(Diff / sprite.ZoomY);
+                TopCutOff = Diff;
+            }
+            else TopCutOff = 0;
         }
-        // Handles X being negative
-        if (this.Viewport.X < this.Parent.Viewport.X)
-        {
-            int Diff = this.Parent.Viewport.X - this.Viewport.X;
-            this.Viewport.X += Diff;
-            this.Viewport.Width -= Diff;
-            foreach (Sprite sprite in this.Sprites.Values) sprite.OX += (int) Math.Round(Diff / sprite.ZoomX);
-            LeftCutOff = Diff;
-        }
-        else LeftCutOff = 0;
-        // Handles height exceeding parent viewport
-        if (this.Viewport.Y + this.Size.Height > this.Parent.Viewport.Y + this.Parent.Viewport.Height)
-        {
-            int Diff = this.Viewport.Y + this.Size.Height - (this.Parent.Viewport.Y + this.Parent.Viewport.Height);
-            this.Viewport.Height -= Diff;
-        }
-        // Handles Y being negative
-        if (this.Viewport.Y < this.Parent.Viewport.Y)
-        {
-            int Diff = this.Parent.Viewport.Y - this.Viewport.Y;
-            this.Viewport.Y += Diff;
-            this.Viewport.Height -= Diff;
-            foreach (Sprite sprite in this.Sprites.Values) sprite.OY += (int) Math.Round(Diff / sprite.ZoomY);
-            TopCutOff = Diff;
-        }
-        else TopCutOff = 0;
 
         this.Widgets.ForEach(child => child.UpdateBounds());
+    }
+
+    private List<Viewport> GetAllChildViewports()
+    {
+        List<Viewport> Viewports = new List<Viewport>();
+        foreach (Widget w in Widgets)
+        {
+            Viewports.Add(w.Viewport);
+            Viewports.AddRange(w.GetAllChildViewports());
+        }
+        return Viewports;
+    }
+
+    public Bitmap ToBitmap(int xoffset = 0, int yoffset = 0, int width = 0, int height = 0)
+    {
+        List<Viewport> Viewports = new List<Viewport>() { this.Viewport };
+        Viewports.AddRange(this.GetAllChildViewports());
+        this.UpdateBounds(true);
+        if (width == 0) width = this.Size.Width;
+        if (height == 0) height = this.Size.Height;
+        width += xoffset * 2;
+        height += yoffset * 2;
+        return Graphics.RenderToBitmap(Viewports, width, height, xoffset, yoffset);
     }
 
     /// <summary>

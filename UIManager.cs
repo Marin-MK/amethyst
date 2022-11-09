@@ -351,7 +351,6 @@ public class UIManager : IContainer
             this.SelectedWidget.SelectedWidget = false;
             Widget selbefore = this.SelectedWidget;
             this.SelectedWidget.OnWidgetDeselected(new BaseEventArgs());
-            if (!selbefore.Disposed) selbefore.Redraw();
             // Possible if OnWidgetDeselected itself called SetSelectedWidget on a different widget.
             // In that case we should skip the setting-bit below, as it would
             // set the selected widget to null AFTER the previous SetSelectedWidget call.
@@ -362,7 +361,6 @@ public class UIManager : IContainer
         if (w != null)
         {
             this.SelectedWidget.SelectedWidget = true;
-            this.SelectedWidget.Redraw();
         }
     }
 
