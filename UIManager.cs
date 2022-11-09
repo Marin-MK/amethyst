@@ -21,6 +21,7 @@ public class UIManager : IContainer
     public ScrollBar HScrollBar { get { return null; } set { throw new MethodNotSupportedException(this); } }
     public ScrollBar VScrollBar { get { return null; } set { throw new MethodNotSupportedException(this); } }
     public List<Shortcut> Shortcuts { get; protected set; } = new List<Shortcut>();
+    public List<string> ValidShortcutInputs = new List<string>();
     public int WindowLayer { get { return 0; } set { throw new MethodNotSupportedException(this); } }
     public int LeftCutOff { get { return 0; } }
     public int TopCutOff { get { return 0; } }
@@ -218,12 +219,12 @@ public class UIManager : IContainer
             bool Valid = false;
             if (Input.Press(k.MainKey))
             {
-                if (TimerPassed($"key_{k.ID}"))
+                if (TimerPassed($"key_{k.ID}") && ValidShortcutInputs.Contains(k.ID))
                 {
                     ResetTimer($"key_{k.ID}");
                     Valid = true;
                 }
-                else if (TimerPassed($"key_{k.ID}_initial"))
+                else if (TimerPassed($"key_{k.ID}_initial") && ValidShortcutInputs.Contains(k.ID))
                 {
                     SetTimer($"key_{k.ID}", 50);
                     DestroyTimer($"key_{k.ID}_initial");
@@ -233,15 +234,21 @@ public class UIManager : IContainer
                 {
                     if (Input.Trigger(k.MainKey))
                     {
+                        Console.WriteLine("trigger");
                         SetTimer($"key_{k.ID}_initial", 300);
                         Valid = true;
                     }
+                }
+                else
+                {
+                    if (!ValidShortcutInputs.Contains(k.ID)) ValidShortcutInputs.Add(k.ID);
                 }
             }
             else
             {
                 if (TimerExists($"key_{k.ID}")) DestroyTimer($"key_{k.ID}");
                 if (TimerExists($"key_{k.ID}_initial")) DestroyTimer($"key_{k.ID}_initial");
+                if (ValidShortcutInputs.Contains(k.ID)) ValidShortcutInputs.Remove(k.ID);
             }
             if (!Valid) continue;
 
@@ -278,6 +285,7 @@ public class UIManager : IContainer
                 if (!s.GlobalShortcut) continue;
                 if (TimerExists($"key_{s.Key.ID}")) DestroyTimer($"key_{s.Key.ID}");
                 if (TimerExists($"key_{s.Key.ID}_initial")) DestroyTimer($"key_{s.Key.ID}_initial");
+                if (ValidShortcutInputs.Contains(s.Key.ID)) ValidShortcutInputs.Remove(s.Key.ID);
             }
         }
         for (int i = 0; i < this.Widgets.Count; i++)
