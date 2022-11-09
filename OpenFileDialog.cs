@@ -10,10 +10,12 @@ public class OpenFileDialog
 {
     NativeLibrary tfd;
 
-    internal delegate IntPtr OFDDelegate(string Title, string DefaultPath, int NumFilePatterns, string[] FilterPatterns, string SingleFilterDescription, int AllowMultiple);
-    internal delegate IntPtr SFDDelegate(string Title, string DefaultPath);
-    internal static OFDDelegate FUNC_OpenFileDialog;
-    internal static SFDDelegate FUNC_SelectFolderDialog;
+    internal delegate IntPtr OpenFileDelegate(string Title, string DefaultPath, int NumFilePatterns, string[] FilterPatterns, string SingleFilterDescription, int AllowMultiple);
+    internal delegate IntPtr SelectFolderDelegate(string Title, string DefaultPath);
+    internal delegate IntPtr SaveFileDelegate(string Title, string DefaultPath, int NumFilePatterns, string[] FilterPatterns, string SingleFilterDescription);
+    internal static OpenFileDelegate FUNC_OpenFileDialog;
+    internal static SelectFolderDelegate FUNC_SelectFolderDialog;
+    internal static SaveFileDelegate FUNC_SaveFileDialog;
 
     public string Title;
     public string DefaultFolder;
@@ -43,7 +45,7 @@ public class OpenFileDialog
         this.FileFilter = FileFilter;
     }
 
-    public string ChooseFile()
+    public string? ChooseFile()
     {
         IntPtr ptr = FUNC_OpenFileDialog(
             this.Title,
@@ -65,7 +67,7 @@ public class OpenFileDialog
         return null;
     }
 
-    public List<string> ChooseFiles()
+    public List<string>? ChooseFiles()
     {
         IntPtr ptr = FUNC_OpenFileDialog(
             this.Title,
@@ -89,7 +91,7 @@ public class OpenFileDialog
         return null;
     }
 
-    public string ChooseFolder()
+    public string? ChooseFolder()
     {
         IntPtr ptr = FUNC_SelectFolderDialog(this.Title, this.DefaultFolder);
         if (ptr != IntPtr.Zero)
@@ -99,6 +101,27 @@ public class OpenFileDialog
             {
                 while (Folder.Contains('\\')) Folder = Folder.Replace('\\', '/');
                 return Folder;
+            }
+        }
+        return null;
+    }
+
+    public string? SaveFile()
+    {
+        IntPtr ptr = FUNC_SaveFileDialog(
+            this.Title,
+            this.DefaultFolder,
+            this.FileFilter == null ? 0 : this.FileFilter.Extensions.Count,
+            this.FileFilter.Extensions.Select(e => "*." + e).ToArray(),
+            this.FileFilter.ToString()
+        );
+        if (ptr != IntPtr.Zero)
+        {
+            string File = System.Runtime.InteropServices.Marshal.PtrToStringAnsi(ptr);
+            if (!string.IsNullOrEmpty(File))
+            {
+                File = File.Replace('\\', '/');
+                return File;
             }
         }
         return null;

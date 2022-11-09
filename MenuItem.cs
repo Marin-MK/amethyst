@@ -21,6 +21,13 @@ public class MenuItem : IMenuItem
         this.Text = Text;
         this.Items = new List<IMenuItem>();
     }
+
+    public MenuItem(string Text, odl.BaseEvent OnClicked)
+    {
+        this.Text = Text;
+        this.Items = new List<IMenuItem>();
+        this.OnClicked = OnClicked;
+    }
 }
 
 public class MenuSeparator : IMenuItem { }

@@ -10,6 +10,7 @@ public static class Amethyst
 
     internal static PathInfo Info;
     internal static NativeLibrary tfd;
+    internal static bool Stopped = false;
 
     public static void Start(PathInfo Info, bool InitializeAudio = true, bool InitializeFilePickerLibrary = false)
     {
@@ -19,8 +20,9 @@ public static class Amethyst
         {
             PathPlatformInfo platform = Info.GetPlatform(NativeLibrary.Platform);
             tfd = NativeLibrary.Load(platform.Get("tinyfiledialogs"));
-            OpenFileDialog.FUNC_OpenFileDialog = tfd.GetFunction<OpenFileDialog.OFDDelegate>("tinyfd_openFileDialog");
-            OpenFileDialog.FUNC_SelectFolderDialog = tfd.GetFunction<OpenFileDialog.SFDDelegate>("tinyfd_selectFolderDialog");
+            OpenFileDialog.FUNC_OpenFileDialog = tfd.GetFunction<OpenFileDialog.OpenFileDelegate>("tinyfd_openFileDialog");
+            OpenFileDialog.FUNC_SelectFolderDialog = tfd.GetFunction<OpenFileDialog.SelectFolderDelegate>("tinyfd_selectFolderDialog");
+            OpenFileDialog.FUNC_SaveFileDialog = tfd.GetFunction<OpenFileDialog.SaveFileDelegate>("tinyfd_saveFileDialog");
         }
         Graphics.Start(Info);
         if (InitializeAudio) Audio.Start(Info);
@@ -44,6 +46,7 @@ public static class Amethyst
         {
             while (Graphics.CanUpdate())
             {
+                if (Stopped) break;
                 Graphics.Update();
             }
         }
@@ -51,6 +54,7 @@ public static class Amethyst
         {
             while (Graphics.CanUpdate())
             {
+                if (Stopped) break;
                 TickDelegate();
             }
         }
@@ -58,6 +62,7 @@ public static class Amethyst
 
     public static void Stop()
     {
+        Stopped = true;
         Graphics.Stop();
         if (Audio.Initialized) Audio.Stop();
     }
