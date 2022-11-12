@@ -645,6 +645,20 @@ public class Widget : IDisposable, IContainer
     {
         AssertUndisposed();
         // De-register old global shortcuts in the UIManager object.
+        RemoveShortcuts();
+        this.Shortcuts = Shortcuts;
+        // Register global shortcuts in the UIManager object.
+        foreach (Shortcut s in this.Shortcuts)
+        {
+            if (s.GlobalShortcut) this.Window.UI.RegisterShortcut(s);
+        }
+    }
+
+    /// <summary>
+    /// Removes all registered shortcuts.
+    /// </summary>
+    public virtual void RemoveShortcuts()
+    {
         foreach (Shortcut s in this.Shortcuts)
         {
             if (s.GlobalShortcut) this.Window.UI.DeregisterShortcut(s);
@@ -653,14 +667,8 @@ public class Widget : IDisposable, IContainer
                 if (TimerExists($"key_{s.Key.ID}")) DestroyTimer($"key_{s.Key.ID}");
                 if (TimerExists($"key_{s.Key.ID}_initial")) DestroyTimer($"key_{s.Key.ID}_initial");
             }
-            Console.WriteLine($"Deregistered existing shortcut");
         }
-        this.Shortcuts = Shortcuts;
-        // Register global shortcuts in the UIManager object.
-        foreach (Shortcut s in this.Shortcuts)
-        {
-            if (s.GlobalShortcut) this.Window.UI.RegisterShortcut(s);
-        }
+        ValidShortcutInputs.Clear();
     }
 
     /// <summary>
