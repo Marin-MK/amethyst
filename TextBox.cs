@@ -12,10 +12,12 @@ public class TextBox : ActivatableWidget
     public int TextY => TextArea.TextY;
     public int CaretHeight => TextArea.CaretHeight;
     public bool ShowDisabledText => TextArea.ShowDisabledText;
+    public bool DeselectOnEnterPressed => TextArea.DeselectOnEnterPressed;
 
     public TextArea TextArea;
 
-    public TextEvent OnTextChanged { get { return TextArea.OnTextChanged; } set { TextArea.OnTextChanged = value; } }
+    public TextEvent OnTextChanged { get => TextArea.OnTextChanged; set => TextArea.OnTextChanged = value; }
+    public BaseEvent OnEnterPressed { get => TextArea.OnEnterPressed; set => TextArea.OnEnterPressed = value; }
 
     public TextBox(IContainer Parent) : base(Parent)
     {
@@ -60,6 +62,11 @@ public class TextBox : ActivatableWidget
     public void SetShowDisabledText(bool ShowDisabledText)
     {
         TextArea.SetShowDisabledText(ShowDisabledText);
+    }
+
+    public void SetDeselectOnEnterPressed(bool DeselectOnEnterPressed)
+    {
+        TextArea.SetDeselectOnEnterPress(DeselectOnEnterPressed);
     }
 
     public override void SizeChanged(BaseEventArgs e)

@@ -28,4 +28,15 @@ public class ListItem
     {
         return Name ?? (Object is null ? "" : Object.ToString());
     }
+
+    public override bool Equals(object obj)
+    {
+        if (this == obj) return true;
+        if (obj is ListItem)
+        {
+            ListItem i = (ListItem) obj;
+            return this.Name == i.Name && this.Object.Equals(i.Object);
+        }
+        return false;
+    }
 }

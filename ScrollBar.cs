@@ -18,6 +18,7 @@ public abstract class ScrollBar : Widget
     public bool Arrow2Pressing { get; protected set; } = false;
     public bool Arrow1StartedPressing { get; protected set; } = false;
     public bool Arrow2StartedPressing { get; protected set; } = false;
+    public bool Pressable { get; protected set; } = true;
     public bool KeepInvisible = false;
     public int MinSliderSize = 8;
 
@@ -91,6 +92,11 @@ public abstract class ScrollBar : Widget
             if (CallEvent) this.OnValueChanged?.Invoke(new BaseEventArgs());
             Redraw();
         }
+    }
+
+    public void SetPressable(bool Pressable)
+    {
+        this.Pressable = Pressable;
     }
 
     public override void MouseWheel(MouseEventArgs e)

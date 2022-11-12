@@ -23,6 +23,7 @@ public class TextArea : Widget
     public int DefaultNumericValue { get; protected set; } = 0;
     public bool AllowMinusSigns { get; protected set; } = true;
     public bool ShowDisabledText { get; protected set; } = false;
+    public bool DeselectOnEnterPressed { get; protected set; } = true;
 
     public bool EnteringText = false;
 
@@ -40,6 +41,7 @@ public class TextArea : Widget
     public TextEvent OnTextChanged;
     public BaseEvent OnPressingUp;
     public BaseEvent OnPressingDown;
+    public BaseEvent OnEnterPressed;
 
     List<TextAreaState> UndoList = new List<TextAreaState>();
     List<TextAreaState> RedoList = new List<TextAreaState>();
@@ -230,6 +232,14 @@ public class TextArea : Widget
         }
     }
 
+    public void SetDeselectOnEnterPress(bool DeselectOnEnterPressed)
+    {
+        if (this.DeselectOnEnterPressed != DeselectOnEnterPressed)
+        {
+            this.DeselectOnEnterPressed = DeselectOnEnterPressed;
+        }
+    }
+
     public override void SizeChanged(BaseEventArgs e)
     {
         base.SizeChanged(e);
@@ -260,7 +270,8 @@ public class TextArea : Widget
         string text = this.Text;
         if (e.Text == "\n")
         {
-            Window.UI.SetSelectedWidget(null);
+            OnEnterPressed?.Invoke(new BaseEventArgs());
+            if (DeselectOnEnterPressed) Window.UI.SetSelectedWidget(null);
             return;
         }
         else if (!string.IsNullOrEmpty(e.Text))

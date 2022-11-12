@@ -38,6 +38,7 @@ public abstract class BasicHScrollBar : ScrollBar
     public override void MouseMoving(MouseEventArgs e)
     {
         base.MouseMoving(e);
+        if (!Pressable) return;
         bool OldSliderHovering = SliderHovering;
         bool OldSliderDragging = SliderDragging;
         bool OldArrow1Hovering = Arrow1Hovering;
@@ -100,6 +101,7 @@ public abstract class BasicHScrollBar : ScrollBar
     public override void MouseDown(MouseEventArgs e)
     {
         base.MouseDown(e);
+        if (!Pressable) return;
         if (e.LeftButton == e.OldLeftButton) return;
         int rx = e.X - Viewport.X;
         int ry = e.Y - Viewport.Y;
@@ -173,6 +175,7 @@ public abstract class BasicHScrollBar : ScrollBar
     public override void MouseUp(MouseEventArgs e)
     {
         base.MouseUp(e);
+        if (!Pressable) return;
         if (e.LeftButton != e.OldLeftButton)
         {
             DragOffset = -1;
