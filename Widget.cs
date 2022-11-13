@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using amethyst.Animations;
 using odl;
 
 namespace amethyst;
@@ -328,6 +329,11 @@ public class Widget : IDisposable, IContainer
     public bool EvaluatedLastMouseEvent { get; set; }
 
     /// <summary>
+    /// A list of all active animations.
+    /// </summary>
+    public List<IAnimation> Animations { get; set; } = new List<IAnimation>();
+
+    /// <summary>
     /// Called whenever the mouse moves across the window.
     /// </summary>
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -536,6 +542,12 @@ public class Widget : IDisposable, IContainer
     /// </summary>
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public ObjectEvent OnPaddingChanged { get; set; }
+
+    /// <summary>
+    /// Called whenever an animation finishes.
+    /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public ObjectEvent OnAnimationFinished { get; set; }
 
     /// <summary>
     /// Indicates whether the context menu is set to be opened on next update.
@@ -1272,7 +1284,7 @@ public class Widget : IDisposable, IContainer
     /// <param name="milliseconds">Number of milliseconds to run the timer for.</param>
     public void SetTimer(string identifier, long milliseconds)
     {
-        Timers.Add(new Timer(identifier, DateTime.Now.Ticks, 10000 * milliseconds));
+        Timers.Add(new Timer(identifier, Stopwatch.GetTimestamp(), 10000 * milliseconds));
     }
 
     /// <summary>
@@ -1282,7 +1294,7 @@ public class Widget : IDisposable, IContainer
     {
         Timer t = Timers.Find(timer => timer.Identifier == identifier);
         if (t == null) return false;
-        return DateTime.Now.Ticks >= t.StartTime + t.Timespan;
+        return Stopwatch.GetTimestamp() >= t.StartTime + t.Timespan;
     }
 
     /// <summary>
@@ -1310,7 +1322,110 @@ public class Widget : IDisposable, IContainer
     {
         Timer t = Timers.Find(timer => timer.Identifier == identifier);
         if (t == null) throw new Exception("No timer by the identifier of '" + identifier + "' was found.");
-        t.StartTime = DateTime.Now.Ticks;
+        t.StartTime = Stopwatch.GetTimestamp();
+    }
+
+    /// <summary>
+    /// Starts an animation on this widget.
+    /// </summary>
+    /// <param name="Animation">The animation to run.</param>
+    public void StartAnimation(IAnimation Animation)
+    {
+        Animations.Add(Animation);
+        Animation.Start();
+    }
+
+    /// <summary>
+    /// Pauses the animation with the specified ID.
+    /// </summary>
+    /// <param name="ID">The ID of the animation to pause.</param>
+    public void PauseAnimation(string ID)
+    {
+        IAnimation Anim = Animations.Find(a => a.ID == ID);
+        if (Anim == null) throw new Exception($"No animation could be found with the ID '{ID}'.");
+        PauseAnimation(Anim);
+    }
+
+    /// <summary>
+    /// Pauses the specified animation.
+    /// </summary>
+    /// <param name="Animation">The animation to pause.</param>
+    public void PauseAnimation(IAnimation Animation)
+    {
+        Animation.Pause();
+    }
+
+    /// <summary>
+    /// Resumes the animation with the specified ID.
+    /// </summary>
+    /// <param name="ID">The ID of the animation to resume.</param>
+    public void ResumeAnimation(string ID)
+    {
+        IAnimation Anim = Animations.Find(a => a.ID == ID);
+        if (Anim == null) throw new Exception($"No animation could be found with the ID '{ID}'.");
+        ResumeAnimation(Anim);
+    }
+
+    /// <summary>
+    /// Resumes the specified animation.
+    /// </summary>
+    /// <param name="Animation">The animation to resume.</param>
+    public void ResumeAnimation(IAnimation Animation)
+    {
+        Animation.Resume();
+    }
+
+    /// <summary>
+    /// Returns whether the animation with the specified ID is paused.
+    /// </summary>
+    /// <param name="ID">The ID of the animation.</param>
+    /// <returns>Whether the animation is paused.</returns>
+    public bool IsAnimationPaused(string ID)
+    {
+        IAnimation Anim = Animations.Find(a => a.ID == ID);
+        if (Anim == null) throw new Exception($"No animation could be found with the ID '{ID}'.");
+        return IsAnimationPaused(Anim);
+    }
+
+    /// <summary>
+    /// Returns whether the specified animation is paused.
+    /// </summary>
+    /// <param name="Animation">The animation.</param>
+    /// <returns>Whether the animation is paused.</returns>
+    public bool IsAnimationPaused(IAnimation Animation)
+    {
+        return Animation.Paused;
+    }
+
+    /// <summary>
+    /// Returns whether an animation exists with the specified ID.
+    /// </summary>
+    /// <param name="ID">The ID to test for.</param>
+    /// <returns>Whether an animation with the specified ID exists.</returns>
+    public bool AnimationExists(string ID)
+    {
+        return Animations.Any(anim => anim.ID == ID);
+    }
+
+    /// <summary>
+    /// Stops the animation with the specified ID.
+    /// </summary>
+    /// <param name="ID">The ID of the animation to stop.</param>
+    public void StopAnimation(string ID)
+    {
+        IAnimation Anim = Animations.Find(a => a.ID == ID);
+        if (Anim == null) throw new Exception($"No animation could be found with the ID '{ID}'.");
+        StopAnimation(Anim);
+    }
+
+    /// <summary>
+    /// Stops the specified animation.
+    /// </summary>
+    /// <param name="Animation">The animation to stop.</param>
+    public void StopAnimation(IAnimation Animation)
+    {
+        Animation.Stop();
+        Animations.Remove(Animation);
     }
 
     /// <summary>
@@ -1487,6 +1602,26 @@ public class Widget : IDisposable, IContainer
     public virtual void Update()
     {
         AssertUndisposed();
+
+        long Ticks = Stopwatch.GetTimestamp();
+        int j = 0;
+        while (j < Animations.Count)
+        {
+            if (Animations[j].Paused)
+            {
+                j++;
+                continue;
+            }
+            double factor = Math.Clamp((Ticks - Animations[j].StartTicks) / (double) (Animations[j].EndTicks - Animations[j].StartTicks), 0, 1);
+            Animations[j].Execute(factor);
+            if (Ticks >= Animations[j].EndTicks)
+            {
+                Animations[j].OnFinished?.Invoke();
+                OnAnimationFinished?.Invoke(new ObjectEventArgs(Animations[j]));
+                Animations.RemoveAt(j);
+            }
+            else j++;
+        }
 
         if (OpenContextMenuOnNextUpdate)
         {

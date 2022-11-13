@@ -94,7 +94,7 @@ public class TextArea : Widget
         }
     }
 
-    public void SetFillercolor(Color FillerColor)
+    public void SetFillerColor(Color FillerColor)
     {
         if (this.FillerColor != FillerColor)
         {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using odl;
 
 namespace amethyst;
@@ -302,7 +303,7 @@ public class UIManager : IContainer
     /// <param name="milliseconds">Number of milliseconds to run the timer for.</param>
     public void SetTimer(string identifier, long milliseconds)
     {
-        Timers.Add(new Timer(identifier, DateTime.Now.Ticks, 10000 * milliseconds));
+        Timers.Add(new Timer(identifier, Stopwatch.GetTimestamp(), 10000 * milliseconds));
     }
 
     /// <summary>
@@ -312,7 +313,7 @@ public class UIManager : IContainer
     {
         Timer t = Timers.Find(timer => timer.Identifier == identifier);
         if (t == null) return false;
-        return DateTime.Now.Ticks >= t.StartTime + t.Timespan;
+        return Stopwatch.GetTimestamp() >= t.StartTime + t.Timespan;
     }
 
     /// <summary>
@@ -340,7 +341,7 @@ public class UIManager : IContainer
     {
         Timer t = Timers.Find(timer => timer.Identifier == identifier);
         if (t == null) throw new Exception("No timer by the identifier of '" + identifier + "' was found.");
-        t.StartTime = DateTime.Now.Ticks;
+        t.StartTime = Stopwatch.GetTimestamp();
     }
 
     public void SetSelectedWidget(Widget w)
