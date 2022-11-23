@@ -72,6 +72,21 @@ public class Widget : IDisposable, IContainer
     public Size MaximumSize { get; set; } = new Size(-1, -1);
 
     /// <summary>
+    /// The opacity of the widget's viewport.
+    /// </summary>
+    public byte Opacity { get; protected set; }
+
+    /// <summary>
+    /// The horizontal zoom of the widget's viewport.
+    /// </summary>
+    public float ZoomX { get; protected set; }
+
+    /// <summary>
+    /// The vertical zoom of the widget's viewport.
+    /// </summary>
+    public float ZoomY { get; protected set; }
+
+    /// <summary>
     /// Background color of this widget.
     /// </summary>
     public Color BackgroundColor { get; protected set; } = new Color(255, 255, 255, 0);
@@ -310,6 +325,11 @@ public class Widget : IDisposable, IContainer
     /// A list of timers used for time-sensitive events
     /// </summary>
     public List<Timer> Timers { get; protected set; } = new List<Timer>();
+
+    /// <summary>
+    /// A list of timer names and associated callbacks
+    /// </summary>
+    public List<(string TimerName, Action Callback)> Callbacks = new List<(string, Action)>();
 
     /// <summary>
     /// Whether or not to redraw this widget.
@@ -1062,6 +1082,90 @@ public class Widget : IDisposable, IContainer
         this.UpdatePositionAndSizeIfDocked();
     }
 
+    public void SetGlobalOpacity(byte Opacity)
+    {
+        SetOpacity(Opacity);
+        Widgets.ForEach(w => w.SetGlobalOpacity(Opacity));
+    }
+
+    public void SetOpacity(byte Opacity)
+    {
+        if (this.Opacity != Opacity)
+        {
+            this.Opacity = Opacity;
+            Viewport.Opacity = Opacity;
+        }
+    }
+
+    public void SetZoomX(float ZoomX)
+    {
+        if (this.ZoomX != ZoomX)
+        {
+            Viewport.ZoomX = ZoomX;
+        }
+    }
+
+    public void SetZoomY(float ZoomY)
+    {
+        if (this.ZoomY != ZoomY)
+        {
+            Viewport.ZoomY = ZoomY;
+        }
+    }
+
+    public void SetZoom(float Zoom)
+    {
+        SetZoomX(Zoom);
+        SetZoomY(Zoom);
+    }
+
+    public void SetGlobalZoom(float Zoom, Viewport? OriginViewport = null, int OriginAddX = 0, int OriginAddY = 0)
+    {
+        SetZoomX(Zoom);
+        SetZoomY(Zoom);
+        if (OriginViewport == null) OriginViewport = Viewport;
+        Widgets.ForEach(w =>
+        {
+            OriginAddX += w.Position.X + w.Padding.Left;
+            OriginAddY += w.Position.Y + w.Padding.Up;
+            int diffx = (int) Math.Round((1 - OriginViewport.ZoomX) * OriginAddX);
+            int diffy = (int) Math.Round((1 - OriginViewport.ZoomY) * OriginAddY);
+            w.Viewport.OX = diffx;
+            w.Viewport.OY = diffy;
+            w.SetGlobalZoom(Zoom, OriginViewport, OriginAddX, OriginAddY);
+            OriginAddX -= w.Position.X + w.Padding.Left;
+            OriginAddY -= w.Position.Y + w.Padding.Up;
+        });
+    }
+
+    public void SetGlobalZoomX(float ZoomX, Viewport? OriginViewport = null, int OriginAddX = 0)
+    {
+        SetZoomX(ZoomX);
+        if (OriginViewport == null) OriginViewport = Viewport;
+        Widgets.ForEach(w =>
+        {
+            OriginAddX += w.Position.X + w.Padding.Left;
+            int diffx = (int) Math.Round((1 - OriginViewport.ZoomX) * OriginAddX);
+            w.Viewport.OX = diffx;
+            w.SetGlobalZoomX(ZoomX, OriginViewport, OriginAddX);
+            OriginAddX -= w.Position.X + w.Padding.Left;
+        });
+    }
+
+    public void SetGlobalZoomY(float ZoomY, Viewport? OriginViewport = null, int OriginAddY = 0)
+    {
+        SetZoomY(ZoomY);
+        if (OriginViewport == null) OriginViewport = Viewport;
+        Widgets.ForEach(w =>
+        {
+            OriginAddY += w.Position.Y + w.Padding.Up;
+            int diffy = (int) Math.Round((1 - OriginViewport.ZoomY) * OriginAddY);
+            w.Viewport.OY = diffy;
+            w.SetGlobalZoomY(ZoomY, OriginViewport, OriginAddY);
+            OriginAddY -= w.Position.Y + w.Padding.Up;
+        });
+    }
+
     /// <summary>
     /// Sets the widget margins.
     /// </summary>
@@ -1323,6 +1427,13 @@ public class Widget : IDisposable, IContainer
         Timer t = Timers.Find(timer => timer.Identifier == identifier);
         if (t == null) throw new Exception("No timer by the identifier of '" + identifier + "' was found.");
         t.StartTime = Stopwatch.GetTimestamp();
+    }
+
+    public void SetCallback(long Milliseconds, Action Callback)
+    {
+        string timername = $"callback_{Random.Shared.Next()}";
+        SetTimer(timername, Milliseconds);
+        Callbacks.Add((timername, Callback));
     }
 
     /// <summary>
@@ -1621,6 +1732,22 @@ public class Widget : IDisposable, IContainer
                 Animations.RemoveAt(j);
             }
             else j++;
+        }
+
+        j = 0;
+        while (j < Callbacks.Count)
+        {
+            string timername = Callbacks[j].TimerName;
+            if (TimerExists(timername))
+            {
+                if (TimerPassed(timername))
+                {
+                    Callbacks[j].Callback();
+                    Callbacks.RemoveAt(j);
+                }
+                else j++;
+            }
+            else Callbacks.RemoveAt(j);
         }
 
         if (OpenContextMenuOnNextUpdate)
