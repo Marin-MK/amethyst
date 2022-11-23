@@ -53,6 +53,7 @@ public class MultilineTextArea : Widget
     protected int BottomLineIndex => TopLineIndex + Parent.Size.Height / (LineHeight + LineMargins);
     protected int _FontLineHeight = -1;
     protected int _UserSetLineHeight = -1;
+    protected bool HomeSnappedToFirstPrior = false;
 
     public MultilineTextArea(IContainer Parent) : base(Parent)
     {
@@ -891,11 +892,33 @@ public class MultilineTextArea : Widget
     private void MoveHome(bool Shift)
     {
         if (!Shift && HasSelection) CancelSelection();
-        if (Caret.IndexInLine > 0)
+        int indexadd = 0;
+        if (Caret.Line.LineIndex == 0 || Lines[Caret.Line.LineIndex - 1].EndsInNewline)
+        {
+            foreach (char c in Caret.Line.Text)
+            {
+                if (c == '\n' || c == ' ') indexadd++;
+                else break;
+            }
+            if (indexadd == Caret.Line.Text.Length) indexadd = 0;
+            if (Caret.Index == Caret.Line.StartIndex + indexadd)
+            {
+                if (!HomeSnappedToFirstPrior)
+                {
+                    indexadd = 0;
+                    HomeSnappedToFirstPrior = true;
+                }
+            }
+            else if (Caret.Index == Caret.Line.StartIndex && HomeSnappedToFirstPrior)
+            {
+                HomeSnappedToFirstPrior = false;
+            }
+        }
+        if (Caret.IndexInLine > 0 || indexadd > 0)
         {
             if (Shift && !HasSelection) StartSelection();
             int OldIndex = Caret.Index;
-            Caret.Index = Caret.Line.StartIndex;
+            Caret.Index = Caret.Line.StartIndex + indexadd;
             Caret.AtEndOfLine = false;
             if (Shift)
             {

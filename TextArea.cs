@@ -745,7 +745,7 @@ public class TextArea : Widget
     /// </summary>
     /// <param name="Left">Whether to search to the left or right of the caret.</param>
     /// <returns>The next index to jump to when holding control.</returns>
-    internal static int FindNextCtrlIndex(string Text, int CaretIndex, bool Left) // or false for Right
+    public static int FindNextCtrlIndex(string Text, int CaretIndex, bool Left) // or false for Right
     {
         int idx = 0;
         string splitters = " `~!@#$%^&*()-=+[]{}\\|;:'\",.<>/?\n";
