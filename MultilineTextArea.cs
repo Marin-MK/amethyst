@@ -903,11 +903,8 @@ public class MultilineTextArea : Widget
             if (indexadd == Caret.Line.Text.Length) indexadd = 0;
             if (Caret.Index == Caret.Line.StartIndex + indexadd)
             {
-                if (!HomeSnappedToFirstPrior)
-                {
-                    indexadd = 0;
-                    HomeSnappedToFirstPrior = true;
-                }
+                indexadd = 0;
+                HomeSnappedToFirstPrior = true;
             }
             else if (Caret.Index == Caret.Line.StartIndex && HomeSnappedToFirstPrior)
             {
