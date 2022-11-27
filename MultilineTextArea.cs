@@ -56,6 +56,8 @@ public class MultilineTextArea : Widget
     protected int _UserSetLineHeight = -1;
     protected bool HomeSnappedToFirstPrior = false;
     protected int MaxCaretPositionInLine = 0;
+    protected int CaretWidth = 1;
+    protected bool InsertMode = false;
 
     public MultilineTextArea(IContainer Parent) : base(Parent)
     {
@@ -102,7 +104,8 @@ public class MultilineTextArea : Widget
             new Shortcut(this, new Key(Keycode.V, Keycode.CTRL), _ => Paste()),
             new Shortcut(this, new Key(Keycode.Z, Keycode.CTRL), _ => Undo()),
             new Shortcut(this, new Key(Keycode.Y, Keycode.CTRL), _ => Redo()),
-            new Shortcut(this, new Key(Keycode.ESCAPE), _ => CancelSelection())
+            new Shortcut(this, new Key(Keycode.ESCAPE), _ => CancelSelection()),
+            new Shortcut(this, new Key(Keycode.INSERT), _ => ToggleInsertMode())
         });
         AddUndoState();
 
@@ -136,7 +139,7 @@ public class MultilineTextArea : Widget
         {
             this.Font = Font;
             _FontLineHeight = Font.Size + 5;
-            ((SolidBitmap) Sprites["caret"].Bitmap).SetSize(1, this.LineHeight);
+            ((SolidBitmap) Sprites["caret"].Bitmap).SetSize(CaretWidth, this.LineHeight);
             RecalculateLines();
         }
     }
@@ -165,7 +168,7 @@ public class MultilineTextArea : Widget
         {
             int OldHeight = this.LineHeight;
             _UserSetLineHeight = LineHeight;
-            ((SolidBitmap)Sprites["caret"].Bitmap).SetSize(1, this.LineHeight);
+            ((SolidBitmap)Sprites["caret"].Bitmap).SetSize(CaretWidth, this.LineHeight);
             if (OldHeight != this.LineHeight) RedrawText();
         }
     }
@@ -1113,6 +1116,26 @@ public class MultilineTextArea : Widget
         if (!string.IsNullOrEmpty(e.Text))
         {
             if (e.Text == "\n" && Input.Press(Keycode.CTRL)) return;
+            if (e.Text != "\n" && InsertMode)
+            {
+                int DistanceToNewline = -1;
+                for (int i = Caret.Index; i < Text.Length; i++)
+                {
+                    if (Text[i] == '\n')
+                    {
+                        DistanceToNewline = i - Caret.Index;
+                        break;
+                    }
+                }
+                if (DistanceToNewline > 0)
+                {
+                    RemoveText(Caret.Index, Math.Min(DistanceToNewline, e.Text.Length));
+                }
+                else if (DistanceToNewline == -1)
+                {
+                    RemoveText(Caret.Index, Math.Min(Text.Length - Caret.Index, e.Text.Length));
+                }
+            }
             InsertText(Caret.Index, e.Text);
         }
         else if (e.Backspace || e.Delete)
@@ -1223,6 +1246,22 @@ public class MultilineTextArea : Widget
         {
             InsertText(Caret.Index, "  ");
         }
+    }
+
+    protected virtual void ToggleInsertMode()
+    {
+        InsertMode = !InsertMode;
+        if (InsertMode)
+        {
+            CaretWidth = Font.TextSize('a').Width;
+            ((SolidBitmap) Sprites["caret"].Bitmap).SetColor(new Color(255, 255, 255, 128));
+        }
+        else
+        {
+            CaretWidth = 1;
+            ((SolidBitmap) Sprites["caret"].Bitmap).SetColor(Color.WHITE);
+        }
+        ((SolidBitmap) Sprites["caret"].Bitmap).SetSize(CaretWidth, LineHeight);
     }
 
     protected virtual CaretIndex GetHoveredIndex(MouseEventArgs e)
