@@ -1,6 +1,7 @@
 ﻿using odl;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 
@@ -54,6 +55,7 @@ public class MultilineTextArea : Widget
     protected int _FontLineHeight = -1;
     protected int _UserSetLineHeight = -1;
     protected bool HomeSnappedToFirstPrior = false;
+    protected int MaxCaretPositionInLine = 0;
 
     public MultilineTextArea(IContainer Parent) : base(Parent)
     {
@@ -661,6 +663,7 @@ public class MultilineTextArea : Widget
             ResetIdle();
             if (Shift) RedrawSelectionBoxes();
             UpdateCaretPosition(true);
+            MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
         }
     }
 
@@ -697,6 +700,7 @@ public class MultilineTextArea : Widget
             ResetIdle();
             if (Shift) RedrawSelectionBoxes();
             UpdateCaretPosition(true);
+            MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
         }
     }
 
@@ -711,8 +715,8 @@ public class MultilineTextArea : Widget
         int OldIndex = Caret.Index;
         if (Caret.Line.LineIndex > 0)
         {
-            int CurWidth = Caret.Line.WidthUpTo(Caret.IndexInLine);
             Line l = Lines[Caret.Line.LineIndex - 1];
+            int CurWidth = MaxCaretPositionInLine;
             Caret.Index = l.StartIndex + l.GetIndexAroundWidth(CurWidth);
             Caret.AtEndOfLine = !l.EndsInNewline && Caret.Index == l.EndIndex + 1;
         }
@@ -763,8 +767,8 @@ public class MultilineTextArea : Widget
         int OldIndex = Caret.Index;
         if (Caret.Line.LineIndex < Lines.Count - 1)
         {
-            int CurWidth = Caret.Line.WidthUpTo(Caret.IndexInLine);
             Line l = Lines[Caret.Line.LineIndex + 1];
+            int CurWidth = MaxCaretPositionInLine;
             Caret.Index = l.StartIndex + l.GetIndexAroundWidth(CurWidth);
             Caret.AtEndOfLine = !Caret.Line.EndsInNewline && Caret.Index == l.EndIndex + 1;
         }
@@ -818,6 +822,7 @@ public class MultilineTextArea : Widget
             Caret.Index = l.StartIndex;
         }
         else Caret.Index = 0;
+        MaxCaretPositionInLine = 0;
         Caret.AtEndOfLine = false;
         if (OldIndex != Caret.Index)
         {
@@ -872,6 +877,7 @@ public class MultilineTextArea : Widget
             Caret.Index = Text.Length;
             Caret.AtEndOfLine = !Caret.Line.EndsInNewline;
         }
+        MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
         if (OldIndex != Caret.Index)
         {
             if (Shift)
@@ -960,6 +966,7 @@ public class MultilineTextArea : Widget
             if (Shift) RedrawSelectionBoxes();
             UpdateCaretPosition(true);
         }
+        MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
     }
 
     private void MoveEnd(bool Shift)
@@ -999,6 +1006,7 @@ public class MultilineTextArea : Widget
             ResetIdle();
             if (Shift) RedrawSelectionBoxes();
             UpdateCaretPosition(true);
+            MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
         }
     }
 
@@ -1050,6 +1058,7 @@ public class MultilineTextArea : Widget
         AddUndoState();
         ResetIdle();
         RecalculateLines();
+        MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
     }
 
     protected virtual void RemoveText(int Index, int Count)
@@ -1064,6 +1073,7 @@ public class MultilineTextArea : Widget
         AddUndoState();
         ResetIdle();
         RecalculateLines();
+        MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
     }
 
     private void CutSelection()
@@ -1365,6 +1375,7 @@ public class MultilineTextArea : Widget
             ResetIdle();
             RedrawSelectionBoxes();
             UpdateCaretPosition(true);
+            MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
         }
     }
 
