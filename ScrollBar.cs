@@ -7,8 +7,8 @@ public abstract class ScrollBar : Widget
 {
     public double SliderSize { get; protected set; }
     public double Value { get; protected set; }
-    public float ScrollStep { get; set; } = 32 / 3f;
-    public float? MinScrollStep { get; set; }
+    public float ScrollStep { get; protected set; } = 32 / 3f;
+    public float? MinScrollStep { get; protected set; }
     public Rect MouseInputRect { get; set; }
     public bool SliderHovering { get; protected set; } = false;
     public bool SliderDragging { get; protected set; } = false;
@@ -60,6 +60,22 @@ public abstract class ScrollBar : Widget
         base.SetSize(size);
         SetSliderSize(OriginalSize);
         return this;
+    }
+
+    public void SetScrollStep(float ScrollStep)
+    {
+        if (this.ScrollStep != ScrollStep)
+        {
+            this.ScrollStep = ScrollStep;
+        }
+    }
+    
+    public void SetMinScrollStep(float? MinScrollStep)
+    {
+        if (this.MinScrollStep != MinScrollStep)
+        {
+            this.MinScrollStep = MinScrollStep;
+        }
     }
 
     public virtual void ScrollLeft(int Count = 1)

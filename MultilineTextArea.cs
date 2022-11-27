@@ -565,6 +565,18 @@ public class MultilineTextArea : Widget
         if (TimerExists("idle")) ResetTimer("idle");
     }
 
+    public void SetSelection(int StartIndex, int Length, bool WrapAtLineEnd = true, bool CaretAtEnd = true)
+    {
+        SelectionStart = new CaretIndex(this);
+        SelectionStart.Index = StartIndex;
+        SelectionEnd = new CaretIndex(this);
+        SelectionEnd.Index = StartIndex + Length;
+        Caret.Index = CaretAtEnd ? SelectionEnd.Index : SelectionStart.Index;
+        Caret.AtEndOfLine = false;
+        RedrawSelectionBoxes();
+        UpdateCaretPosition(true);
+    }
+
     private void StartSelection(int? Index = null)
     {
         SelectionStart = new CaretIndex(this);
@@ -573,13 +585,16 @@ public class MultilineTextArea : Widget
         SelectionEnd.Index = Index ?? Caret.Index;
     }
 
-    protected void CancelSelection()
+    protected void CancelSelection(bool Redraw = true)
     {
         if (!HasSelection) return;
         SelectionStart = null;
         SelectionEnd = null;
-        RedrawSelectionBoxes();
-        UpdateCaretPosition(true);
+        if (Redraw)
+        {
+            RedrawSelectionBoxes();
+            UpdateCaretPosition(true);
+        }
     }
 
     protected virtual void DeleteSelection()
@@ -1112,7 +1127,92 @@ public class MultilineTextArea : Widget
                 }
             }
         }
+        else if (e.Tab) TabInput();
         if (this.Text != text) OnTextChanged?.Invoke(new BaseEventArgs());
+    }
+
+    protected void TabInput()
+    {
+        if (HasSelection && SelectionStart.Line.LineIndex != SelectionEnd.Line.LineIndex)
+        {
+            int StartIdx = SelectionLeft.Line.LineIndex;
+            int EndIdx = SelectionRight.Line.LineIndex;
+            for (int i = StartIdx; i <= EndIdx; i++)
+            {
+                TabInputForLine(i, false);
+            }
+        }
+        else
+        {
+            TabInputForLine(Caret.Line.LineIndex, true);
+        }
+        UpdateCaretPosition(true);
+        RedrawSelectionBoxes();
+    }
+
+    protected void TabInputForLine(int LineIndex, bool TestIfCaretPrecedes)
+    {
+        bool CaretPrecedesLineContent = true;
+        int LineStartIndex = -1;
+        for (int i = 0; i < Lines[LineIndex].Length; i++)
+        {
+            if (Lines[LineIndex].Text[i] != ' ' && Lines[LineIndex].Text[i] != '\n')
+            {
+                if (LineStartIndex == -1) LineStartIndex = i;
+                if (i >= Caret.IndexInLine) continue;
+                CaretPrecedesLineContent = false;
+                break;
+            }
+        }
+        if (LineStartIndex == -1) LineStartIndex = Lines[LineIndex].Text.Length;
+        if (!TestIfCaretPrecedes || CaretPrecedesLineContent)
+        {
+            if (Input.Press(Keycode.SHIFT))
+            {
+                int Count = 0;
+                for (int i = 0; i < LineStartIndex; i++)
+                {
+                    if (Lines[LineIndex].Text[i] == ' ') Count++;
+                }
+                if (Count == 0) return;
+                Count = Math.Min(2, Count);
+                CaretIndex StartIndex = (CaretIndex) SelectionLeft.Clone();
+                CaretIndex EndIndex = (CaretIndex) SelectionRight.Clone();
+                bool Before = Lines[LineIndex].StartIndex < StartIndex.Index;
+                CancelSelection();
+                CaretIndex OldCaret = (CaretIndex) Caret.Clone();
+                Caret.Index = Lines[LineIndex].StartIndex;
+                RemoveText(Lines[LineIndex].StartIndex, Count);
+                Caret = OldCaret;
+                SelectionStart = StartIndex;
+                SelectionEnd = EndIndex;
+                if (Before) SelectionLeft.Index -= Count;
+                SelectionRight.Index -= Count;
+                int IndexRedux = Count;
+                if (Caret.Line.LineIndex == LineIndex) IndexRedux = Math.Min(IndexRedux, Caret.IndexInLine);
+                if (Caret.Index >= Lines[LineIndex].StartIndex) Caret.Index -= IndexRedux;
+            }
+            else
+            {
+                CaretIndex StartIndex = (CaretIndex) SelectionLeft.Clone();
+                CaretIndex EndIndex = (CaretIndex) SelectionRight.Clone();
+                bool Before = Lines[LineIndex].StartIndex < StartIndex.Index;
+                CancelSelection();
+                CaretIndex OldCaret = (CaretIndex) Caret.Clone();
+                Caret.Index = Lines[LineIndex].StartIndex;
+                InsertText(Lines[LineIndex].StartIndex, "  ");
+                Caret = OldCaret;
+                SelectionStart = StartIndex;
+                SelectionEnd = EndIndex;
+                if (Before) SelectionLeft.Index += 2;
+                SelectionRight.Index += 2;
+                if (Caret.Index >= Lines[LineIndex].StartIndex) Caret.Index += 2;
+            }
+        }
+        else if (!HasSelection)
+        {
+            InsertText(Caret.Index, "  ");
+        }
     }
 
     protected virtual CaretIndex GetHoveredIndex(MouseEventArgs e)
