@@ -673,14 +673,18 @@ public class Widget : IDisposable, IContainer
     /// Initializes the list of shortcuts.
     /// </summary>
     /// <param name="Shortcuts">The list of shortcuts.</param>
-    public virtual void RegisterShortcuts(List<Shortcut> Shortcuts)
+    public virtual void RegisterShortcuts(List<Shortcut> Shortcuts, bool DeregisterExisting = true)
     {
         AssertUndisposed();
-        // De-register old global shortcuts in the UIManager object.
-        RemoveShortcuts();
-        this.Shortcuts = Shortcuts;
+        if (DeregisterExisting)
+        {
+            // De-register old global shortcuts in the UIManager object.
+            RemoveShortcuts();
+            this.Shortcuts = Shortcuts;
+        }
+        else this.Shortcuts.AddRange(Shortcuts);
         // Register global shortcuts in the UIManager object.
-        foreach (Shortcut s in this.Shortcuts)
+        foreach (Shortcut s in Shortcuts)
         {
             if (s.GlobalShortcut) this.Window.UI.RegisterShortcut(s);
         }
