@@ -39,6 +39,7 @@ public class MultilineTextArea : Widget
     protected bool RequireRecalculation = false;
     protected bool RequireRedrawText = false;
     protected bool RequireCaretRepositioning = false;
+    protected bool RequireUpdateUpDownAnchor = false;
     protected bool EnteringText = false;
     protected bool HasSelection => SelectionStart != null;
     protected bool SnapToWords = false;
@@ -242,6 +243,7 @@ public class MultilineTextArea : Widget
         }
         if (RequireRecalculation) RecalculateLines(true);
         if (RequireRedrawText) RedrawText(true);
+        if (RequireUpdateUpDownAnchor) UpdateUpDownAnchor(true);
         OldTopLineIndex = TopLineIndex;
         OldBottomLineIndex = BottomLineIndex;
         if (RequireCaretRepositioning)
@@ -1044,6 +1046,17 @@ public class MultilineTextArea : Widget
         RedoableStates.RemoveAt(RedoableStates.Count - 1);
     }
 
+    protected virtual void UpdateUpDownAnchor(bool Now = false)
+    {
+        if (!Now)
+        {
+            RequireUpdateUpDownAnchor = true;
+            return;
+        }
+        MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
+        RequireUpdateUpDownAnchor = false;
+    }
+
     protected virtual void InsertText(int Index, string Text)
     {
         Text = Text.Replace("\r", "");
@@ -1061,7 +1074,7 @@ public class MultilineTextArea : Widget
         AddUndoState();
         ResetIdle();
         RecalculateLines();
-        MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
+        UpdateUpDownAnchor();
     }
 
     protected virtual void RemoveText(int Index, int Count)
@@ -1076,7 +1089,7 @@ public class MultilineTextArea : Widget
         AddUndoState();
         ResetIdle();
         RecalculateLines();
-        MaxCaretPositionInLine = Caret.Line.WidthUpTo(Caret.IndexInLine);
+        UpdateUpDownAnchor();
     }
 
     private void CutSelection()
