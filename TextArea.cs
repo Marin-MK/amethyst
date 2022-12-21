@@ -60,7 +60,7 @@ public class TextArea : Widget
         OnWidgetSelected += WidgetSelected;
         OnDisposed += delegate (BaseEventArgs e)
         {
-            if (SelectedWidget)
+            if (Mouse.InsideButNotNecessarilyAccessible)
             {
                 this.Window.UI.SetSelectedWidget(null);
                 Input.SetCursor(CursorType.Arrow);

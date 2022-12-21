@@ -235,7 +235,6 @@ public class UIManager : IContainer
                 {
                     if (Input.Trigger(k.MainKey))
                     {
-                        Console.WriteLine("trigger");
                         SetTimer($"key_{k.ID}_initial", 300);
                         Valid = true;
                     }
