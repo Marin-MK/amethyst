@@ -5,6 +5,7 @@ namespace amethyst.Windows;
 public class RadioBox : ActivatableTextWidget
 {
     public bool Checked { get; protected set; } = false;
+    public BlendMode? BlendMode { get; protected set; }
 
     public BaseEvent OnCheckChanged;
 
@@ -38,6 +39,16 @@ public class RadioBox : ActivatableTextWidget
             }
             this.OnCheckChanged?.Invoke(new BaseEventArgs());
             this.Redraw();
+        }
+    }
+
+    public void SetBlendMode(BlendMode? BlendMode)
+    {
+        if (this.BlendMode != BlendMode)
+        {
+            this.BlendMode = BlendMode;
+            if (Sprites["text"].Bitmap is not null)
+                Sprites["text"].Bitmap.BlendMode = this.BlendMode ?? Bitmap.DefaultBlendMode;
         }
     }
 
@@ -180,6 +191,7 @@ public class RadioBox : ActivatableTextWidget
         Sprites["text"].Bitmap.Font = this.Font;
         Sprites["text"].Bitmap.Unlock();
         Sprites["text"].Bitmap.DrawText(this.Text, this.TextColor);
+        Sprites["text"].Bitmap.BlendMode = this.BlendMode ?? Bitmap.DefaultBlendMode;
         Sprites["text"].Bitmap.Lock();
 
         this.SetSize(s.Width + 18, 13);

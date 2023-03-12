@@ -16,11 +16,32 @@ public class Button : ActivatableTextWidget
     public Color BorderColorSelected { get; protected set; } = SystemColors.ControlBorderColorSelected;
     public Color FillerColorSelected { get; protected set; } = SystemColors.ControlFillerColorSelected;
 
+    public BlendMode? BlendMode { get; protected set; }
+    public bool Enabled { get; protected set; } = true;
+
     public Button(IContainer Parent) : base(Parent)
     {
         Sprites["box"] = new Sprite(this.Viewport);
         Sprites["text"] = new Sprite(this.Viewport);
         Sprites["text"].Name = "text sprite";
+    }
+
+    public void SetBlendMode(BlendMode? BlendMode)
+    {
+        if (this.BlendMode != BlendMode)
+        {
+            this.BlendMode = BlendMode;
+            this.RedrawText();
+        }
+    }
+
+    public void SetEnabled(bool Enabled)
+    {
+        if (this.Enabled != Enabled)
+        {
+            this.Enabled = Enabled;
+            this.RedrawText();
+        }
     }
 
     protected override void DrawText()
@@ -32,7 +53,8 @@ public class Button : ActivatableTextWidget
             Sprites["text"].Bitmap = new Bitmap(s);
             Sprites["text"].Bitmap.Unlock();
             Sprites["text"].Bitmap.Font = this.Font;
-            Sprites["text"].Bitmap.DrawText(this.Text, this.TextColor);
+            Sprites["text"].Bitmap.DrawText(this.Text, new Color(this.TextColor.Red, this.TextColor.Green, this.TextColor.Blue, (byte) (this.Enabled ? 255 : 128)));
+            Sprites["text"].Bitmap.BlendMode = this.BlendMode ?? Bitmap.DefaultBlendMode;
             Sprites["text"].Bitmap.Lock();
             Sprites["text"].X = Size.Width / 2 - s.Width / 2;
             Sprites["text"].Y = Size.Height / 2 - s.Height / 2 - 1;
@@ -55,6 +77,12 @@ public class Button : ActivatableTextWidget
             fillercolor = FillerColorSelected;
             thickness = 2;
         }
+        if (!Enabled)
+        {
+            bordercolor = BorderColorInactive;
+            fillercolor = FillerColorInactive;
+            thickness = 1;
+        }
         for (int i = 0; i < thickness; i++) Sprites["box"].Bitmap.DrawRect(i, i, Size.Width - i * 2, Size.Height - i * 2, bordercolor);
         Sprites["box"].Bitmap.FillRect(thickness, thickness, Size.Width - thickness * 2, Size.Height - thickness * 2, fillercolor);
         Sprites["box"].Bitmap.Lock();
@@ -71,5 +99,15 @@ public class Button : ActivatableTextWidget
             Sprites["text"].Y = Size.Height / 2 - s.Height / 2 - 1;
         }
         Redraw();
+    }
+
+    public override void MouseDown(MouseEventArgs e)
+    {
+        if (Enabled) base.MouseDown(e);
+    }
+
+    public override void MouseUp(MouseEventArgs e)
+    {
+        if (Enabled) base.MouseUp(e);
     }
 }

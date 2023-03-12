@@ -5,6 +5,7 @@ namespace amethyst.Windows;
 public class CheckBox : ActivatableTextWidget
 {
     public bool Checked { get; protected set; } = false;
+    public BlendMode? BlendMode { get; protected set; }
 
     public BaseEvent OnCheckChanged;
 
@@ -33,6 +34,15 @@ public class CheckBox : ActivatableTextWidget
         }
     }
 
+    public void SetBlendMode(BlendMode? BlendMode)
+    {
+        if (this.BlendMode != BlendMode)
+        {
+            this.BlendMode = BlendMode;
+            this.RedrawText();
+        }
+    }
+
     protected override void DrawText()
     {
         Sprites["text"].Bitmap?.Dispose();
@@ -41,13 +51,12 @@ public class CheckBox : ActivatableTextWidget
             Size s = this.Font.TextSize(this.Text);
             int w = Sprites["text"].X + s.Width;
             int h = 13;
-            MinimumSize = new Size(new Size(w, h));
-            MaximumSize = MinimumSize;
-            SetSize(MaximumSize);
+            SetWidth(Sprites["text"].X + s.Width + 5);
             Sprites["text"].Bitmap = new Bitmap(s);
             Sprites["text"].Bitmap.Unlock();
             Sprites["text"].Bitmap.Font = this.Font;
             Sprites["text"].Bitmap.DrawText(this.Text, this.TextColor);
+            Sprites["text"].Bitmap.BlendMode = this.BlendMode ?? Bitmap.DefaultBlendMode;
             Sprites["text"].Bitmap.Lock();
         }
         base.DrawText();

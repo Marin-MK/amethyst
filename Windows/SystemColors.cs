@@ -37,5 +37,9 @@ public class SystemColors
     public static Color SliderArrowColorHovering = new Color(218, 218, 218);
     public static Color SliderArrowColorPressing = new Color(96, 96, 96);
 
+    public static Color Divider = new Color(160, 160, 160);
+    public static Color DarkDivider = new Color(105, 105, 105);
+    public static Color DarkDividerShadow = new Color(227, 227, 227);
+
     public static Color SelectionColor = new Color(0, 120, 215);
 }

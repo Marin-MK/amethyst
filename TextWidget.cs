@@ -8,6 +8,7 @@ public class TextWidget : Widget
     public string Text { get; protected set; } = "";
     public Color TextColor { get; protected set; } = Color.BLACK;
     public Font Font { get; protected set; }
+    public BlendMode? BlendMode { get; protected set; }
     public DrawOptions DrawOptions { get; protected set; } = DrawOptions.LeftAlign;
 
     protected bool DrawnText = false;
@@ -40,6 +41,15 @@ public class TextWidget : Widget
         if (this.Font != Font)
         {
             this.Font = Font;
+            this.RedrawText();
+        }
+    }
+
+    public void SetBlendMode(BlendMode? BlendMode)
+    {
+        if (this.BlendMode != BlendMode)
+        {
+            this.BlendMode = BlendMode;
             this.RedrawText();
         }
     }
