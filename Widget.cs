@@ -74,17 +74,17 @@ public class Widget : IDisposable, IContainer
     /// <summary>
     /// The opacity of the widget's viewport.
     /// </summary>
-    public byte Opacity { get; protected set; }
+    public byte Opacity { get; protected set; } = 255;
 
     /// <summary>
     /// The horizontal zoom of the widget's viewport.
     /// </summary>
-    public float ZoomX { get; protected set; }
+    public float ZoomX { get; protected set; } = 1;
 
     /// <summary>
     /// The vertical zoom of the widget's viewport.
     /// </summary>
-    public float ZoomY { get; protected set; }
+    public float ZoomY { get; protected set; } = 1;
 
     /// <summary>
     /// Background color of this widget.
@@ -1105,6 +1105,7 @@ public class Widget : IDisposable, IContainer
     {
         if (this.ZoomX != ZoomX)
         {
+            this.ZoomX = ZoomX;
             Viewport.ZoomX = ZoomX;
         }
     }
@@ -1113,6 +1114,7 @@ public class Widget : IDisposable, IContainer
     {
         if (this.ZoomY != ZoomY)
         {
+            this.ZoomY = ZoomY;
             Viewport.ZoomY = ZoomY;
         }
     }
@@ -1130,15 +1132,15 @@ public class Widget : IDisposable, IContainer
         if (OriginViewport == null) OriginViewport = Viewport;
         Widgets.ForEach(w =>
         {
-            OriginAddX += w.Position.X + w.Padding.Left;
-            OriginAddY += w.Position.Y + w.Padding.Up;
+            OriginAddX += w.Position.X + w.Padding.Left - w.ScrolledX;
+            OriginAddY += w.Position.Y + w.Padding.Up - w.ScrolledY;
             int diffx = (int) Math.Round((1 - OriginViewport.ZoomX) * OriginAddX);
             int diffy = (int) Math.Round((1 - OriginViewport.ZoomY) * OriginAddY);
             w.Viewport.OX = diffx;
             w.Viewport.OY = diffy;
             w.SetGlobalZoom(Zoom, OriginViewport, OriginAddX, OriginAddY);
-            OriginAddX -= w.Position.X + w.Padding.Left;
-            OriginAddY -= w.Position.Y + w.Padding.Up;
+            OriginAddX -= w.Position.X + w.Padding.Left + w.ScrolledX;
+            OriginAddY -= w.Position.Y + w.Padding.Up + w.ScrolledY;
         });
     }
 
@@ -1446,8 +1448,13 @@ public class Widget : IDisposable, IContainer
     /// <param name="Animation">The animation to run.</param>
     public void StartAnimation(IAnimation Animation)
     {
-        Animations.Add(Animation);
-        Animation.Start();
+        // Start the animation after one additional update cycle, so that we know all our widgets
+        // have already been resized to whatever size they need to be.
+        Graphics.Schedule(() =>
+        {
+            Animations.Add(Animation);
+            Animation.Start();
+        });
     }
 
     /// <summary>
@@ -1737,6 +1744,9 @@ public class Widget : IDisposable, IContainer
             }
             else j++;
         }
+
+        // Return if the widget was disposed after an animation
+        if (this.Disposed) return;
 
         j = 0;
         while (j < Callbacks.Count)
