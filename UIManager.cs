@@ -195,6 +195,7 @@ public class UIManager : IContainer
 
     public void Update()
     {
+        if (Window.Disposed) return;
         // Update children before self, that way widget-local shortcuts will trigger
         // before any global shortcuts will.
         for (int i = 0; i < this.Widgets.Count; i++)

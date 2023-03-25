@@ -636,7 +636,7 @@ public class Widget : IDisposable, IContainer
     {
         if (!Disposed)
         {
-            Console.WriteLine($"GC is collecting an undisposed widget: {GetType()}");
+            Graphics.Logger?.Warn($"GC is collecting an undisposed widget: {GetType()}");
         }
     }
 
