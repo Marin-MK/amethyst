@@ -41,6 +41,7 @@ public class ContextMenu : Widget
             Window.SetActiveWidget(this);
         }
         SetWidth(192);
+        MinimumSize.Width = MaximumSize.Width = 192;
     }
 
     public void SetFont(Font Font)
@@ -98,6 +99,8 @@ public class ContextMenu : Widget
     {
         this.Items = new List<IMenuItem>(Items);
         this.SetSize(192, CalcHeight() + 10);
+        MinimumSize.Width = MaximumSize.Width = Size.Width;
+        MinimumSize.Height = MaximumSize.Height = Size.Height;
         AnyCheckables = Items.Exists(i => i is MenuItem && ((MenuItem) i).IsCheckable);
     }
 
