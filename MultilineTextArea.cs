@@ -21,6 +21,8 @@ public class MultilineTextArea : Widget
     public int LineMargins { get; protected set; } = 2;
     public bool OverlaySelectedText { get; protected set; } = true;
     public bool LineWrapping { get; protected set; } = true;
+    public bool ReadOnly { get; protected set; } = false;
+    public bool Interactable { get; protected set; } = true;
 
     public BaseEvent OnTextChanged;
     public BoolEvent OnCopy;
@@ -210,6 +212,27 @@ public class MultilineTextArea : Widget
         }
     }
 
+    public void SetReadOnly(bool ReadOnly)
+    {
+        if (this.ReadOnly != ReadOnly)
+        {
+            this.ReadOnly = ReadOnly;
+        }
+    }
+
+    public void SetInteractable(bool Interactable)
+    {
+        if (this.Interactable != Interactable)
+        {
+            this.Interactable = Interactable;
+            if (!this.Interactable)
+            {
+                if (Mouse.Inside) Input.SetCursor(CursorType.Arrow);
+                if (SelectedWidget) Window.UI.SetSelectedWidget(null);
+            }
+        }
+    }
+
     public virtual void SetLineMargins(int LineMargins)
     {
         if (this.LineMargins != LineMargins)
@@ -301,15 +324,17 @@ public class MultilineTextArea : Widget
     public override void WidgetSelected(BaseEventArgs e)
     {
         base.WidgetSelected(e);
+        if (!Interactable) return;
         EnteringText = true;
         Input.StartTextInput();
-        SetTimer("idle", 400);
+        if (!TimerExists("idle")) SetTimer("idle", 400);
         if (!TimerExists("state")) SetTimer("state", 500);
     }
 
     public override void WidgetDeselected(BaseEventArgs e)
     {
         base.WidgetDeselected(e);
+        if (!Interactable) return;
         EnteringText = false;
         Input.StopTextInput();
         if (TimerExists("state")) DestroyTimer("state");
@@ -566,7 +591,7 @@ public class MultilineTextArea : Widget
         if (ResetScroll) RequireCaretRepositioning = true;
     }
 
-    protected void ResetIdle()
+    protected virtual void ResetIdle()
     {
         Sprites["caret"].Visible = true;
         if (TimerExists("idle")) ResetTimer("idle");
@@ -574,6 +599,7 @@ public class MultilineTextArea : Widget
 
     public void SetSelection(int StartIndex, int Length, bool WrapAtLineEnd = true, bool CaretAtEnd = true)
     {
+        if (!Interactable) return;
         SelectionStart = new CaretIndex(this);
         SelectionStart.Index = StartIndex;
         SelectionEnd = new CaretIndex(this);
@@ -586,13 +612,14 @@ public class MultilineTextArea : Widget
 
     private void StartSelection(int? Index = null)
     {
+        if (!Interactable) return;
         SelectionStart = new CaretIndex(this);
         SelectionStart.Index = Index ?? Caret.Index;
         SelectionEnd = new CaretIndex(this);
         SelectionEnd.Index = Index ?? Caret.Index;
     }
 
-    protected void CancelSelection(bool Redraw = true)
+    protected virtual void CancelSelection(bool Redraw = true)
     {
         if (!HasSelection) return;
         SelectionStart = null;
@@ -622,6 +649,7 @@ public class MultilineTextArea : Widget
 
     private void SelectAll()
     {
+        if (!Interactable) return;
         if (!HasSelection) StartSelection();
         SelectionStart.Index = 0;
         SelectionStart.AtEndOfLine = false;
@@ -636,6 +664,7 @@ public class MultilineTextArea : Widget
 
     private void MoveRight(bool Shift, bool Control)
     {
+        if (!Interactable) return;
         if (!Shift && HasSelection)
         {
             Caret.AtEndOfLine = SelectionRight.AtEndOfLine;
@@ -674,6 +703,7 @@ public class MultilineTextArea : Widget
 
     private void MoveLeft(bool Shift, bool Control)
     {
+        if (!Interactable) return;
         if (!Shift && HasSelection)
         {
             Caret.AtEndOfLine = SelectionLeft.AtEndOfLine;
@@ -711,6 +741,7 @@ public class MultilineTextArea : Widget
 
     private void MoveUp(bool Shift, bool Ctrl)
     {
+        if (!Interactable) return;
         if (Ctrl)
         {
             ScrollUp(1);
@@ -763,6 +794,7 @@ public class MultilineTextArea : Widget
 
     private void MoveDown(bool Shift, bool Ctrl)
     {
+        if (!Interactable) return;
         if (Ctrl)
         {
             ScrollDown(1);
@@ -816,6 +848,7 @@ public class MultilineTextArea : Widget
 
     private void MovePageUp(bool Shift)
     {
+        if (!Interactable) return;
         if (!Shift && HasSelection) CancelSelection();
         int OldIndex = Caret.Index;
         if (Caret.Line.LineIndex > 0)
@@ -862,6 +895,7 @@ public class MultilineTextArea : Widget
 
     private void MovePageDown(bool Shift)
     {
+        if (!Interactable) return;
         if (!Shift && HasSelection) CancelSelection();
         int OldIndex = Caret.Index;
         if (Caret.Line.LineIndex < Lines.Count - 1)
@@ -917,6 +951,7 @@ public class MultilineTextArea : Widget
 
     private void MoveHome(bool Shift)
     {
+        if (!Interactable) return;
         if (!Shift && HasSelection) CancelSelection();
         int indexadd = 0;
         if (Caret.Line.LineIndex == 0 || Lines[Caret.Line.LineIndex - 1].EndsInNewline)
@@ -976,6 +1011,7 @@ public class MultilineTextArea : Widget
 
     private void MoveEnd(bool Shift)
     {
+        if (!Interactable) return;
         if (!Shift && HasSelection) CancelSelection();
         if (Caret.IndexInLine < Caret.Line.EndIndex + 1 && Caret.Index < Text.Length)
         {
@@ -1030,18 +1066,20 @@ public class MultilineTextArea : Widget
 
     protected virtual void Undo()
     {
+        if (!Interactable || ReadOnly) return;
         if (UndoableStates.Count < 2) return;
         TextAreaState PreviousState = UndoableStates[UndoableStates.Count - 2];
-        PreviousState.Apply();
+        PreviousState.Apply(true);
         RedoableStates.Add(UndoableStates[UndoableStates.Count - 1]);
         UndoableStates.RemoveAt(UndoableStates.Count - 1);
     }
 
     protected virtual void Redo()
     {
+        if (!Interactable || ReadOnly) return;
         if (RedoableStates.Count < 1) return;
         TextAreaState PreviousState = RedoableStates[RedoableStates.Count - 1];
-        PreviousState.Apply();
+        PreviousState.Apply(true);
         UndoableStates.Add(PreviousState);
         RedoableStates.RemoveAt(RedoableStates.Count - 1);
     }
@@ -1059,6 +1097,7 @@ public class MultilineTextArea : Widget
 
     protected virtual void InsertText(int Index, string Text)
     {
+        if (!Interactable || ReadOnly) return;
         Text = Text.Replace("\r", "");
         if (Text.Length == 0) return;
         SetPreviousViewState();
@@ -1079,6 +1118,7 @@ public class MultilineTextArea : Widget
 
     protected virtual void RemoveText(int Index, int Count)
     {
+        if (!Interactable || ReadOnly) return;
         if (Index < 0) return;
         Count = Math.Min(Text.Length - Index, Count);
         if (Count < 1) return;
@@ -1094,6 +1134,7 @@ public class MultilineTextArea : Widget
 
     private void CutSelection()
     {
+        if (!Interactable || ReadOnly) return;
         if (!HasSelection) return;
         CopySelection();
         DeleteSelection();
@@ -1101,6 +1142,7 @@ public class MultilineTextArea : Widget
 
     private void CopySelection()
     {
+        if (!Interactable || ReadOnly) return;
         if (!HasSelection) return;
         BoolEventArgs e = new BoolEventArgs(true);
         OnCopy?.Invoke(e);
@@ -1113,6 +1155,7 @@ public class MultilineTextArea : Widget
 
     private void Paste()
     {
+        if (!Interactable || ReadOnly) return;
         BoolEventArgs e = new BoolEventArgs(true);
         OnPaste?.Invoke(e);
         if (e.Value)
@@ -1124,6 +1167,7 @@ public class MultilineTextArea : Widget
 
     public override void TextInput(TextEventArgs e)
     {
+        if (!Interactable || ReadOnly) return;
         base.TextInput(e);
         string text = this.Text;
         if (!string.IsNullOrEmpty(e.Text))
@@ -1179,6 +1223,7 @@ public class MultilineTextArea : Widget
 
     protected void TabInput()
     {
+        if (!Interactable || ReadOnly) return;
         if (HasSelection && SelectionStart.Line.LineIndex != SelectionEnd.Line.LineIndex)
         {
             int StartIdx = SelectionLeft.Line.LineIndex;
@@ -1263,6 +1308,7 @@ public class MultilineTextArea : Widget
 
     protected virtual void ToggleInsertMode()
     {
+        if (!Interactable) return;
         InsertMode = !InsertMode;
         if (InsertMode)
         {
@@ -1306,6 +1352,7 @@ public class MultilineTextArea : Widget
     public override void LeftMouseDown(MouseEventArgs e)
     {
         base.LeftMouseDown(e);
+        if (!Interactable) return;
         if (MouseInsideTextArea(e))
         {
             if (TimerExists("triple"))
@@ -1338,6 +1385,7 @@ public class MultilineTextArea : Widget
     public override void DoubleLeftMouseDownInside(MouseEventArgs e)
     {
         base.DoubleLeftMouseDownInside(e);
+        if (!Interactable) return;
         if (TimerExists("triple")) DestroyTimer("triple");
         SetTimer("triple", 300);
         SnapToWords = true;
@@ -1358,6 +1406,7 @@ public class MultilineTextArea : Widget
 
     private void TripleLeftMouseDownInside(MouseEventArgs e)
     {
+        if (!Interactable) return;
         if (!HasSelection) StartSelection();
         CaretIndex Index = GetHoveredIndex(e);
         Line Line = Index.Line;
@@ -1377,6 +1426,7 @@ public class MultilineTextArea : Widget
     public override void MouseMoving(MouseEventArgs e)
     {
         base.MouseMoving(e);
+        if (!Interactable) return;
         if (Mouse.LeftMousePressed && StartedInParent)
         {
             CaretIndex Index = GetHoveredIndex(e);
@@ -1434,6 +1484,7 @@ public class MultilineTextArea : Widget
     public override void MouseUp(MouseEventArgs e)
     {
         base.MouseUp(e);
+        if (!Interactable) return;
         if (Mouse.LeftMouseReleased)
         {
             SnapToWords = false;
@@ -1554,7 +1605,7 @@ public class MultilineTextArea : Widget
         }
     }
 
-    protected class TextAreaState
+    public class TextAreaState
     {
         // If this field differs
         public string Text;
@@ -1564,6 +1615,8 @@ public class MultilineTextArea : Widget
         public CaretIndex Caret;
         public int ParentScrolledX;
         public int ParentScrolledY;
+        public int MaxChildWidth;
+        public int MaxChildHeight;
 
         public TextAreaState(MultilineTextArea TextArea)
         {
@@ -1572,6 +1625,8 @@ public class MultilineTextArea : Widget
             this.Caret = (CaretIndex) TextArea.Caret?.Clone();
             this.ParentScrolledX = TextArea.Parent.ScrolledX;
             this.ParentScrolledY = TextArea.Parent.ScrolledY;
+            this.MaxChildWidth = ((Widget) TextArea.Parent).MaxChildWidth;
+            this.MaxChildHeight = ((Widget) TextArea.Parent).MaxChildHeight;
         }
 
         public override bool Equals(object obj)
@@ -1582,7 +1637,9 @@ public class MultilineTextArea : Widget
                 TextAreaState s = (TextAreaState) obj;
                 return this.Caret.Equals(s.Caret) &&
                        this.ParentScrolledX == s.ParentScrolledX &&
-                       this.ParentScrolledY == s.ParentScrolledY;
+                       this.ParentScrolledY == s.ParentScrolledY &&
+                       this.MaxChildWidth == s.MaxChildWidth &&
+                       this.MaxChildHeight == s.MaxChildHeight;
             }
             return false;
         }
@@ -1592,13 +1649,17 @@ public class MultilineTextArea : Widget
             return base.GetHashCode();
         }
 
-        public virtual void Apply()
+        public virtual void Apply(bool _ = false)
         {
             this.TextArea.SetText(this.Text, false, false);
             this.TextArea.Caret = (CaretIndex) this.Caret.Clone();
             this.TextArea.Parent.ScrolledX = this.ParentScrolledX;
             this.TextArea.Parent.ScrolledY = this.ParentScrolledY;
+            ((Widget) this.TextArea.Parent).MaxChildWidth = this.MaxChildWidth;
+            ((Widget) this.TextArea.Parent).MaxChildHeight = this.MaxChildHeight;
+            this.TextArea.UpdateHeight();
             ((Widget) this.TextArea.Parent).UpdateAutoScroll();
+            this.TextArea.Window.UI.SetSelectedWidget(this.TextArea);
         }
     }
 }
