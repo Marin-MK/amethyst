@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using odl;
 
 namespace amethyst;
@@ -10,6 +11,9 @@ public class ContextMenu : Widget
     public Color InnerColor { get; protected set; } = new Color(45, 69, 107);
     public Color OuterColor { get; protected set; } = Color.BLACK;
     public Font Font { get; protected set; }
+    public bool CanMoveWithTab = false;
+    public bool CanMoveWithUpDown = false;
+    public int MoveIndex { get; protected set; } = 0;
 
     public MenuItem HoveringItem;
     public ContextMenu ChildMenu;
@@ -26,8 +30,10 @@ public class ContextMenu : Widget
         if (ParentMenu != null) SetZIndex(ParentMenu.ZIndex);
         else SetZIndex(Window.ActiveWidget is UIManager ? 9 : (Window.ActiveWidget as Widget).ZIndex + 9);
         Sprites["bg"] = new Sprite(this.Viewport);
+        Sprites["bgsel"] = new Sprite(this.Viewport, new SolidBitmap(192, 18, new Color(28, 50, 73)));
+        Sprites["bgsel"].Visible = false;
         Sprites["ext"] = new Sprite(this.Viewport);
-        Sprites["selector"] = new Sprite(this.Viewport, new SolidBitmap(2, 18, new Color(55, 187, 255)));
+        Sprites["selector"] = new Sprite(this.Viewport, new SolidBitmap(2, 23, new Color(55, 187, 255)));
         Sprites["selector"].X = 4;
         Sprites["selector"].Visible = false;
         Sprites["items"] = new Sprite(this.Viewport);
@@ -42,6 +48,58 @@ public class ContextMenu : Widget
         }
         SetWidth(192);
         MinimumSize.Width = MaximumSize.Width = 192;
+
+        RegisterShortcuts(new List<Shortcut>()
+        {
+            new Shortcut(this, new Key(Keycode.DOWN), _ => MoveDown(), true, e => e.Value = CanMoveWithUpDown),
+            new Shortcut(this, new Key(Keycode.UP), _ => MoveUp(), true, e => e.Value = CanMoveWithUpDown),
+            new Shortcut(this, new Key(Keycode.TAB), _ => MoveDown(), true, e => e.Value = CanMoveWithTab),
+            new Shortcut(this, new Key(Keycode.TAB, Keycode.SHIFT), _ => MoveUp(), true, e => e.Value = CanMoveWithTab),
+            new Shortcut(this, new Key(Keycode.DOWN, Keycode.CTRL), _ => MoveDown(), true, e => e.Value = CanMoveWithUpDown),
+            new Shortcut(this, new Key(Keycode.UP, Keycode.CTRL), _ => MoveUp(), true, e => e.Value = CanMoveWithUpDown),
+            new Shortcut(this, new Key(Keycode.TAB, Keycode.CTRL), _ => MoveDown(), true, e => e.Value = CanMoveWithTab),
+            new Shortcut(this, new Key(Keycode.TAB, Keycode.CTRL, Keycode.SHIFT), _ => MoveUp(), true, e => e.Value = CanMoveWithTab),
+        });
+    }
+
+    public void MoveUp()
+    {
+        int newIndex = this.MoveIndex - 1;
+        // Keep going until we find a MenuItem
+        while (newIndex >= 0)
+        {
+            if (Items[newIndex] is MenuItem) break;
+            newIndex--;
+        }
+        if (newIndex < 0)
+        {
+            this.MoveIndex = Items.Count;
+            MoveUp();
+            return;
+        }
+        SetMoveIndex(newIndex);
+    }
+
+    public void MoveDown()
+    {
+        if (this.MoveIndex == 1)
+        {
+
+        }
+        int newIndex = this.MoveIndex + 1;
+        // Keep going until we find a MenuItem
+        while (newIndex < Items.Count)
+        {
+            if (Items[newIndex] is MenuItem) break;
+            newIndex++;
+        }
+        if (newIndex >= Items.Count)
+        {
+            this.MoveIndex = -1;
+            MoveDown();
+            return;
+        }
+        SetMoveIndex(newIndex);
     }
 
     public void SetFont(Font Font)
@@ -53,10 +111,41 @@ public class ContextMenu : Widget
         }
     }
 
+    public void SetMoveIndex(int moveIndex, bool force = false)
+    {
+        if (this.MoveIndex != moveIndex || force)
+        {
+            this.MoveIndex = moveIndex;
+            Sprites["bgsel"].Visible = false;
+            if (this.MoveIndex != -1)
+            {
+                Sprites["bgsel"].Y = GetCoordinateByIndex(this.MoveIndex);
+                Sprites["bgsel"].Visible = true;
+                HoveringItem = (MenuItem) Items[this.MoveIndex];
+            }
+        }
+    }
+
+    private int GetCoordinateByIndex(int index)
+    {
+        int y = 8;
+        for (int i = 0; i <= index; i++)
+        {
+            if (Items[i] is MenuItem)
+            {
+                if (i == index) return y;
+                y += 23;
+            }
+            else y += 5;
+        }
+        return 0;
+    }
+
     public override void SizeChanged(BaseEventArgs e)
     {
         base.SizeChanged(e);
         RedrawBox();
+        ((SolidBitmap) Sprites["bgsel"].Bitmap).SetSize(Size.Width, 18);
     }
 
     private void RedrawBox()
@@ -312,6 +401,7 @@ public class ContextMenu : Widget
         else
         {
             // Disposes from the first ancestor downwards
+            MoveIndex = Items.IndexOf(HoveringItem);
             DisposeFromTopDown();
             HoveringItem.OnClicked?.Invoke(new BaseEventArgs());
         }

@@ -1224,6 +1224,7 @@ public class MultilineTextArea : Widget
     protected void TabInput()
     {
         if (!Interactable || ReadOnly) return;
+        if (Input.Press(Keycode.CTRL)) return;
         if (HasSelection && SelectionStart.Line.LineIndex != SelectionEnd.Line.LineIndex)
         {
             int StartIdx = SelectionLeft.Line.LineIndex;
@@ -1256,7 +1257,7 @@ public class MultilineTextArea : Widget
             }
         }
         if (LineStartIndex == -1) LineStartIndex = Lines[LineIndex].Text.Length;
-        if (!TestIfCaretPrecedes || CaretPrecedesLineContent)
+        if (HasSelection && (!TestIfCaretPrecedes || CaretPrecedesLineContent))
         {
             if (Input.Press(Keycode.SHIFT))
             {
