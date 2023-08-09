@@ -28,7 +28,7 @@ public class MultilineTextArea : Widget
     public BoolEvent OnCopy;
     public BoolEvent OnPaste;
 
-    protected List<Line> Lines;
+    public List<Line> Lines;
     protected List<Sprite> LineSprites = new List<Sprite>();
     protected List<Sprite> SelBoxSprites = new List<Sprite>();
     protected List<TextAreaState> UndoableStates = new List<TextAreaState>();
@@ -299,24 +299,24 @@ public class MultilineTextArea : Widget
         }
     }
 
-    protected virtual void ScrollUpPixels(int px)
+    public virtual void ScrollUpPixels(int px)
     {
         Parent.ScrolledY = Math.Max(Parent.ScrolledY - px, 0);
         ((Widget) Parent).UpdateAutoScroll();
     }
 
-    protected virtual void ScrollUp(int Count)
+    public virtual void ScrollUp(int Count)
     {
         ScrollUpPixels(Count * (LineHeight + LineMargins));
     }
 
-    protected virtual void ScrollDownPixels(int px)
+    public virtual void ScrollDownPixels(int px)
     {
         Parent.ScrolledY += px;
         ((Widget) Parent).UpdateAutoScroll();
     }
 
-    protected virtual void ScrollDown(int Count)
+    public virtual void ScrollDown(int Count)
     {
         ScrollDownPixels(Count * (LineHeight + LineMargins));
     }
@@ -610,7 +610,7 @@ public class MultilineTextArea : Widget
         UpdateCaretPosition(true);
     }
 
-    private void StartSelection(int? Index = null)
+    protected void StartSelection(int? Index = null)
     {
         if (!Interactable) return;
         SelectionStart = new CaretIndex(this);
@@ -619,7 +619,7 @@ public class MultilineTextArea : Widget
         SelectionEnd.Index = Index ?? Caret.Index;
     }
 
-    protected virtual void CancelSelection(bool Redraw = true)
+    protected virtual void CancelSelection(bool Redraw = true, bool _ = false)
     {
         if (!HasSelection) return;
         SelectionStart = null;

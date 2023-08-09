@@ -215,7 +215,7 @@ public class UIManager : IContainer
         foreach (Shortcut s in this.Shortcuts)
         {
             // UIManager only has global shortcuts, and all global shortcuts are in UIManager.
-            if (s.Widget != null && (s.Widget.WindowLayer < Window.ActiveWidget.WindowLayer || !s.Widget.IsVisible() || s.Widget.Disposed)) continue;
+            if (s.PendingRemoval || s.Widget != null && (s.Widget.WindowLayer < Window.ActiveWidget.WindowLayer || !s.Widget.IsVisible() || s.Widget.Disposed)) continue;
 
             Key k = s.Key;
             bool Valid = false;

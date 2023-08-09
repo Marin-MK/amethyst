@@ -253,7 +253,7 @@ public class Widget : IDisposable, IContainer
     public int ScrolledX { get; set; } = 0;
 
     /// <summary>
-    /// How far this widget has scrolled horizontally with autoscroll.
+    /// How far this widget has scrolled vertically with autoscroll.
     /// </summary>
     public int ScrolledY { get; set; } = 0;
 
