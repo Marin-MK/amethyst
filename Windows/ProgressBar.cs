@@ -48,6 +48,7 @@ public class ProgressBar : Widget
 
     private void RedrawFiller()
     {
+        if (Disposed) return;
         SolidBitmap bmp = (SolidBitmap) Sprites["filler"].Bitmap;
         int fillerWidth = (int) Math.Round(Progress * (Size.Width - 2));
         bmp.SetSize(fillerWidth, Size.Height - 2);
