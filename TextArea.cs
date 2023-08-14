@@ -20,7 +20,8 @@ public class TextArea : Widget
     public bool ReadOnly { get; protected set; } = false;
     public bool Enabled { get; protected set; } = true;
     public bool NumericOnly { get; protected set; } = false;
-    public int DefaultNumericValue { get; protected set; } = 0;
+    public bool AllowFloats { get; protected set; } = false;
+    public float DefaultNumericValue { get; protected set; } = 0;
     public bool AllowMinusSigns { get; protected set; } = true;
     public bool ShowDisabledText { get; protected set; } = false;
     public bool DeselectOnEnterPressed { get; protected set; } = true;
@@ -207,7 +208,15 @@ public class TextArea : Widget
         }
     }
 
-    public void SetDefaultNumericValue(int DefaultNumericValue)
+	public void SetAllowFloats(bool AllowFloats)
+	{
+		if (this.AllowFloats != AllowFloats)
+		{
+			this.AllowFloats = AllowFloats;
+		}
+	}
+
+	public void SetDefaultNumericValue(float DefaultNumericValue)
     {
         if (this.DefaultNumericValue != DefaultNumericValue)
         {
@@ -279,22 +288,25 @@ public class TextArea : Widget
             if (SelectionStartIndex != -1 && SelectionStartIndex != SelectionEndIndex) DeleteSelection();
             if (NumericOnly)
             {
-                if (!IsNumeric(e.Text)) return;
+                if (!IsNumeric(e.Text, AllowFloats)) return;
                 if (e.Text == "-" && !AllowMinusSigns) return;
                 if (this.Text.Length > 0 && this.Text[0] == '-')
                 {
                     if (e.Text == "-") return;
                     if (CaretIndex == 0)
                     {
-                        // e.g. [5]- turns into 5, and [2]-11 turns into 211
-                        MoveCaretRight(1);
+                        if (e.Text == "." || e.Text == ",") return;
+						// e.g. [5]- turns into 5, and [2]-11 turns into 211
+						MoveCaretRight(1);
                         RemoveText(0, 1);
                     }
                 }
                 // Disallow e.g. 2-3 and 23-
                 else if (e.Text == "-" && CaretIndex != 0) return;
-            }
-            InsertText(CaretIndex, e.Text);
+                if ((e.Text == "." || e.Text == ",") && this.Text.Contains('.')) return;
+                InsertText(CaretIndex, e.Text.Replace(',', '.'));
+			}
+            else InsertText(CaretIndex, e.Text);
         }
         else if (e.Backspace || e.Delete)
         {
@@ -938,7 +950,7 @@ public class TextArea : Widget
         if (!this.Enabled && !this.ShowDisabledText || string.IsNullOrEmpty(this.Text)) return;
         Size s = Font.TextSize(this.Text);
         if (s.Width < 1 || s.Height < 1) return;
-        Sprites["text"].Bitmap = new Bitmap(s);
+        Sprites["text"].Bitmap = new Bitmap(s.Width, s.Height);
         Sprites["text"].Bitmap.Unlock();
         Sprites["text"].Bitmap.Font = this.Font;
         Sprites["text"].Bitmap.DrawText(this.Text, this.Enabled ? this.TextColor : DisabledTextColor);
@@ -1047,13 +1059,13 @@ public class TextArea : Widget
     {
         // To make things easier, pasting is not allowed in numeric-only text areas. This out of laziness;
         // I would prefer not duplicating the code found in TextInput.
-        if (this.ReadOnly || this.NumericOnly) return;
+        if (this.ReadOnly) return;
         if (TimerPassed("paste")) ResetTimer("paste");
         string text = Input.GetClipboard();
         if (string.IsNullOrEmpty(text)) return;
-        if (NumericOnly && !IsNumeric(text))
+        if (NumericOnly && !IsNumeric(text, AllowFloats))
         {
-            if (IsNumeric(text.Trim())) text = text.Trim();
+            if (IsNumeric(text.Trim(), AllowFloats)) text = text.Trim();
             else return;
         }
         string OldText = this.Text;
@@ -1224,11 +1236,22 @@ public class TextArea : Widget
         }
     }
 
-    bool IsNumeric(string s)
+    bool IsNumeric(string s, bool allowOneDot = false)
     {
+        bool seenDot = false;
         for (int i = 0; i < s.Length; i++)
         {
             char c = s[i];
+            if (c == '.' || c == ',')
+            {
+                if (allowOneDot && !seenDot)
+                {
+                    seenDot = true;
+                    continue;
+                }
+                else return false;
+            }
+            if (allowOneDot && seenDot && c == '-') return false;
             if (c == '-' && i == 0) continue;
             if (c < '0' || c > '9') return false;
         }

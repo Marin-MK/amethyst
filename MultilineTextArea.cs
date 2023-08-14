@@ -18,7 +18,7 @@ public class MultilineTextArea : Widget
     public Color SelectionBackgroundColor { get; protected set; } = new Color(128, 128, 255);
     public DrawOptions DrawOptions { get; protected set; } = DrawOptions.None;
     public int LineHeight => _UserSetLineHeight == -1 ? _FontLineHeight : _UserSetLineHeight;
-    public int LineMargins { get; protected set; } = 2;
+    public int LineMargins { get; protected set; } = 4;
     public bool OverlaySelectedText { get; protected set; } = true;
     public bool LineWrapping { get; protected set; } = true;
     public bool ReadOnly { get; protected set; } = false;
@@ -285,7 +285,7 @@ public class MultilineTextArea : Widget
             if (Caret.Line.LineIndex >= BottomLineIndex) ScrollDown(Caret.Line.LineIndex - BottomLineIndex + 1);
             RequireCaretRepositioning = false;
         }
-        if (TimerPassed("idle"))
+        if (TimerPassed("idle") && SelectedWidget)
         {
             Sprites["caret"].Visible = !Sprites["caret"].Visible;
             ResetTimer("idle");
@@ -447,7 +447,7 @@ public class MultilineTextArea : Widget
             if (line.LineIndex < TopLineIndex || line.LineIndex > BottomLineIndex) return;
             Sprite sprite = new Sprite(this.Viewport);
             sprite.Y = line.LineIndex * LineHeight + line.LineIndex * LineMargins;
-            sprite.Bitmap = new Bitmap(line.LineWidth, LineHeight + 2);
+            sprite.Bitmap = new Bitmap(line.LineWidth, LineHeight + 4);
             sprite.Bitmap.Font = Font;
             sprite.Bitmap.Unlock();
             if (HasSelection)
@@ -570,7 +570,7 @@ public class MultilineTextArea : Widget
                 }
             }
             else sprite.Bitmap.DrawText(line.Text.Replace('\n', ' '), this.TextColor, this.DrawOptions);
-            sprite.Bitmap.Lock();
+			sprite.Bitmap.Lock();
             Sprites[$"line{line.LineIndex}"] = sprite;
             LineSprites.Add(sprite);
         });

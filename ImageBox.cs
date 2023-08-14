@@ -238,6 +238,7 @@ public class ImageBox : Widget
     public void SetSrcRect(Rect SrcRect)
     {
         Sprite.SrcRect = SrcRect;
+        UpdateSize();
     }
 
     public void SetFillMode(FillMode FillMode)
