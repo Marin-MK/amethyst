@@ -183,7 +183,7 @@ public class ImageBox : Widget
         Sprite.Z = Z;
     }
 
-    public void SetOpacity(byte Opacity)
+    public new void SetOpacity(byte Opacity)
     {
         Sprite.Opacity = Opacity;
     }

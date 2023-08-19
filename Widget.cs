@@ -570,6 +570,12 @@ public class Widget : IDisposable, IContainer
     public ObjectEvent OnAnimationFinished { get; set; }
 
     /// <summary>
+    /// Called whenever the widget updates.
+    /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public BaseEvent OnUpdate { get; set; }
+
+    /// <summary>
     /// Indicates whether the context menu is set to be opened on next update.
     /// </summary>
     public bool OpenContextMenuOnNextUpdate = false;
@@ -1724,6 +1730,8 @@ public class Widget : IDisposable, IContainer
     public virtual void Update()
     {
         AssertUndisposed();
+
+        OnUpdate?.Invoke(new BaseEventArgs());
 
         long Ticks = Stopwatch.GetTimestamp();
         int j = 0;
