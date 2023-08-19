@@ -114,7 +114,7 @@ public class TextArea : Widget
         }
     }
 
-    public void SetText(string Text)
+    public void SetText(string Text, bool callTextChangedEvent = true)
     {
         if (this.Text != Text)
         {
@@ -130,7 +130,7 @@ public class TextArea : Widget
             //if (inviswidth > 0) X = inviswidth;
             //RX = inviswidth > 0 ? Size.Width - 1 : width;
             //CaretIndex = this.Text.Length;
-            this.OnTextChanged?.Invoke(new TextEventArgs(this.Text, OldText));
+            if (callTextChangedEvent) this.OnTextChanged?.Invoke(new TextEventArgs(this.Text, OldText));
         }
     }
 
