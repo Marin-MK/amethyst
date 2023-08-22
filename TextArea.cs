@@ -58,6 +58,7 @@ public class TextArea : Widget
         Sprites["caret"] = new Sprite(this.Viewport, new SolidBitmap(1, 16, CaretColor));
         Sprites["caret"].Y = 2;
         Sprites["caret"].Z = 1;
+        Sprites["caret"].Visible = false;
         OnWidgetSelected += WidgetSelected;
         OnDisposed += delegate (BaseEventArgs e)
         {
