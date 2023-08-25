@@ -2,7 +2,7 @@
 using NativeLibraryLoader;
 using odl;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public static class Amethyst
 {

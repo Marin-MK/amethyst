@@ -1,3 +1,3 @@
-﻿namespace amethyst.src;
+﻿namespace amethyst;
 
 public interface IPopupWindow { }

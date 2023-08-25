@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using odl;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class ContextMenu : Widget
 {

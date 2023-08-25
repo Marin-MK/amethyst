@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using odl;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class HelpText : Widget
 {

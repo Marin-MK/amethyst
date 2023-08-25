@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using odl;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class Grid : Widget, ILayout
 {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using odl;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class UIManager : IContainer
 {

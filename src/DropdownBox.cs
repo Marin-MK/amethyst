@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using odl;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class DropdownBox : TextBox
 {

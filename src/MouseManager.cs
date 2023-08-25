@@ -1,7 +1,7 @@
 ﻿using System;
 using odl;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class MouseManager
 {
@@ -40,7 +40,7 @@ public class MouseManager
     /// and either be an always-active-mouse widget or not have a window overlaying it.
     /// </summary>
     public bool Accessible => CurrentArgs is not null && (
-                                Widget is not src.Widget ||
+                                Widget is not amethyst.Widget ||
                                     !((Widget)Widget).Disposed && (Widget.Viewport.Visible || Widget is ScrollBar && ((ScrollBar)Widget).KeepInvisible) && (
                                         ((Widget)Widget).MouseAlwaysActive ||
                                         Widget.WindowLayer >= ((Widget)Widget).Window.ActiveWidget.WindowLayer

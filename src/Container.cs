@@ -1,4 +1,4 @@
-﻿namespace amethyst.src;
+﻿namespace amethyst;
 
 public class Container : Widget
 {

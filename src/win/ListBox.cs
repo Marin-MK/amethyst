@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using odl;
 
-namespace amethyst.src.Windows;
+namespace amethyst.Windows;
 
 public class ListBox : Widget
 {

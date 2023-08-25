@@ -1,8 +1,8 @@
 ﻿using odl;
 
-namespace amethyst.src.Windows;
+namespace amethyst.Windows;
 
-public class TextBox : src.TextBox
+public class TextBox : amethyst.TextBox
 {
     public TextBox(IContainer Parent) : base(Parent)
     {

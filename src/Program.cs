@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using odl;
 using NativeLibraryLoader;
 using System.IO;
-using amethyst.src.Windows;
+using amethyst.Windows;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class Program
 {

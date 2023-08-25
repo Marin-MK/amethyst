@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace amethyst.src.Windows;
+namespace amethyst.Windows;
 
 public class ProgressBar : Widget
 {

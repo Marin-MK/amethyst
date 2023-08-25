@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public interface IMenuItem { }
 

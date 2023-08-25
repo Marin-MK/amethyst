@@ -1,7 +1,7 @@
 ﻿using System;
 using odl;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class BorderlessWindow : UIWindow
 {

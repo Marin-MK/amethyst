@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class ListItem
 {

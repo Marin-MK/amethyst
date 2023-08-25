@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace amethyst.src.Animations;
+namespace amethyst.Animations;
 
 public abstract class IAnimation
 {

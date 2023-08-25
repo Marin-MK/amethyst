@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using NativeLibraryLoader;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class OpenFileDialog
 {

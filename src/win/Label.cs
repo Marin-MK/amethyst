@@ -1,7 +1,7 @@
 ﻿using odl;
 using System.Collections.Generic;
 
-namespace amethyst.src.Windows;
+namespace amethyst.Windows;
 
 public class Label : TextWidget
 {

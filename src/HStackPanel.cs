@@ -1,6 +1,6 @@
 ﻿using odl;
 
-namespace amethyst.src;
+namespace amethyst;
 
 public class HStackPanel : Widget, ILayout
 {

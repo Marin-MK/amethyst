@@ -1,6 +1,6 @@
 ﻿using odl;
 
-namespace amethyst.src.Windows;
+namespace amethyst.Windows;
 
 public class HScrollBar : BasicHScrollBar
 {
