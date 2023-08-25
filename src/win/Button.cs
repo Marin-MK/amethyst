@@ -1,6 +1,4 @@
-﻿using amethyst;
-using amethyst.Windows;
-using odl;
+﻿using odl;
 
 namespace amethyst.Windows;
 

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using odl;
+﻿using odl;
 using NativeLibraryLoader;
 using System.IO;
 using amethyst.Windows;
