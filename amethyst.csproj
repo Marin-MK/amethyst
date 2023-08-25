@@ -1,30 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <Platforms>x64</Platforms>
-    <ApplicationIcon />
-    <OutputType>Library</OutputType>
-    <StartupObject />
-    <Configurations>Debug;Release</Configurations>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <Authors>Marijn Herrebout</Authors>
-    <Copyright>Marijn Herrebout</Copyright>
-    <RepositoryUrl>https://github.com/Marin-MK/amethyst</RepositoryUrl>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <Platforms>x64</Platforms>
+        <ApplicationIcon />
+        <OutputType>Library</OutputType>
+        <StartupObject />
+        <Configurations>Debug;Release</Configurations>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <Authors>Marijn Herrebout</Authors>
+        <Copyright>Marijn Herrebout</Copyright>
+        <RepositoryUrl>https://github.com/Marin-MK/amethyst</RepositoryUrl>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Optimize>False</Optimize>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+        <Optimize>False</Optimize>
+		<OutputPath>build/Debug</OutputPath>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Optimize>False</Optimize>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <Optimize>False</Optimize>
+		<OutputPath>build/Release</OutputPath>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\decodl\decodl.csproj" />
-    <ProjectReference Include="..\NativeLibraryLoader\NativeLibraryLoader.csproj" />
-    <ProjectReference Include="..\odl\odl.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\decodl\decodl.csproj" />
+        <ProjectReference Include="..\NativeLibraryLoader\NativeLibraryLoader.csproj" />
+        <ProjectReference Include="..\odl\odl.csproj" />
+    </ItemGroup>
 
 </Project>
