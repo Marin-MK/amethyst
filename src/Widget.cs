@@ -5,6 +5,7 @@ using System.Linq;
 using amethyst.Animations;
 using odl;
 
+
 namespace amethyst;
 
 public class Widget : IDisposable, IContainer
@@ -642,7 +643,7 @@ public class Widget : IDisposable, IContainer
 	{
 		if (!Disposed)
 		{
-			Graphics.Logger?.Warn($"GC is collecting an undisposed widget: {GetType()}");
+			ODL.Logger?.Warn($"GC is collecting an undisposed widget: {GetType()}");
 		}
 	}
 
@@ -1950,10 +1951,10 @@ public class Widget : IDisposable, IContainer
 			Sprites["_d_"].X = Size.Width - 1;
 			Sprites["_e_"].Bitmap?.Dispose();
 			string txt = GetType().ToString().Split('.').Last();
-			Font f = Font.Get("Arial", 10);
+			Font f = FontCache.GetOrCreate("Arial", 10);
 			Size s = f.TextSize(txt);
 			Sprites["_e_"].Bitmap = new Bitmap(s);
-			Sprites["_e_"].Bitmap.Font = Font.Get("Arial", 10);
+			Sprites["_e_"].Bitmap.Font = FontCache.GetOrCreate("Arial", 10);
 			Sprites["_e_"].X = Viewport.Width / 2 - s.Width / 2;
 			Sprites["_e_"].Y = Viewport.Height / 2 - s.Height / 2;
 			Sprites["_e_"].Bitmap.Unlock();

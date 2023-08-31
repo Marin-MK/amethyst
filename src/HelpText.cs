@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using odl;
 
+
 namespace amethyst;
 
 public class HelpText : Widget
 {
-    public Font Font { get; protected set; } = Font.Get("ProductSans-M", 11);
+    public Font Font { get; protected set; } = FontCache.GetOrCreate("ProductSans-M", 11);
     public int MaxWidth { get; protected set; } = 300;
 
     public HelpText(IContainer Parent) : base(Parent)

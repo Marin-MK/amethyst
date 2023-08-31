@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using odl;
 
+
 namespace amethyst;
 
 public class DropdownBox : TextBox
@@ -111,7 +112,7 @@ public class DropdownWidget : Widget
         Sprites["text"] = new Sprite(Viewport);
         Sprites["text"].Bitmap = new Bitmap(Size);
         Sprites["text"].Bitmap.Unlock();
-        Sprites["text"].Bitmap.Font = Font.Get("ProductSans-M", 9);
+        Sprites["text"].Bitmap.Font = FontCache.GetOrCreate("ProductSans-M", 9);
         for (int i = 0; i < Items.Count; i++)
         {
             Sprites["text"].Bitmap.DrawText(Items[i].Name, 6, i * 18 + 2, Color.WHITE);
