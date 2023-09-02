@@ -303,7 +303,7 @@ public class UIManager : IContainer
     /// <param name="milliseconds">Number of milliseconds to run the timer for.</param>
     public void SetTimer(string identifier, long milliseconds)
     {
-        Timers.Add(new Timer(identifier, Stopwatch.GetTimestamp(), 10000 * milliseconds));
+        Timers.Add(new Timer(identifier, Stopwatch.GetTimestamp(), Amethyst.TicksPerMillisecond * milliseconds));
     }
 
     /// <summary>

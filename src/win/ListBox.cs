@@ -161,7 +161,7 @@ public class ListDrawer : Widget
         ItemPanel.SetSize(width, Items.Count * LineSize);
         // Chunk size doesn't matter as we're redrawing the entire bitmap anyway
         // Only used to be able to exceed the texture size limit to allow for infinite lists
-        ItemPanel.Sprites["items"].Bitmap = new Bitmap(width, Math.Max(1, Items.Count * LineSize), Graphics.MaxTextureSize);
+        ItemPanel.Sprites["items"].Bitmap = new Bitmap(width, Math.Max(1, Items.Count * LineSize));
         ItemPanel.Sprites["items"].Bitmap.Unlock();
         ItemPanel.Sprites["items"].Bitmap.Font = Font;
         for (int i = 0; i < Items.Count; i++)

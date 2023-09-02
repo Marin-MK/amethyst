@@ -24,7 +24,7 @@ public abstract class IAnimation
     public IAnimation(string ID, long Milliseconds, Action<double> Callback, bool CompleteIfStopped = true)
     {
         this.ID = ID;
-        Length = Milliseconds * 10000;
+        Length = Milliseconds * Amethyst.TicksPerMillisecond;
         this.Callback = Callback;
         this.CompleteIfStopped = true;
     }

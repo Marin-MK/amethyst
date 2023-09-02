@@ -11,6 +11,7 @@ public static class Amethyst
     internal static PathInfo Info;
     internal static NativeLibrary tfd;
     internal static bool Stopped = false;
+    public static long TicksPerMillisecond => ODL.OnWindows ? 10_000L : 1_000_000L;
 
     public static void Start(PathInfo Info, bool InitializeAudio = true, bool InitializeFilePickerLibrary = false)
     {
@@ -27,8 +28,6 @@ public static class Amethyst
         Graphics.Start(Info);
         if (InitializeAudio) Audio.Start(Info);
         ODL.FontResolver.AddPath("assets/fonts");
-        
-        if (ODL.OnMacOS) throw new PlatformNotSupportedException();
     }
 
     public static void Run(Action TickDelegate = null)
