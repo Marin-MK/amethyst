@@ -14,6 +14,7 @@ public class TextBox : ActivatableWidget
     public int CaretHeight => TextArea.CaretHeight;
     public bool ShowDisabledText => TextArea.ShowDisabledText;
     public bool DeselectOnEnterPressed => TextArea.DeselectOnEnterPressed;
+    public bool ReadOnly => TextArea.ReadOnly;
 
     public TextArea TextArea;
 
@@ -68,6 +69,11 @@ public class TextBox : ActivatableWidget
     public void SetDeselectOnEnterPressed(bool DeselectOnEnterPressed)
     {
         TextArea.SetDeselectOnEnterPress(DeselectOnEnterPressed);
+    }
+
+    public void SetReadOnly(bool ReadOnly)
+    {
+        TextArea.SetReadOnly(ReadOnly);
     }
 
     public override void SizeChanged(BaseEventArgs e)
