@@ -44,6 +44,14 @@ public class ImageBox : Widget
                     SetSize((int)Math.Round(SrcRect.Width * ZoomX), (int)Math.Round(SrcRect.Height * ZoomY));
                     SetPosition((int)Math.Round((double)Parent.Size.Width / 2 - Size.Width / 2), (int)Math.Round((double)Parent.Size.Height / 2 - Size.Height / 2));
                     break;
+                case FillMode.CenterX:
+                    SetSize((int)Math.Round(SrcRect.Width * ZoomX), (int)Math.Round(SrcRect.Height * ZoomY));
+                    SetPosition((int)Math.Round((double)Parent.Size.Width / 2 - Size.Width / 2), Position.Y);
+                    break;
+                case FillMode.CenterY:
+                    SetSize((int)Math.Round(SrcRect.Width * ZoomX), (int)Math.Round(SrcRect.Height * ZoomY));
+                    SetPosition(Position.X, (int)Math.Round((double)Parent.Size.Height / 2 - Size.Height / 2));
+                    break;
                 case FillMode.Fill:
                     Sprite.ZoomX = (double)Parent.Size.Width / SrcRect.Width;
                     Sprite.ZoomY = (double)Parent.Size.Height / SrcRect.Height;
@@ -252,6 +260,8 @@ public enum FillMode
 {
     None,
     Center,
+    CenterX,
+    CenterY,
     Fill,
     FillMaintainAspect,
     FillMaintainAspectAndCenter,
