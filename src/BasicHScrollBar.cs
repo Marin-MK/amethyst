@@ -207,7 +207,7 @@ public abstract class BasicHScrollBar : ScrollBar
         if (!IsVisible() && !KeepInvisible) return;
         double px = ScrollStep * Count;
         if (MinScrollStep != null && px < (int)MinScrollStep) px = (int)MinScrollStep;
-        if (LinkedWidget != null) SetValue((LinkedWidget.ScrolledX - px) / (LinkedWidget.MaxChildWidth - LinkedWidget.Viewport.Width));
+        if (LinkedWidget != null) SetValue((LinkedWidget.ScrolledX - px) / (LinkedWidget.MaxChildWidth - (LinkedWidget.Viewport.Width - LinkedWidget.ChildPadding.Left + LinkedWidget.ChildPadding.Right)));
         else SetValue(Value - px / Size.Width);
     }
 
@@ -216,7 +216,7 @@ public abstract class BasicHScrollBar : ScrollBar
         if (!IsVisible() && !KeepInvisible) return;
         double px = ScrollStep * Count;
         if (MinScrollStep != null && px < (int)MinScrollStep) px = (int)MinScrollStep;
-        if (LinkedWidget != null) SetValue((LinkedWidget.ScrolledX + px) / (LinkedWidget.MaxChildWidth - LinkedWidget.Viewport.Width));
+        if (LinkedWidget != null) SetValue((LinkedWidget.ScrolledX + px) / (LinkedWidget.MaxChildWidth - (LinkedWidget.Viewport.Width - LinkedWidget.ChildPadding.Left + LinkedWidget.ChildPadding.Right)));
         else SetValue(Value + px / Size.Width);
     }
 
@@ -229,9 +229,10 @@ public abstract class BasicHScrollBar : ScrollBar
             Value = value;
             if (LinkedWidget != null)
             {
-                if (LinkedWidget.MaxChildWidth > LinkedWidget.Viewport.Width)
+                int effW = LinkedWidget.Viewport.Width - LinkedWidget.ChildPadding.Left + LinkedWidget.ChildPadding.Right;
+                if (LinkedWidget.MaxChildWidth > effW)
                 {
-                    LinkedWidget.ScrolledX = (int)Math.Round((LinkedWidget.MaxChildWidth - LinkedWidget.Viewport.Width) * Value);
+                    LinkedWidget.ScrolledX = (int) Math.Round((LinkedWidget.MaxChildWidth - effW) * Value);
                     LinkedWidget.UpdateBounds();
                 }
             }

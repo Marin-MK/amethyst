@@ -53,15 +53,9 @@ public class Widget : IDisposable, IContainer
 	public Point Position { get; protected set; } = new Point(0, 0);
 
 	/// <summary>
-	/// A position offset for child widgets.
+	/// Relative padding that is applied to all of this widget's children.
 	/// </summary>
-	public Point ChildPositionOffset = new Point(0, 0);
-
-	/// <summary>
-	/// A size reduction for child widgets. If a widget is docked and would normally use the full size of this widget to fill up,
-	/// this size offset is added to that size. Therefore these should normally be negative values.
-	/// </summary>
-	public Size ChildSizeOffset = new Size(0, 0);
+	public Padding ChildPadding = new Padding(0);
 
 	/// <summary>
 	/// Main window associated with this widget.
@@ -793,9 +787,10 @@ public class Widget : IDisposable, IContainer
 	public virtual void SetVisible(bool Visible)
 	{
 		AssertUndisposed();
+		bool wasVisible = this.Visible;
 		this.Visible = Visible;
 		Widget parent = Parent as Widget;
-		if (parent == null || (parent as Widget).IsVisible())
+		if (parent == null || parent.IsVisible())
 		{
 			Viewport.Visible = Visible;
 		}
@@ -804,7 +799,7 @@ public class Widget : IDisposable, IContainer
 			Viewport.Visible = false;
 		}
 		SetViewportVisible(Visible);
-		OnVisibilityChanged?.Invoke(new BoolEventArgs(this.Visible));
+		if (this.Visible != wasVisible) OnVisibilityChanged?.Invoke(new BoolEventArgs(this.Visible));
 	}
 
 	/// <summary>
@@ -867,22 +862,23 @@ public class Widget : IDisposable, IContainer
 			// ScrollBarX
 			if (HAutoScroll)
 			{
-				if (MaxChildWidth > Size.Width)
+				if (MaxChildWidth > Size.Width - ChildPadding.Left + ChildPadding.Right)
 				{
 					if (HScrollBar == null)
 					{
 						throw new Exception("Autoscroll was enabled, but no scrollbar has been defined.");
 					}
-					if (OldMaxChildWidth - Viewport.Width > 0 && ScrolledX > OldMaxChildWidth - Viewport.Width)
+					int effW = Viewport.Width - ChildPadding.Left + ChildPadding.Right;
+					if (OldMaxChildWidth - effW > 0 && ScrolledX > OldMaxChildWidth - effW)
 					{
-						ScrolledX = OldMaxChildWidth - Viewport.Width;
+						ScrolledX = OldMaxChildWidth - effW;
 					}
-					if (ScrolledX > MaxChildWidth - Viewport.Width)
+					if (ScrolledX > MaxChildWidth - effW)
 					{
-						ScrolledX = MaxChildWidth - Viewport.Width;
+						ScrolledX = MaxChildWidth - effW;
 					}
-					HScrollBar.SetValue((double)ScrolledX / (MaxChildWidth - Viewport.Width), false);
-					HScrollBar.SetSliderSize((double)Viewport.Width / MaxChildWidth);
+					HScrollBar.SetValue((double)ScrolledX / (MaxChildWidth - effW), false);
+					HScrollBar.SetSliderSize((double) effW / MaxChildWidth);
 					HScrollBar.MouseInputRect = Viewport.Rect;
 					HScrollBar.SetVisible(!HScrollBar.KeepInvisible);
 				}
@@ -895,22 +891,23 @@ public class Widget : IDisposable, IContainer
 			// ScrollBarY
 			if (VAutoScroll)
 			{
-				if (MaxChildHeight > Size.Height)
+				if (MaxChildHeight > Size.Height - ChildPadding.Up + ChildPadding.Down)
 				{
 					if (VScrollBar == null)
 					{
 						throw new Exception("Autoscroll was enabled, but no scrollbar has been defined.");
 					}
-					if (OldMaxChildHeight - Viewport.Height > 0 && ScrolledY > OldMaxChildHeight - Viewport.Height)
+					int effH = Viewport.Height - ChildPadding.Up + ChildPadding.Down;
+					if (OldMaxChildHeight - effH > 0 && ScrolledY > OldMaxChildHeight - effH)
 					{
-						ScrolledY = OldMaxChildHeight - Viewport.Height;
+						ScrolledY = OldMaxChildHeight - effH;
 					}
-					if (ScrolledY > MaxChildHeight - Viewport.Height)
+					if (ScrolledY > MaxChildHeight - effH)
 					{
-						ScrolledY = MaxChildHeight - Viewport.Height;
+						ScrolledY = MaxChildHeight - effH;
 					}
-					VScrollBar.SetValue((double)ScrolledY / (MaxChildHeight - Viewport.Height), false);
-					VScrollBar.SetSliderSize((double)Viewport.Height / MaxChildHeight);
+					VScrollBar.SetValue((double)ScrolledY / (MaxChildHeight - effH), false);
+					VScrollBar.SetSliderSize((double) effH / MaxChildHeight);
 					VScrollBar.MouseInputRect = Viewport.Rect;
 					VScrollBar.SetVisible(!VScrollBar.KeepInvisible);
 				}
@@ -979,18 +976,18 @@ public class Widget : IDisposable, IContainer
 		int parentSizeOffsetHeight = 0;
 		if (Parent is Widget && this is not ScrollBar)
 		{
-			Viewport.X += parentPosOffsetX = ((Widget) Parent).ChildPositionOffset.X;
-			Viewport.Y += parentPosOffsetY = ((Widget) Parent).ChildPositionOffset.Y;
-			Viewport.Width += parentSizeOffsetWidth = ((Widget) Parent).ChildSizeOffset.Width;
-			Viewport.Height += parentSizeOffsetHeight = ((Widget) Parent).ChildSizeOffset.Height;
+			Viewport.X += parentPosOffsetX = ((Widget) Parent).ChildPadding.Left;
+			Viewport.Y += parentPosOffsetY = ((Widget) Parent).ChildPadding.Up;
+			parentSizeOffsetWidth = ((Widget) Parent).ChildPadding.Right;
+			parentSizeOffsetHeight = ((Widget) Parent).ChildPadding.Down;
 		}
 
 		if (!PretendToBeAtOrigin)
 		{
 			// Handles width exceeding parent viewport
-			if (Viewport.X + Size.Width > Parent.Viewport.X + Parent.Viewport.Width)
+			if (Viewport.X + Size.Width > Parent.Viewport.X + Parent.Viewport.Width + parentSizeOffsetWidth)
 			{
-				int Diff = Viewport.X + Size.Width - (Parent.Viewport.X + Parent.Viewport.Width);
+				int Diff = Viewport.X + Size.Width - (Parent.Viewport.X + Parent.Viewport.Width + parentSizeOffsetWidth);
 				Viewport.Width -= Diff;
 			}
 			// Handles X being negative
@@ -1004,9 +1001,9 @@ public class Widget : IDisposable, IContainer
 			}
 			else LeftCutOff = 0;
 			// Handles height exceeding parent viewport
-			if (Viewport.Y + Size.Height > Parent.Viewport.Y + Parent.Viewport.Height)
+			if (Viewport.Y + Size.Height > Parent.Viewport.Y + Parent.Viewport.Height + parentSizeOffsetHeight)
 			{
-				int Diff = Viewport.Y + Size.Height - (Parent.Viewport.Y + Parent.Viewport.Height);
+				int Diff = Viewport.Y + Size.Height - (Parent.Viewport.Y + Parent.Viewport.Height + parentSizeOffsetHeight);
 				Viewport.Height -= Diff;
 			}
 			// Handles Y being negative
@@ -1401,47 +1398,45 @@ public class Widget : IDisposable, IContainer
 	}
 
 	/// <summary>
-	/// Sets the child position offset.
+	/// Sets the padding of this widget's children.
 	/// </summary>
-	/// <param name="x">The x offset.</param>
-	/// <param name="y">The y offset.</param>
-	public void SetChildPositionOffset(int x, int y)
+	/// <param name="left">The Left component of the padding.</param>
+	/// <param name="up">The Up component of the padding.</param>
+	/// <param name="right">The Right component of the padding.</param>
+	/// <param name="down">The Down component of the padding.</param>
+	public void SetChildPadding(int left, int up, int right, int down)
 	{
-		SetChildPositionOffset(new Point(x, y));
+		SetPadding(new Padding(left, up, right, down));
 	}
 
 	/// <summary>
-	/// Sets the child position offset.
+	/// Sets the padding of this widget's children.
 	/// </summary>
-	/// <param name="offset">The offset.</param>
-	public void SetChildPositionOffset(Point offset)
+	/// <param name="horizontal">The horizontal component of the padding.</param>
+	/// <param name="vertical">The vertical component of the padding.</param>
+	public void SetChildPadding(int horizontal, int vertical)
 	{
-		if (!this.ChildPositionOffset.Equals(offset))
+		SetChildPadding(new Padding(horizontal, vertical));
+	}
+
+	/// <summary>
+	/// Sets the padding of this widget's children.
+	/// </summary>
+	/// <param name="all">All components of the padding.</param>
+	public void SetChildPadding(int all)
+	{
+		SetChildPadding(new Padding(all));
+	}
+
+	/// <summary>
+	/// Sets the padding of this widget's children.
+	/// </summary>
+	/// <param name="offset">The padding.</param>
+	public void SetChildPadding(Padding childPadding)
+	{
+		if (!this.ChildPadding.Equals(ChildPadding))
 		{
-			this.ChildPositionOffset = offset;
-			this.UpdateBounds();
-		}
-	}
-
-	/// <summary>
-	/// Sets the child size offset.
-	/// </summary>
-	/// <param name="width">The width offset.</param>
-	/// <param name="height">The height offset.</param>
-	public void SetChildSizeOffset(int width, int height)
-	{
-		SetChildSizeOffset(new Size(width, height));
-	}
-
-	/// <summary>
-	/// Sets the child size offset.
-	/// </summary>
-	/// <param name="offset">The offset.</param>
-	public void SetChildSizeOffset(Size offset)
-	{
-		if (!this.ChildSizeOffset.Equals(offset))
-		{
-			this.ChildSizeOffset = offset;
+			this.ChildPadding = childPadding;
 			this.UpdateBounds();
 		}
 	}
