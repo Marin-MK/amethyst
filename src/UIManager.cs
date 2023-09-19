@@ -29,6 +29,7 @@ public class UIManager : IContainer
     public List<Timer> Timers = new List<Timer>();
     public Container Container;
     public bool EvaluatedLastMouseEvent { get; set; }
+    public Padding ChildPadding => new Padding(0);
 
     List<Shortcut> ShortcutsPendingAddition = new List<Shortcut>();
 

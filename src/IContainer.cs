@@ -11,6 +11,7 @@ public interface IContainer
     List<Widget> Widgets { get; }
     Point AdjustedPosition { get; }
     int ZIndex { get; }
+    Padding ChildPadding { get; }
 
     int ScrolledX { get; set; }
     int ScrolledY { get; set; }

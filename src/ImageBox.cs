@@ -29,7 +29,7 @@ public class ImageBox : Widget
         OnSizeChanged += _ => UpdateSize();
     }
 
-    void UpdateSize()
+    public void UpdateSize()
     {
         Sprite.MultiplePositions.Clear();
         if (Bitmap == null) SetSize(1, 1);
@@ -167,6 +167,7 @@ public class ImageBox : Widget
     {
         Sprite.Bitmap?.Dispose();
         Sprite.Bitmap = null;
+        UpdateSize();
     }
 
     public void ClearBitmap()

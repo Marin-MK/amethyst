@@ -55,7 +55,7 @@ public class Widget : IDisposable, IContainer
 	/// <summary>
 	/// Relative padding that is applied to all of this widget's children.
 	/// </summary>
-	public Padding ChildPadding = new Padding(0);
+	public Padding ChildPadding { get; protected set; } = new Padding(0);
 
 	/// <summary>
 	/// Main window associated with this widget.
@@ -970,30 +970,30 @@ public class Widget : IDisposable, IContainer
 		int origY = Viewport.Y;
 		Viewport.Width = Size.Width;
 		Viewport.Height = Size.Height;
-		int parentPosOffsetX = 0;
-		int parentPosOffsetY = 0;
-		int parentSizeOffsetWidth = 0;
-		int parentSizeOffsetHeight = 0;
+		int childPaddingLeft = 0;
+		int childPaddingUp = 0;
+		int childPaddingRight = 0;
+		int childPaddingDown = 0;
 		if (Parent is Widget && this is not ScrollBar)
 		{
-			Viewport.X += parentPosOffsetX = ((Widget) Parent).ChildPadding.Left;
-			Viewport.Y += parentPosOffsetY = ((Widget) Parent).ChildPadding.Up;
-			parentSizeOffsetWidth = ((Widget) Parent).ChildPadding.Right;
-			parentSizeOffsetHeight = ((Widget) Parent).ChildPadding.Down;
+			Viewport.X += childPaddingLeft = Parent.ChildPadding.Left;
+			Viewport.Y += childPaddingUp = Parent.ChildPadding.Up;
+			childPaddingRight = Parent.ChildPadding.Right;
+			childPaddingDown = Parent.ChildPadding.Down;
 		}
 
 		if (!PretendToBeAtOrigin)
 		{
 			// Handles width exceeding parent viewport
-			if (Viewport.X + Size.Width > Parent.Viewport.X + Parent.Viewport.Width + parentSizeOffsetWidth)
+			if (Viewport.X + Size.Width > Parent.Viewport.X + Parent.Viewport.Width + childPaddingRight)
 			{
-				int Diff = Viewport.X + Size.Width - (Parent.Viewport.X + Parent.Viewport.Width + parentSizeOffsetWidth);
+				int Diff = Viewport.X + Size.Width - (Parent.Viewport.X + Parent.Viewport.Width + childPaddingRight);
 				Viewport.Width -= Diff;
 			}
 			// Handles X being negative
-			if (Viewport.X < Parent.Viewport.X + parentPosOffsetX)
+			if (Viewport.X < Parent.Viewport.X + childPaddingLeft)
 			{
-				int Diff = Parent.Viewport.X + parentPosOffsetX - Viewport.X;
+				int Diff = Parent.Viewport.X + childPaddingLeft - Viewport.X;
 				Viewport.X += Diff;
 				Viewport.Width -= Diff;
 				foreach (Sprite sprite in Sprites.Values) sprite.OX += (int)Math.Round(Diff / sprite.ZoomX);
@@ -1001,15 +1001,15 @@ public class Widget : IDisposable, IContainer
 			}
 			else LeftCutOff = 0;
 			// Handles height exceeding parent viewport
-			if (Viewport.Y + Size.Height > Parent.Viewport.Y + Parent.Viewport.Height + parentSizeOffsetHeight)
+			if (Viewport.Y + Size.Height > Parent.Viewport.Y + Parent.Viewport.Height + childPaddingDown)
 			{
-				int Diff = Viewport.Y + Size.Height - (Parent.Viewport.Y + Parent.Viewport.Height + parentSizeOffsetHeight);
+				int Diff = Viewport.Y + Size.Height - (Parent.Viewport.Y + Parent.Viewport.Height + childPaddingDown);
 				Viewport.Height -= Diff;
 			}
 			// Handles Y being negative
-			if (Viewport.Y < Parent.Viewport.Y + parentPosOffsetY)
+			if (Viewport.Y < Parent.Viewport.Y + childPaddingUp)
 			{
-				int Diff = Parent.Viewport.Y + parentPosOffsetY - Viewport.Y;
+				int Diff = Parent.Viewport.Y + childPaddingUp - Viewport.Y;
 				Viewport.Y += Diff;
 				Viewport.Height -= Diff;
 				foreach (Sprite sprite in Sprites.Values) sprite.OY += (int)Math.Round(Diff / sprite.ZoomY);
@@ -1406,7 +1406,7 @@ public class Widget : IDisposable, IContainer
 	/// <param name="down">The Down component of the padding.</param>
 	public void SetChildPadding(int left, int up, int right, int down)
 	{
-		SetPadding(new Padding(left, up, right, down));
+		SetChildPadding(new Padding(left, up, right, down));
 	}
 
 	/// <summary>
@@ -1434,7 +1434,7 @@ public class Widget : IDisposable, IContainer
 	/// <param name="offset">The padding.</param>
 	public void SetChildPadding(Padding childPadding)
 	{
-		if (!this.ChildPadding.Equals(ChildPadding))
+		if (!this.ChildPadding.Equals(childPadding))
 		{
 			this.ChildPadding = childPadding;
 			this.UpdateBounds();
