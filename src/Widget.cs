@@ -53,6 +53,17 @@ public class Widget : IDisposable, IContainer
 	public Point Position { get; protected set; } = new Point(0, 0);
 
 	/// <summary>
+	/// A position offset for child widgets.
+	/// </summary>
+	public Point ChildPositionOffset = new Point(0, 0);
+
+	/// <summary>
+	/// A size reduction for child widgets. If a widget is docked and would normally use the full size of this widget to fill up,
+	/// this size offset is added to that size. Therefore these should normally be negative values.
+	/// </summary>
+	public Size ChildSizeOffset = new Size(0, 0);
+
+	/// <summary>
 	/// Main window associated with this widget.
 	/// </summary>
 	public UIWindow Window { get; protected set; }
@@ -955,12 +966,24 @@ public class Widget : IDisposable, IContainer
 		}
 		else
 		{
-			bool ParentAtOrigin = Parent is Widget && ((Widget)Parent).PretendToBeAtOrigin;
+			bool ParentAtOrigin = Parent is Widget && ((Widget) Parent).PretendToBeAtOrigin;
 			Viewport.X = Parent.Viewport.X + Position.X + Padding.Left - (ParentAtOrigin ? 0 : Parent.LeftCutOff) - xoffset;
 			Viewport.Y = Parent.Viewport.Y + Position.Y + Padding.Up - (ParentAtOrigin ? 0 : Parent.TopCutOff) - yoffset;
 		}
+		int origY = Viewport.Y;
 		Viewport.Width = Size.Width;
 		Viewport.Height = Size.Height;
+		int parentPosOffsetX = 0;
+		int parentPosOffsetY = 0;
+		int parentSizeOffsetWidth = 0;
+		int parentSizeOffsetHeight = 0;
+		if (Parent is Widget && this is not ScrollBar)
+		{
+			Viewport.X += parentPosOffsetX = ((Widget) Parent).ChildPositionOffset.X;
+			Viewport.Y += parentPosOffsetY = ((Widget) Parent).ChildPositionOffset.Y;
+			Viewport.Width += parentSizeOffsetWidth = ((Widget) Parent).ChildSizeOffset.Width;
+			Viewport.Height += parentSizeOffsetHeight = ((Widget) Parent).ChildSizeOffset.Height;
+		}
 
 		if (!PretendToBeAtOrigin)
 		{
@@ -971,9 +994,9 @@ public class Widget : IDisposable, IContainer
 				Viewport.Width -= Diff;
 			}
 			// Handles X being negative
-			if (Viewport.X < Parent.Viewport.X)
+			if (Viewport.X < Parent.Viewport.X + parentPosOffsetX)
 			{
-				int Diff = Parent.Viewport.X - Viewport.X;
+				int Diff = Parent.Viewport.X + parentPosOffsetX - Viewport.X;
 				Viewport.X += Diff;
 				Viewport.Width -= Diff;
 				foreach (Sprite sprite in Sprites.Values) sprite.OX += (int)Math.Round(Diff / sprite.ZoomX);
@@ -987,9 +1010,9 @@ public class Widget : IDisposable, IContainer
 				Viewport.Height -= Diff;
 			}
 			// Handles Y being negative
-			if (Viewport.Y < Parent.Viewport.Y)
+			if (Viewport.Y < Parent.Viewport.Y + parentPosOffsetY)
 			{
-				int Diff = Parent.Viewport.Y - Viewport.Y;
+				int Diff = Parent.Viewport.Y + parentPosOffsetY - Viewport.Y;
 				Viewport.Y += Diff;
 				Viewport.Height -= Diff;
 				foreach (Sprite sprite in Sprites.Values) sprite.OY += (int)Math.Round(Diff / sprite.ZoomY);
@@ -1375,6 +1398,52 @@ public class Widget : IDisposable, IContainer
 			}
 		}
 		return this;
+	}
+
+	/// <summary>
+	/// Sets the child position offset.
+	/// </summary>
+	/// <param name="x">The x offset.</param>
+	/// <param name="y">The y offset.</param>
+	public void SetChildPositionOffset(int x, int y)
+	{
+		SetChildPositionOffset(new Point(x, y));
+	}
+
+	/// <summary>
+	/// Sets the child position offset.
+	/// </summary>
+	/// <param name="offset">The offset.</param>
+	public void SetChildPositionOffset(Point offset)
+	{
+		if (!this.ChildPositionOffset.Equals(offset))
+		{
+			this.ChildPositionOffset = offset;
+			this.UpdateBounds();
+		}
+	}
+
+	/// <summary>
+	/// Sets the child size offset.
+	/// </summary>
+	/// <param name="width">The width offset.</param>
+	/// <param name="height">The height offset.</param>
+	public void SetChildSizeOffset(int width, int height)
+	{
+		SetChildSizeOffset(new Size(width, height));
+	}
+
+	/// <summary>
+	/// Sets the child size offset.
+	/// </summary>
+	/// <param name="offset">The offset.</param>
+	public void SetChildSizeOffset(Size offset)
+	{
+		if (!this.ChildSizeOffset.Equals(offset))
+		{
+			this.ChildSizeOffset = offset;
+			this.UpdateBounds();
+		}
 	}
 
 	/// <summary>
