@@ -1361,7 +1361,7 @@ public class Widget : IDisposable, IContainer
 	public virtual Widget SetSize(Size size)
 	{
 		AssertUndisposed();
-		Size OldSize = Size;
+		Size OldSize = new Size(this.Size);
 		// Ensures the set size matches the parent size if the widget is docked
 		size.Width = HDocked ? Parent.Size.Width - Position.X - Padding.Left - Padding.Right : size.Width;
 		size.Height = VDocked ? Parent.Size.Height - Position.Y - Padding.Up - Padding.Down : size.Height;
