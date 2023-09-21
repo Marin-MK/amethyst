@@ -2160,6 +2160,7 @@ public class Widget : IDisposable, IContainer
 	}
 }
 
+[DebuggerDisplay("{Key}")]
 public class Shortcut
 {
 	public Widget Widget;

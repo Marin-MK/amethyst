@@ -106,7 +106,7 @@ public class MultilineTextArea : Widget
             new Shortcut(this, new Key(Keycode.V, Keycode.CTRL), _ => Paste()),
             new Shortcut(this, new Key(Keycode.Z, Keycode.CTRL), _ => Undo()),
             new Shortcut(this, new Key(Keycode.Y, Keycode.CTRL), _ => Redo()),
-            new Shortcut(this, new Key(Keycode.ESCAPE), _ => CancelSelection()),
+            new Shortcut(this, new Key(Keycode.ESCAPE), _ => CancelSelection(), false, e => e.Value = HasSelection),
             new Shortcut(this, new Key(Keycode.INSERT), _ => ToggleInsertMode())
         });
         AddUndoState();

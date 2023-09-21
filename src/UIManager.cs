@@ -218,7 +218,16 @@ public class UIManager : IContainer
             // UIManager only has global shortcuts, and all global shortcuts are in UIManager.
             if (s.PendingRemoval || s.Widget != null && (s.Widget.WindowLayer < Window.ActiveWidget.WindowLayer || !s.Widget.IsVisible() || s.Widget.Disposed)) continue;
 
-            Key k = s.Key;
+			if (Input.Press(Keycode.ESCAPE))
+			{
+
+			}
+            if (Input.Trigger(Keycode.ESCAPE))
+            {
+
+            }
+
+			Key k = s.Key;
             bool Valid = false;
             if (Input.Press(k.MainKey))
             {
