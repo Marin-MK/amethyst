@@ -1245,12 +1245,14 @@ public class MultilineTextArea : Widget
     {
         bool CaretPrecedesLineContent = true;
         int LineStartIndex = -1;
+        int precedeTestIndex = Caret.IndexInLine;
+        if (HasSelection) precedeTestIndex = SelectionLeft.IndexInLine;
         for (int i = 0; i < Lines[LineIndex].Length; i++)
         {
             if (Lines[LineIndex].Text[i] != ' ' && Lines[LineIndex].Text[i] != '\n')
             {
                 if (LineStartIndex == -1) LineStartIndex = i;
-                if (i >= Caret.IndexInLine) continue;
+                if (i >= precedeTestIndex) continue;
                 CaretPrecedesLineContent = false;
                 break;
             }
@@ -1302,7 +1304,14 @@ public class MultilineTextArea : Widget
         }
         else if (!HasSelection)
         {
-            InsertText(Caret.Index, "  ");
+            if (Input.Press(Keycode.SHIFT))
+            {
+                if (Caret.Line.Length == 0) return;
+                StartSelection();
+                TabInputForLine(LineIndex, TestIfCaretPrecedes);
+                CancelSelection();
+			}
+            else InsertText(Caret.Index, "  ");
         }
     }
 
