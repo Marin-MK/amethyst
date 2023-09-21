@@ -1308,7 +1308,7 @@ public class MultilineTextArea : Widget
             {
                 if (Caret.Line.Length == 0) return;
                 StartSelection();
-                TabInputForLine(LineIndex, TestIfCaretPrecedes);
+                TabInputForLine(LineIndex, false);
                 CancelSelection();
 			}
             else InsertText(Caret.Index, "  ");
